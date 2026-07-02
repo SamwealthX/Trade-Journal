@@ -2696,6 +2696,12 @@ async function _refreshGdriveToken(){
   _refreshInFlight = (async () => {
     if(!gdriveRefreshToken) return false; // GSI popup / legacy implicit sessions have none — nothing to do
     try{
+      // 15s timeout — gdriveInit() awaits this whole function BEFORE
+      // showing any UI at all (see the proactive refresh check above), so
+      // a stalled request here with no timeout would hang the entire app
+      // on the loading overlay indefinitely, not just this one call.
+      const _ctrl = new AbortController();
+      const _timeout = setTimeout(() => _ctrl.abort(), 15000);
       const res = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -2705,7 +2711,9 @@ async function _refreshGdriveToken(){
           client_id: MOBILE_RELAY_CONFIG.CLIENT_ID,
           client_secret: MOBILE_RELAY_CONFIG.CLIENT_SECRET,
         }),
+        signal: _ctrl.signal,
       });
+      clearTimeout(_timeout);
       const data = await res.json();
       if(!res.ok || data.error || !data.access_token){
         console.error('Token refresh failed:', data.error_description || data.error || ('HTTP '+res.status));
