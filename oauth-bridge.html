@@ -36,8 +36,29 @@
   <a href="#" class="btn hide" id="returnBtn">Return to app</a>
 </div>
 
+<!-- ── Global safety net ──
+     Runs BEFORE the Supabase CDN script, so it catches even a failed/blocked
+     CDN load (which would otherwise throw synchronously at
+     window.supabase.createClient() below, outside any try/catch, and freeze
+     the page silently on the text above forever — the exact symptom this is
+     here to prevent). Any uncaught error anywhere in this page routes here. -->
+<script>
+window.addEventListener('error', function(e){
+  try{
+    document.getElementById('spinner').classList.add('hide');
+    var t = document.getElementById('statusTitle');
+    t.textContent = 'Something went wrong';
+    t.classList.add('err');
+    document.getElementById('statusMsg').textContent =
+      'A technical error occurred and this page could not finish connecting '
+      + '(' + (e && e.message ? e.message : 'unknown error') + '). '
+      + 'Please close this tab and try again from the app.';
+  } catch(_){ /* if even this fails, there's nothing more we can do client-side */ }
+});
+</script>
 <!-- Supabase client, loaded from CDN — matches the version used in the Mini App -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"
+        onerror="document.getElementById('spinner').classList.add('hide'); document.getElementById('statusTitle').textContent='Setup error'; document.getElementById('statusTitle').classList.add('err'); document.getElementById('statusMsg').textContent='Could not load a required script (Supabase). Check your connection and try again.';"></script>
 <script>
 // ─────────────────────────────────────────────────────────────────────────
 // OAuth bridge page — DW Trade Journal
@@ -140,6 +161,10 @@ async function run(){
 
   let tokenResp;
   try{
+    // 15s timeout — a stalled mobile network connection should surface as a
+    // visible error, not hang the page indefinitely on the initial spinner.
+    const _ctrl = new AbortController();
+    const _timeout = setTimeout(() => _ctrl.abort(), 15000);
     const res = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -150,7 +175,9 @@ async function run(){
         redirect_uri: GOOGLE_TOKEN_CONFIG.REDIRECT_URI,
         grant_type: 'authorization_code',
       }),
+      signal: _ctrl.signal,
     });
+    clearTimeout(_timeout);
     tokenResp = await res.json();
     if(!res.ok || tokenResp.error){
       throw new Error(tokenResp.error_description || tokenResp.error || `HTTP ${res.status}`);
