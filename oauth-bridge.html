@@ -56,8 +56,15 @@ window.addEventListener('error', function(e){
   } catch(_){ /* if even this fails, there's nothing more we can do client-side */ }
 });
 </script>
-<!-- Supabase client, loaded from CDN — matches the version used in the Mini App -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"
+<!-- Supabase client, loaded from CDN — matches the version used in the Mini App.
+     crossorigin="anonymous": without this, any exception thrown inside this
+     script reports only as the masked "Script error." (no message/line),
+     which is what happened on the first retry — this makes the real error
+     visible next time instead. Version pinned (not the floating @2 tag) to
+     rule out a transient bad release as the cause; bump deliberately later
+     if you want a newer version, rather than picking it up silently. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"
+        crossorigin="anonymous"
         onerror="document.getElementById('spinner').classList.add('hide'); document.getElementById('statusTitle').textContent='Setup error'; document.getElementById('statusTitle').classList.add('err'); document.getElementById('statusMsg').textContent='Could not load a required script (Supabase). Check your connection and try again.';"></script>
 <script>
 // ─────────────────────────────────────────────────────────────────────────
