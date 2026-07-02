@@ -2271,15 +2271,30 @@ async function _onGoogleToken(accessToken, opts={}){
   }
 
   // We're inside Telegram (tg is truthy) — persist session normally.
-  await Promise.all([
-    CS.set('gdrive_token',   gdriveToken),
-    CS.set('gdrive_email',   gdriveEmail),
-    // Only written when present (Authorization Code relay sessions) — GSI
-    // popup / implicit-grant sessions have neither and simply don't set
-    // these keys, same as before this migration.
-    ...(gdriveRefreshToken ? [CS.set('gdrive_refresh_token', gdriveRefreshToken)] : []),
-    ...(gdriveTokenExpiry  ? [CS.set('gdrive_token_expiry', String(gdriveTokenExpiry))] : []),
-  ]);
+  // Wrapped in try/catch: previously, an unguarded CloudStorage failure here
+  // (quota, permission, or a WebView context with degraded CloudStorage
+  // access) would reject this whole function silently — since callers
+  // either fire-and-forget this call or await it inside an uncaught
+  // setTimeout — leaving gdriveShowSignedIn()/hideAppOverlay() below
+  // unreached and the user stuck on the loading overlay indefinitely with
+  // no visible error. Now: persistence failure is treated as non-fatal —
+  // the user still gets into the app with the in-memory token (won't
+  // survive a reload, but that's a far better failure mode than an
+  // infinite stuck loading screen), and sees a toast instead of silence.
+  try{
+    await Promise.all([
+      CS.set('gdrive_token',   gdriveToken),
+      CS.set('gdrive_email',   gdriveEmail),
+      // Only written when present (Authorization Code relay sessions) — GSI
+      // popup / implicit-grant sessions have neither and simply don't set
+      // these keys, same as before this migration.
+      ...(gdriveRefreshToken ? [CS.set('gdrive_refresh_token', gdriveRefreshToken)] : []),
+      ...(gdriveTokenExpiry  ? [CS.set('gdrive_token_expiry', String(gdriveTokenExpiry))] : []),
+    ]);
+  } catch(e){
+    console.error('Failed to persist Google session to CloudStorage:', e);
+    showToast('Signed in, but could not save your session — you may need to sign in again next time', 'error');
+  }
 
   gdriveShowSignedIn();
   hideAppOverlay();
