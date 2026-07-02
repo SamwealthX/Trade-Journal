@@ -21,8 +21,12 @@
      Google OAuth token from the iOS Safari sign-in tab back into the
      Telegram Mini App via tg://resolve + start_param (see
      _iosTelegramGoogleSignIn / handleTelegramStartParam). No app data,
-     trades, or journal content ever touches Supabase. -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+     trades, or journal content ever touches Supabase.
+     Version pinned + crossorigin set (not the floating @2 tag) — matches
+     the same hardening applied to oauth-bridge.html after a masked
+     "Script error." crash was traced to that unpinned reference; keep
+     both files on the same pinned version. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" crossorigin="anonymous"></script>
 <style>
 :root {
   --bg:#0a0d12;--surface:#111519;--surface2:#181d24;--surface3:#1e2530;
@@ -1504,7 +1508,7 @@ const MOBILE_RELAY_CONFIG = {
 // external Safari/SFSafariViewController opened by tg.openLink() do NOT
 // reliably share localStorage (Apple storage partitioning — see
 // _iosTelegramGoogleSignIn for the full writeup). The relay row is
-// single-use and expires after 15 minutes server-side (RLS + a
+// single-use and expires after 5 minutes server-side (RLS + a
 // security-definer redeem function; the anon key below cannot read rows
 // directly, only INSERT them or call redeem_oauth_code()).
 // Fill in your project's URL and anon/publishable key from
@@ -1647,6 +1651,13 @@ let _pendingOAuthToken = null;
 // unaffected by this migration, and has no refresh token to carry.
 let _pendingOAuthRefreshToken = null;
 let _pendingOAuthExpiresIn = null;
+// Set by handleTelegramStartParam() when a start_param was present but
+// redemption couldn't even be attempted (Supabase client never initialized)
+// or was attempted and failed outright (not just a normal miss/expiry).
+// Surfaced in gdriveInit()'s sign-in screen so this is diagnosable from the
+// phone itself, instead of only ever showing up in a console nobody's
+// looking at on a live iOS device.
+let _startParamRedeemError = null;
 // Holds an OAuth error captured from URL hash (e.g. user cancelled, or
 // Google returned access_denied / another error instead of a token).
 let _pendingOAuthError = null;
@@ -1699,11 +1710,16 @@ async function handleTelegramStartParam(){
   if(!code) return;
   if(!_supabaseRelay){
     console.error('Telegram start_param present but SUPABASE_CONFIG is not set; cannot redeem.');
+    _startParamRedeemError = 'Could not connect to the sign-in relay (setup issue). Please try again — if this keeps happening, the app may need an update.';
     return;
   }
   try{
     const { data, error } = await _supabaseRelay.rpc('redeem_oauth_code', { p_code: code });
-    if(error){ console.error('redeem_oauth_code failed:', error); return; }
+    if(error){
+      console.error('redeem_oauth_code failed:', error);
+      _startParamRedeemError = 'Sign-in could not be completed (relay error). Please try again.';
+      return;
+    }
     // The RPC returns a table (zero or one row):
     // [{ access_token, refresh_token, expires_in }] or [].
     const row = Array.isArray(data) && data[0] ? data[0] : null;
@@ -1717,6 +1733,7 @@ async function handleTelegramStartParam(){
     // which is the correct behavior for a stale or reused deep link.
   } catch(e){
     console.error('redeem_oauth_code threw:', e);
+    _startParamRedeemError = 'Sign-in could not be completed (network error). Please try again.';
   }
 }
 
@@ -1881,6 +1898,15 @@ async function gdriveInit(){
     gdriveShowSignedOut();
     showSignInScreen();
     hideAppOverlay();
+    // If handleTelegramStartParam() had a start_param to redeem but hit a
+    // real error (not just a normal miss/expiry), surface it here — this is
+    // the exact "mini app opens, sign-in silently does nothing" case, now
+    // at least visible instead of console-only.
+    if(_startParamRedeemError){
+      const statusEl = document.getElementById('signInScreenStatus');
+      if(statusEl) statusEl.textContent = _startParamRedeemError;
+      _startParamRedeemError = null;
+    }
     _gdriveInitialized = true;
     loadAll();
     // Covers the case where this WebView DID get fully reloaded/relaunched
