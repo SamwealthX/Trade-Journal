@@ -15,6 +15,21 @@
      without async/defer so it's guaranteed to execute before the inline
      script at the bottom of the page runs. -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+  // Call ready() as early as physically possible — immediately after the
+  // Telegram SDK itself loads, BEFORE Chart.js/Supabase even begin
+  // downloading below. Those are blocking, non-deferred <script src> tags;
+  // if either stalls (cold cache, network just reconnected after returning
+  // from Safari — exactly the conditions on a fresh relaunch tab), the
+  // main inline script further down the page — which also calls ready(),
+  // see below — doesn't run in time, and Telegram falls back to its own
+  // internal heuristic for hiding the native loading placeholder, which is
+  // what was getting stuck. This call cannot be blocked by anything after it.
+  try{
+    var _tgEarly = window.Telegram && window.Telegram.WebApp;
+    if(_tgEarly){ _tgEarly.ready(); _tgEarly.expand(); }
+  } catch(e){}
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <!-- Supabase client — used ONLY as a short-lived relay to bridge the
@@ -1448,17 +1463,15 @@ function escapeForInlineHandler(str){
 }
 
 const tg = window.Telegram?.WebApp;
-// ready() tells Telegram's native client to hide its own "Loading…"
-// placeholder now — as early as possible, deliberately BEFORE any of the
-// async init below (Supabase relay redemption, GSI loading, CloudStorage
-// reads). Without this call, Telegram falls back to an internal heuristic
-// (roughly: page load/first paint) to decide when to hide that placeholder,
-// which is usually fast enough not to notice — but on a relaunch where the
-// page has to freshly fetch three external CDN scripts right after
-// returning from a backgrounded Safari tab, that heuristic can stall long
-// enough to look like the app is stuck. Calling ready() immediately removes
-// that dependency entirely: our own UI (sign-in screen / loading state)
-// takes over from here regardless of how long anything else takes.
+// The actual early ready()/expand() call now happens in a tiny inline
+// script right after the Telegram SDK <script> tag (see <head>) — BEFORE
+// Chart.js/GSI/Supabase even begin downloading, since those are blocking
+// script loads that could otherwise delay reaching this point past when
+// it's useful. ready()/expand() are safe to call more than once, so this
+// is kept as a redundant safety net in case that earlier call somehow
+// didn't fire (window.Telegram.WebApp not yet defined at that point, on
+// some client). setHeaderColor() only needs to happen once and has no
+// early-call equivalent, so it stays here.
 if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor?.('#0a0d12'); }
 
 // ── Detect returning to the mini-app after a Telegram external-browser
