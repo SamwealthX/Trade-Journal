@@ -220,16 +220,27 @@ async function run(){
   }
 
   // Success — hand off back to the Mini App.
+  // NOTE: deliberately NOT auto-redirecting via window.location.href here.
+  // iOS Universal Links (t.me/... handing off to the native Telegram app)
+  // reliably trigger the full native app hand-off only from a genuine user
+  // tap/gesture — a setTimeout-triggered navigation doesn't count as one,
+  // even though it's just code running a moment later. A non-gesture
+  // redirect here was very likely why this sometimes landed in Telegram's
+  // lightweight WEB PREVIEW of the mini app instead of the real native
+  // WebView — a different, more limited environment (this is what was
+  // showing "Safari" in the iOS status bar and getting stuck on Telegram's
+  // native loading placeholder even after ready() was called as early as
+  // possible: the web preview may not honor that call the same way).
+  // The visible button below is a real tap and is now the ONLY path back —
+  // slightly more friction (one tap instead of zero), but a reliable native
+  // hand-off beats an unreliable automatic one.
   els.title.textContent = 'Connected!';
-  els.msg.textContent = 'Taking you back to the app…';
+  els.msg.textContent = 'Tap below to return to the app.';
   const link = deepLink(state, false);
+  els.spinner.classList.add('hide');
   els.btn.classList.remove('hide');
   els.btn.textContent = 'Return to app';
   els.btn.href = link;
-  // Auto-redirect; the visible button is a fallback in case iOS Safari
-  // blocks the automatic navigation (it sometimes does for non-gesture-
-  // triggered redirects).
-  setTimeout(() => { window.location.href = link; }, 600);
 }
 
 run();
