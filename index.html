@@ -1448,7 +1448,18 @@ function escapeForInlineHandler(str){
 }
 
 const tg = window.Telegram?.WebApp;
-if (tg) { tg.expand(); tg.setHeaderColor?.('#0a0d12'); }
+// ready() tells Telegram's native client to hide its own "Loading…"
+// placeholder now — as early as possible, deliberately BEFORE any of the
+// async init below (Supabase relay redemption, GSI loading, CloudStorage
+// reads). Without this call, Telegram falls back to an internal heuristic
+// (roughly: page load/first paint) to decide when to hide that placeholder,
+// which is usually fast enough not to notice — but on a relaunch where the
+// page has to freshly fetch three external CDN scripts right after
+// returning from a backgrounded Safari tab, that heuristic can stall long
+// enough to look like the app is stuck. Calling ready() immediately removes
+// that dependency entirely: our own UI (sign-in screen / loading state)
+// takes over from here regardless of how long anything else takes.
+if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor?.('#0a0d12'); }
 
 // ── Detect returning to the mini-app after a Telegram external-browser
 // sign-in attempt that never completed (e.g. user closed the Google tab,
