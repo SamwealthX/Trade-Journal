@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Connecting Google Drive…</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:#0b0d10; color:#e8e8ea; text-align:center; padding:24px; box-sizing:border-box;
+  }
+  .wrap { max-width:360px; }
+  .spinner {
+    width:36px; height:36px; margin:0 auto 20px; border-radius:50%;
+    border:3px solid rgba(255,255,255,0.15); border-top-color:#4f8cff;
+    animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  h1 { font-size:17px; font-weight:600; margin:0 0 8px; }
+  p { font-size:14px; color:#9a9ba3; line-height:1.5; margin:0 0 20px; }
+  .btn {
+    display:inline-block; padding:12px 22px; border-radius:10px; background:#4f8cff;
+    color:#fff; text-decoration:none; font-size:14px; font-weight:600; border:none; cursor:pointer;
+  }
+  .err { color:#ff6b6b; }
+  .hide { display:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="spinner" id="spinner"></div>
+  <h1 id="statusTitle">Connecting your Google account…</h1>
+  <p id="statusMsg">This will just take a second. Do not close this tab.</p>
+  <a href="#" class="btn hide" id="returnBtn">Return to app</a>
+</div>
+
+<!-- Supabase client, loaded from CDN — matches the version used in the Mini App -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+// ─────────────────────────────────────────────────────────────────────────
+// OAuth bridge page — DW Trade Journal
+//
+// Purpose: this page exists solely because iOS WKWebView (Telegram's
+// embedded browser) and system Safari do NOT reliably share storage, so a
+// Google OAuth flow that starts in the WebView must finish in Safari, and
+// the result has to be smuggled back in via a server-side dead-drop
+// (Supabase `oauth_relay` table) rather than shared localStorage.
+//
+// This page is opened by Telegram.WebApp.openLink() partway through the
+// flow (see _iosTelegramGoogleSignIn() in the main app). Google redirects
+// here after the user approves consent. From here we:
+//   1. Read the Authorization Code (`code`) + our own `state` value from
+//      the query string.
+//   2. Exchange the code for tokens directly against Google's token
+//      endpoint (plain Authorization Code flow, no PKCE — see rationale
+//      below).
+//   3. Write the resulting access_token / refresh_token / expiry into the
+//      oauth_relay table, keyed by `state`.
+//   4. Deep-link back into the Telegram Mini App with `state` as the
+//      `startapp` payload (well under Telegram's 64-char / restricted-
+//      charset limit, since it's just an opaque relay key — never the
+//      actual token).
+//
+// Why plain Authorization Code instead of PKCE:
+// PKCE protects a code redeemed by a party with no client_secret. Here,
+// this bridge page IS the party redeeming the code, and it already has to
+// hold a client_secret to do so — so PKCE buys nothing extra, and would
+// actually create a problem: the code_verifier is generated in the
+// WebView, but the WebView and this page don't share storage either
+// (same Safari/WebView partitioning issue), so the verifier couldn't
+// reliably get here anyway. Plain Authorization Code + client_secret
+// sidesteps that entirely.
+//
+// IMPORTANT: this client_secret is for a DEDICATED OAuth client used only
+// for this mobile relay flow — separate from the desktop GSI popup
+// client. It's not truly confidential (it ships in a static page), which
+// is expected and accepted for installed/native-style OAuth clients per
+// Google's own guidance. Do not reuse the desktop client's secret here.
+// ─────────────────────────────────────────────────────────────────────────
+
+const GOOGLE_TOKEN_CONFIG = {
+  CLIENT_ID: '975572674533-s3j1gt3qlaeuem6qnlj98hjtdkvvh5or.apps.googleusercontent.com',
+  CLIENT_SECRET: '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',
+  // Must exactly match this page's own URL as registered in Google Cloud
+  // Console → Credentials → this client's Authorized redirect URIs.
+  REDIRECT_URI: 'https://github.com/SamwealthX/Trade-Journal/oauth-bridge.html',
+};
+
+const SUPABASE_CONFIG = {
+  URL: 'https://roecrtidfougnuyuswxn.supabase.co',
+  ANON_KEY: 'sb_publishable_a0IUT6UWcwwDrCTv3_kiLA_qeox08Wi',
+};
+
+const TG_BOT_USERNAME = 'DW_journalbot';
+const TG_MINIAPP_SHORTNAME = 'DW_Tradejournal';
+
+const supabase = window.supabase.createClient(SUPABASE_CONFIG.URL, SUPABASE_CONFIG.ANON_KEY);
+
+const els = {
+  spinner: document.getElementById('spinner'),
+  title: document.getElementById('statusTitle'),
+  msg: document.getElementById('statusMsg'),
+  btn: document.getElementById('returnBtn'),
+};
+
+function showError(title, msg, state){
+  els.spinner.classList.add('hide');
+  els.title.textContent = title;
+  els.title.classList.add('err');
+  els.msg.textContent = msg;
+  els.btn.classList.remove('hide');
+  els.btn.href = deepLink(state, /*failed=*/true);
+}
+
+function deepLink(state, failed){
+  // https://t.me/<bot>/<miniapp> universal link — more reliable than the
+  // tg:// custom scheme on iOS Safari, and works whether or not Telegram
+  // is already running.
+  const param = failed ? 'oauthfailed' : state;
+  return `https://t.me/${TG_BOT_USERNAME}/${TG_MINIAPP_SHORTNAME}?startapp=${encodeURIComponent(param)}`;
+}
+
+async function run(){
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const state = params.get('state');
+  const oauthError = params.get('error');
+
+  if(oauthError){
+    // e.g. user tapped "Cancel" on Google's consent screen
+    showError('Sign-in cancelled', 'You can close this tab and try again from the app.', state);
+    return;
+  }
+  if(!code || !state){
+    showError('Something went wrong', 'This link is missing required information. Please try connecting again from the app.', state);
+    return;
+  }
+
+  let tokenResp;
+  try{
+    const res = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code,
+        client_id: GOOGLE_TOKEN_CONFIG.CLIENT_ID,
+        client_secret: GOOGLE_TOKEN_CONFIG.CLIENT_SECRET,
+        redirect_uri: GOOGLE_TOKEN_CONFIG.REDIRECT_URI,
+        grant_type: 'authorization_code',
+      }),
+    });
+    tokenResp = await res.json();
+    if(!res.ok || tokenResp.error){
+      throw new Error(tokenResp.error_description || tokenResp.error || `HTTP ${res.status}`);
+    }
+  } catch(e){
+    console.error('Token exchange failed:', e);
+    showError('Connection failed', 'Google did not accept the sign-in. Please try again from the app.', state);
+    return;
+  }
+
+  // tokenResp: { access_token, refresh_token?, expires_in, scope, token_type }
+  // Note: refresh_token is only present if we requested access_type=offline
+  // AND (first-ever consent, or prompt=consent forced re-issue). The main
+  // app's auth URL builder is responsible for setting those params.
+  try{
+    // NOTE: oauth_relay's primary key column is named `code` (a relay
+    // lookup key), not `state` — don't confuse this with Google's
+    // Authorization `code` above, which is already spent by this point.
+    // The value stored here is the OAuth `state` param, matching what
+    // _iosTelegramGoogleSignIn() in index.html generates and later passes
+    // as p_code to redeem_oauth_code().
+    const { error } = await supabase.from('oauth_relay').insert({
+      code: state,
+      access_token: tokenResp.access_token,
+      refresh_token: tokenResp.refresh_token || null,
+      expires_in: tokenResp.expires_in || null,
+    });
+    if(error) throw error;
+  } catch(e){
+    console.error('Failed to write relay row:', e);
+    showError('Connection failed', 'Could not complete the connection. Please try again from the app.', state);
+    return;
+  }
+
+  // Success — hand off back to the Mini App.
+  els.title.textContent = 'Connected!';
+  els.msg.textContent = 'Taking you back to the app…';
+  const link = deepLink(state, false);
+  els.btn.classList.remove('hide');
+  els.btn.textContent = 'Return to app';
+  els.btn.href = link;
+  // Auto-redirect; the visible button is a fallback in case iOS Safari
+  // blocks the automatic navigation (it sometimes does for non-gesture-
+  // triggered redirects).
+  setTimeout(() => { window.location.href = link; }, 600);
+}
+
+run();
+</script>
+</body>
+</html>
