@@ -2068,7 +2068,14 @@ function _initTokenClient(){
   }
 }
 
-// ── Telegram-specific Google Sign-In ──
+// ── DEPRECATED — no longer called. Kept only for reference. ──
+// This was the old Android-only implicit-grant flow, built on the
+// assumption that Telegram Android reloads the mini-app WebView in place
+// when the user returns from the external browser. That assumption no
+// longer holds (Android now opens a genuinely separate browser tab/window,
+// same as iOS), so the token landed here had nowhere reliable to go.
+// Both signInScreenGoogleSignIn() and gdriveSignIn() now route Android
+// through _iosTelegramGoogleSignIn() instead (the Supabase relay flow).
 // Opens Google OAuth in an external browser via tg.openLink().
 // Google redirects back to this page with #access_token=... in the URL hash.
 // On Telegram Android, the mini-app reloads when the user returns, and
@@ -2254,29 +2261,47 @@ async function _onGoogleToken(accessToken, opts={}){
       const httpsLink = 'https://t.me/' + encodeURIComponent(TG_BOT_USERNAME)
         + '/' + encodeURIComponent(TG_MINIAPP_SHORTNAME)
         + '?startapp=' + encodeURIComponent(relayCode);
-      // NOTE: window.location.href = 'tg://...' is intentionally NOT attempted
-      // here. iOS Safari silently blocks programmatic navigation to custom URL
-      // schemes unless triggered directly by a user gesture (a tap). A silent
-      // failure here leaves the user looking at whatever was rendered before,
-      // which looks like "the app loaded in Safari". Instead we render a clear
-      // full-screen call to action and let the user's tap drive the navigation —
-      // that tap IS a user gesture, so iOS will honour the tg:// scheme.
+      // ── Why the deep-link button is hidden at first ──
+      // _pollRelayCompletion() (kicked off back in _iosTelegramGoogleSignIn()
+      // via _startRelayPolling()) is the mechanism that ACTUALLY works: it
+      // watches for the original Telegram WebView regaining focus/visibility
+      // and redeems the relay code there, in place. Tapping the tg://resolve
+      // deep link instead tells Telegram to LAUNCH the mini app fresh via
+      // startapp — which opens a brand-new mini-app window/instance rather
+      // than restoring the original one. The user ends up with two windows:
+      // the original (still on the sign-in screen, unaware anything
+      // happened) and a new one that's signed in — confusing at best.
+      // So: lead with "just switch back" and a waiting spinner, and only
+      // reveal the button as a fallback after enough time has passed that
+      // polling likely isn't going to catch it on its own (e.g. the
+      // original WebView was actually killed, not just backgrounded).
       document.body.innerHTML = `
         <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;gap:24px;color:#e8edf3;background:#0a0d12">
           <div style="font-size:64px">✅</div>
           <div>
             <div style="font-size:22px;font-weight:700;margin-bottom:10px">Google account connected!</div>
-            <div style="font-size:15px;color:#8896a8;line-height:1.6">You can just switch back to Telegram<br>normally (swipe back / app switcher) —<br>we'll pick this up automatically.</div>
+            <div style="font-size:15px;color:#8896a8;line-height:1.6">Switch back to Telegram now —<br>swipe back or use the app switcher.<br>We'll finish signing you in automatically.</div>
           </div>
-          <a href="${deepLink}" style="display:block;padding:16px 40px;background:#00e5a0;color:#000;border-radius:14px;font-weight:700;font-size:17px;text-decoration:none;letter-spacing:0.01em">
-            Return to Telegram ↗
-          </a>
-          <div style="font-size:12px;color:#4a5568;margin-top:-8px">
-            If the button above doesn't open Telegram,
-            <a href="${httpsLink}" style="color:#8896a8;text-decoration:underline">try this link instead</a>,
-            or just switch apps manually.
+          <div id="_relayWaitSpinner" style="width:28px;height:28px;border:3px solid #1a2028;border-top-color:#00e5a0;border-radius:50%;animation:_relaySpin 0.8s linear infinite"></div>
+          <style>@keyframes _relaySpin{to{transform:rotate(360deg)}}</style>
+          <div id="_relayFallback" style="display:none;flex-direction:column;align-items:center;gap:14px">
+            <div style="font-size:13px;color:#6b7789;line-height:1.5">Still here? If switching back manually<br>isn't working, try this instead:</div>
+            <a href="${deepLink}" style="display:block;padding:14px 36px;background:#00e5a0;color:#000;border-radius:14px;font-weight:700;font-size:16px;text-decoration:none;letter-spacing:0.01em">
+              Return to Telegram ↗
+            </a>
+            <div style="font-size:12px;color:#4a5568">
+              Or <a href="${httpsLink}" style="color:#8896a8;text-decoration:underline">try this link instead</a>
+            </div>
           </div>
-        </div>`;
+        </div>
+        <script>
+          setTimeout(function(){
+            var spinner = document.getElementById('_relayWaitSpinner');
+            var fallback = document.getElementById('_relayFallback');
+            if(spinner) spinner.style.display = 'none';
+            if(fallback) fallback.style.display = 'flex';
+          }, 12000);
+        <\/script>`;
     } else {
       document.body.innerHTML = '<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif;gap:20px;color:#e8edf3"><div style="font-size:56px">&#x26A0;&#xFE0F;</div><div><div style="font-size:21px;font-weight:700;margin-bottom:10px">Could not complete sign-in</div><div style="font-size:14px;color:#8896a8;line-height:1.6">Your Google sign-in succeeded, but relaying it back to Telegram failed. Return to Telegram and try again.</div></div><a href="https://t.me" style="margin-top:8px;padding:14px 32px;background:#00e5a0;color:#000;border-radius:14px;font-weight:700;font-size:15px;text-decoration:none">Open Telegram</a></div>';
     }
@@ -2511,10 +2536,20 @@ function signInScreenGoogleSignIn(){
       }, 3000);
       return;
     }
-    // Android Telegram: open external browser via tg.openLink()
+    // Android Telegram: route through the SAME Supabase relay flow as iOS
+    // (function name is historical — it just means "open external browser +
+    // relay back via Supabase + start_param", not "iOS-only"). We stopped
+    // relying on the old assumption that Telegram Android reloads the
+    // mini-app WebView in place when the user returns from the external
+    // browser — that no longer holds in this build (Android now opens a
+    // genuinely separate browser tab, same as iOS), so both platforms now
+    // share the one relay path that's actually proven to work, instead of
+    // Android quietly falling back to a flow with no polling and a token
+    // that gets stranded. This also gets Android a refresh token for free
+    // (Authorization Code flow), which the old implicit-grant flow never had.
     statusEl.textContent = 'Opening Google sign-in in your browser…';
     const _attemptStartedAt = Date.now();
-    Promise.resolve(_telegramGoogleSignIn()).catch(()=>{
+    Promise.resolve(_iosTelegramGoogleSignIn()).catch(()=>{
       statusEl.textContent = 'Could not open Google sign-in. Please try again.';
       document.getElementById('signInGoogleBtn').disabled = false;
     });
@@ -2577,8 +2612,10 @@ function gdriveSignIn(){
       _iosTelegramGoogleSignIn();
       return;
     }
-    // Android Telegram: external browser via tg.openLink() — no GSI needed
-    Promise.resolve(_telegramGoogleSignIn()).catch(()=>{
+    // Android Telegram: same Supabase relay flow as iOS — see the matching
+    // comment in signInScreenGoogleSignIn() for why this replaced the old
+    // raw hash-redirect _telegramGoogleSignIn() flow.
+    Promise.resolve(_iosTelegramGoogleSignIn()).catch(()=>{
       showToast('Could not open Google sign-in', 'error');
     });
     return;
