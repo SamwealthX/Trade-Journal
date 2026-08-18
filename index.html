@@ -1952,6 +1952,29 @@ async function gdriveInit(){
     _pollRelayCompletion();
   }
 
+  // ── Embedded-WebView cached-token fast path ──
+  // If we already have a saved token (returning user reopening/reloading the
+  // mini app) AND we're inside Telegram's embedded WebView (or the plain
+  // Android in-app browser), don't block the UI on GSI loading at all.
+  // _initTokenClient() stubs tokenClient=null for these platforms anyway
+  // (see _isEmbeddedWebView below) — GSI's popup token client is never used
+  // here, sign-in only ever goes through the redirect/relay flow. GSI is
+  // therefore completely irrelevant to a returning user who already has a
+  // valid token, yet the old code still made hideAppOverlay() depend on GSI
+  // finishing its download. That's fine on Android/Desktop, where GSI loads
+  // quickly, but iOS Telegram's WebView is documented elsewhere in this file
+  // to stall or block accounts.google.com/gsi/client outright (the same
+  // /gsi/transform issue behind the sign-in redirect workarounds) — so a
+  // returning iOS user could sit on the loading overlay indefinitely with no
+  // path forward. Skip the wait entirely for this case.
+  const _embeddedWebView = (!!tg && !_isTelegramDesktop()) || _isAndroidWebView();
+  if(gdriveToken && !_pendingOAuthToken && _embeddedWebView && !_gdriveInitialized){
+    gdriveShowSignedIn();
+    hideAppOverlay();
+    _gdriveInitialized = true;
+    loadAll();
+  }
+
   // Wait for GSI script to load, then init the token client.
   // If a pending OAuth token was captured above, _initTokenClient() will
   // process it immediately without waiting for a user click.
@@ -1962,10 +1985,26 @@ async function gdriveInit(){
     }
   }, 200);
   // Don't wait forever for GSI — if it never loads (network blocked, ad
-  // blocker, etc), stop polling so we don't leak the interval forever.
-  // The 3s timeout below still completes sign-in from a pending token even
-  // if GSI never becomes available.
-  setTimeout(()=>clearInterval(waitForGSI), 8000);
+  // blocker, or the iOS WebView /gsi/transform stall), stop polling AND
+  // still init the token client as a safety net so gdriveReady gets set and
+  // any remaining branches (pending token, sign-in screen wiring) resolve
+  // instead of hanging forever. Previously this only cleared the interval
+  // without ever calling _initTokenClient(), which is exactly what left
+  // returning iOS users stuck on the loading overlay when GSI never arrived.
+  setTimeout(()=>{
+    clearInterval(waitForGSI);
+    // Guard: _initTokenClient() only touches window.google.accounts.oauth2
+    // on non-embedded platforms (regular desktop/mobile browsers use GSI's
+    // real popup token client there). Embedded WebViews stub tokenClient to
+    // null and never touch window.google, so this is always safe for them
+    // even if GSI genuinely never loaded. For non-embedded platforms, only
+    // call through if GSI did end up loading late (window.google present);
+    // otherwise leave gdriveReady false so signInScreenGoogleSignIn()'s own
+    // _waitForGdriveReady()/timeout messaging handles the "never loaded" case.
+    if(!gdriveReady && (_embeddedWebView || window.google?.accounts?.oauth2)){
+      _initTokenClient();
+    }
+  }, 8000);
 
   // Fallback: if GSI never loads (e.g. network error) but we have a pending
   // redirect token, still complete sign-in after a brief wait.
