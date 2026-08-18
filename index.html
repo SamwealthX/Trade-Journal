@@ -3184,6 +3184,16 @@ async function loadAll(){
         monthlyGoals  = data.monthlyGoals  || {};
         propFirms     = Array.isArray(data.propFirms) ? data.propFirms : [];
         _lastDriveSave = data._saved || '';
+        // `trades` was just replaced wholesale from Drive — filteredTrades()'s
+        // memo cache keys on tradesVersion, and every *mutation* site bumps it,
+        // but this bulk reassignment didn't. If anything called filteredTrades()
+        // earlier in this session while trades was still [] (same tradesVersion
+        // value), the cache would treat this fresh data as a hit and keep
+        // serving the stale empty array — journal shows "No trades logged yet"
+        // even though accounts/totals (which don't go through that cache)
+        // render correctly. A full page reload masks this because it resets
+        // the cache from scratch. Bump here so the swap always invalidates it.
+        tradesVersion++;
         // IMPORTANT: loadUIState() MUST be awaited and fully resolved before the
         // first renderAll() — it restores activeAcctFilter from CloudStorage, and
         // rendering before it resolves paints 'All Accounts' first with no re-render.
