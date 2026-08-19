@@ -26,6 +26,7 @@
   }
   .err { color:#ff6b6b; }
   .hide { display:none; }
+  .fallback-hint { font-size:12px; color:#6b7280; line-height:1.5; margin:0 0 14px; }
 </style>
 </head>
 <body>
@@ -33,7 +34,10 @@
   <div class="spinner" id="spinner"></div>
   <h1 id="statusTitle">Connecting your Google account…</h1>
   <p id="statusMsg">This will just take a second. Do not close this tab.</p>
-  <a href="#" class="btn hide" id="returnBtn">Return to app</a>
+  <div id="fallbackArea" class="hide">
+    <p class="fallback-hint" id="fallbackHint">Still here? If switching back manually isn't working, try this instead:</p>
+    <a href="#" class="btn" id="returnBtn">Return to app</a>
+  </div>
 </div>
 
 <!-- ── Global safety net ──
@@ -130,6 +134,8 @@ const els = {
   spinner: document.getElementById('spinner'),
   title: document.getElementById('statusTitle'),
   msg: document.getElementById('statusMsg'),
+  fallbackArea: document.getElementById('fallbackArea'),
+  fallbackHint: document.getElementById('fallbackHint'),
   btn: document.getElementById('returnBtn'),
 };
 
@@ -138,7 +144,12 @@ function showError(title, msg, state){
   els.title.textContent = title;
   els.title.classList.add('err');
   els.msg.textContent = msg;
-  els.btn.classList.remove('hide');
+  // Errors are terminal — there's nothing to wait on, so the button (the
+  // only way forward from here) shows immediately rather than after the
+  // success-path delay below.
+  els.fallbackHint.classList.add('hide');
+  els.fallbackArea.classList.remove('hide');
+  els.btn.textContent = 'Return to app';
   els.btn.href = deepLink(state, /*failed=*/true);
 }
 
@@ -231,16 +242,30 @@ async function run(){
   // showing "Safari" in the iOS status bar and getting stuck on Telegram's
   // native loading placeholder even after ready() was called as early as
   // possible: the web preview may not honor that call the same way).
-  // The visible button below is a real tap and is now the ONLY path back —
-  // slightly more friction (one tap instead of zero), but a reliable native
-  // hand-off beats an unreliable automatic one.
-  els.title.textContent = 'Connected!';
-  els.msg.textContent = 'Tap below to return to the app.';
-  const link = deepLink(state, false);
-  els.spinner.classList.add('hide');
-  els.btn.classList.remove('hide');
+  //
+  // ── Why "switch back" leads, not the button ──
+  // The Telegram WebView that opened this Safari tab is still alive in
+  // memory (iOS preserves it across the round trip) and is already polling
+  // Supabase for this exact relay row — see _pollRelayCompletion() /
+  // _startRelayPolling() in the main app. Just switching back to Telegram
+  // (swipe back / app switcher) lets that polling pick it up and finish
+  // sign-in automatically, restoring the SAME window the user was already
+  // in. Tapping this button instead launches the mini app fresh via
+  // startapp, which opens a brand-new instance rather than restoring the
+  // original one — the user can end up with two windows: the original
+  // (still on the sign-in screen, unaware anything happened) and a new one
+  // that's signed in. So: lead with "just switch back", and only reveal
+  // this button as a fallback once enough time has passed that polling
+  // likely isn't going to catch it on its own (e.g. the original WebView
+  // was actually killed in the background, not just suspended).
+  els.title.textContent = 'Google account connected!';
+  els.msg.textContent = 'Switch back to Telegram now — swipe back or use the app switcher. We\u2019ll finish signing you in automatically.';
   els.btn.textContent = 'Return to app';
-  els.btn.href = link;
+  els.btn.href = deepLink(state, false);
+  setTimeout(function(){
+    els.spinner.classList.add('hide');
+    els.fallbackArea.classList.remove('hide');
+  }, 16000);
 }
 
 run();
