@@ -1696,14 +1696,6 @@ let _startParamRedeemError = null;
 // Google returned access_denied / another error instead of a token).
 let _pendingOAuthError = null;
 
-// Holds the OAuth `state` value captured from the URL hash by the Safari
-// relay tab (set in gdriveInit()'s hash-parsing block below). Reused as the
-// primary key of the short-lived Supabase oauth_relay row that tab creates,
-// so the ORIGINAL Telegram tab -- which generated this same value before it
-// ever navigated to Safari -- can look itself up later. See
-// _pollRelayCompletion().
-let _capturedOAuthState = null;
-
 // Holds the relay/state code THIS tab generated right before opening
 // Safari for iOS Telegram sign-in (see _iosTelegramGoogleSignIn()). Kept in
 // memory -- not just CloudStorage -- because iOS Telegram preserves this
@@ -1797,13 +1789,6 @@ async function gdriveInit(){
     // on a stale/forged redirect.
     const _expectedState = await CS.get('gdrive_oauth_state');
     const _stateOk = !_expectedState || _hs === _expectedState;
-    // Always capture the raw state value regardless of _stateOk. On the iOS
-    // relay path this Safari tab never shares storage with the Telegram tab
-    // that generated it (that's the whole reason the CS-based check above
-    // reduces to a no-op here), so _hs itself -- echoed back by Google,
-    // therefore authoritative -- is what lets _onGoogleToken() reuse the
-    // SAME code the original Telegram tab is already polling for.
-    if(_hs) _capturedOAuthState = _hs;
     if(_ht && _stateOk){
       _pendingOAuthToken = _ht;
     } else if(_he){
@@ -2247,108 +2232,22 @@ async function _onGoogleToken(accessToken, opts={}){
     gdriveEmail = ud.email || '';
   } catch(e){ gdriveEmail=''; }
 
-  // ── iOS/mobile OAuth relay (Supabase bridge) — OR — Telegram Desktop/Web's
-  // own in-place redirect losing its tg bridge. Both land here identically
-  // (tg is null), but need opposite handling: mobile relay must NOT boot the
-  // app in this context (see below); desktop/web's redirect IS its final
-  // destination — there's no separate Telegram window to hand off to — so it
-  // should just complete sign-in normally, same as if tg had stayed present.
+  // ── Telegram Desktop/Web's own in-place redirect losing its tg bridge ──
   // desktop_web_oauth_pending (set immediately before the redirect in
   // _androidWebViewGoogleSignIn(), raw localStorage so it survives the
-  // navigation regardless of what happens to tg) is the one reliable signal
-  // that distinguishes the two — tg.platform is long gone by this point.
-  const _isDesktopWebRedirect = !!localStorage.getItem('desktop_web_oauth_pending');
+  // navigation regardless of what happens to tg) is how we know this is
+  // that redirect completing, even though tg itself may be null again by
+  // now — tg.platform is long gone by this point. This is the ONLY
+  // still-live reason _onGoogleToken() ever runs with tg null: the old
+  // iOS implicit-grant Supabase-relay UI that used to live here (dead code
+  // removed) was superseded by oauth-bridge.html + the Authorization Code
+  // flow (see _iosTelegramGoogleSignIn()) — Google now redirects the iOS
+  // relay flow straight to that separate page, never back to this one, so
+  // it can no longer reach this function with tg null and no marker set.
+  // Nothing below actually branches on this anymore (the old branch that
+  // did was the dead code removed above) — we still clear it here purely
+  // as cleanup, so a stale '1' can't linger in localStorage indefinitely.
   localStorage.removeItem('desktop_web_oauth_pending');
-  if(!tg && !_isDesktopWebRedirect){
-    localStorage.removeItem('ios_oauth_bridge_marker'); // clean up if somehow present
-    if(!_getSupabaseRelay()){
-      // Misconfiguration guard — SUPABASE_CONFIG wasn't filled in.
-      document.body.style.cssText = 'margin:0;padding:0;background:#0a0d12';
-      document.body.innerHTML = '<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif;gap:20px;color:#e8edf3"><div style="font-size:56px">&#x26A0;&#xFE0F;</div><div><div style="font-size:21px;font-weight:700;margin-bottom:10px">Setup needed</div><div style="font-size:14px;color:#8896a8;line-height:1.6">SUPABASE_CONFIG is not set, so sign-in cannot relay back to Telegram. Return to Telegram and try again later.</div></div><a href="https://t.me" style="margin-top:8px;padding:14px 32px;background:#00e5a0;color:#000;border-radius:14px;font-weight:700;font-size:15px;text-decoration:none">Open Telegram</a></div>';
-      return;
-    }
-    // Reuse the SAME code the original Telegram tab generated as the OAuth
-    // `state` param before it ever opened Safari (see
-    // _iosTelegramGoogleSignIn() / _capturedOAuthState above). That's what
-    // lets the original tab -- still alive in memory on iOS, since Telegram
-    // doesn't reload this WebView on return -- look up and redeem this
-    // exact row itself via _pollRelayCompletion(), with no deep link
-    // required. Falls back to a fresh code only if somehow no state was
-    // captured, so the manual "Return to Telegram" screen below still works
-    // as a standalone fallback either way.
-    const relayCode = _capturedOAuthState || _genRelayCode();
-    let relayOk = false;
-    try{
-      // Column is access_token (not token) since the Phase 2 migration
-      // renamed it — this path only ever has an access token (implicit
-      // grant, no refresh token), so refresh_token/expires_in are simply
-      // left unset (both nullable) rather than written as null explicitly.
-      const { error } = await _getSupabaseRelay()
-        .from('oauth_relay')
-        .insert({ code: relayCode, access_token: accessToken });
-      relayOk = !error;
-      if(error) console.error('Supabase relay insert failed:', error);
-    } catch(e){ console.error('Supabase relay insert threw:', e); }
-
-    document.body.style.cssText = 'margin:0;padding:0;background:#0a0d12';
-    if(relayOk){
-      // tg:// URI — correct format for a named mini app with startapp payload.
-      // Carries the relay code as start_param back into the mini-app on relaunch.
-      const deepLink = 'tg://resolve?domain=' + encodeURIComponent(TG_BOT_USERNAME)
-        + '&appname=' + encodeURIComponent(TG_MINIAPP_SHORTNAME)
-        + '&startapp=' + encodeURIComponent(relayCode);
-      // HTTPS t.me fallback — same effect but goes through Safari's universal
-      // link handler, which is more reliably intercepted by Telegram on iOS
-      // than a bare tg:// custom scheme navigated to programmatically.
-      const httpsLink = 'https://t.me/' + encodeURIComponent(TG_BOT_USERNAME)
-        + '/' + encodeURIComponent(TG_MINIAPP_SHORTNAME)
-        + '?startapp=' + encodeURIComponent(relayCode);
-      // ── Why the deep-link button is hidden at first ──
-      // _pollRelayCompletion() (kicked off back in _iosTelegramGoogleSignIn()
-      // via _startRelayPolling()) is the mechanism that ACTUALLY works: it
-      // watches for the original Telegram WebView regaining focus/visibility
-      // and redeems the relay code there, in place. Tapping the tg://resolve
-      // deep link instead tells Telegram to LAUNCH the mini app fresh via
-      // startapp — which opens a brand-new mini-app window/instance rather
-      // than restoring the original one. The user ends up with two windows:
-      // the original (still on the sign-in screen, unaware anything
-      // happened) and a new one that's signed in — confusing at best.
-      // So: lead with "just switch back" and a waiting spinner, and only
-      // reveal the button as a fallback after enough time has passed that
-      // polling likely isn't going to catch it on its own (e.g. the
-      // original WebView was actually killed, not just backgrounded).
-      document.body.innerHTML = `
-        <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;gap:24px;color:#e8edf3;background:#0a0d12">
-          <div style="font-size:64px">✅</div>
-          <div>
-            <div style="font-size:22px;font-weight:700;margin-bottom:10px">Google account connected!</div>
-            <div style="font-size:15px;color:#8896a8;line-height:1.6">Switch back to Telegram now —<br>swipe back or use the app switcher.<br>We'll finish signing you in automatically.</div>
-          </div>
-          <div id="_relayWaitSpinner" style="width:28px;height:28px;border:3px solid #1a2028;border-top-color:#00e5a0;border-radius:50%;animation:_relaySpin 0.8s linear infinite"></div>
-          <style>@keyframes _relaySpin{to{transform:rotate(360deg)}}</style>
-          <div id="_relayFallback" style="display:none;flex-direction:column;align-items:center;gap:14px">
-            <div style="font-size:13px;color:#6b7789;line-height:1.5">Still here? If switching back manually<br>isn't working, try this instead:</div>
-            <a href="${deepLink}" style="display:block;padding:14px 36px;background:#00e5a0;color:#000;border-radius:14px;font-weight:700;font-size:16px;text-decoration:none;letter-spacing:0.01em">
-              Return to Telegram ↗
-            </a>
-            <div style="font-size:12px;color:#4a5568">
-              Or <a href="${httpsLink}" style="color:#8896a8;text-decoration:underline">try this link instead</a>
-            </div>
-          </div>
-        </div>
-        <script>
-          setTimeout(function(){
-            var spinner = document.getElementById('_relayWaitSpinner');
-            var fallback = document.getElementById('_relayFallback');
-            if(spinner) spinner.style.display = 'none';
-            if(fallback) fallback.style.display = 'flex';
-          }, 12000);
-        <\/script>`;
-    } else {
-      document.body.innerHTML = '<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif;gap:20px;color:#e8edf3"><div style="font-size:56px">&#x26A0;&#xFE0F;</div><div><div style="font-size:21px;font-weight:700;margin-bottom:10px">Could not complete sign-in</div><div style="font-size:14px;color:#8896a8;line-height:1.6">Your Google sign-in succeeded, but relaying it back to Telegram failed. Return to Telegram and try again.</div></div><a href="https://t.me" style="margin-top:8px;padding:14px 32px;background:#00e5a0;color:#000;border-radius:14px;font-weight:700;font-size:15px;text-decoration:none">Open Telegram</a></div>';
-    }
-    return;
-  }
 
   // Either tg is truthy (normal in-Telegram sign-in), or this is Telegram
   // Desktop/Web's own redirect that lost tg but was flagged by
