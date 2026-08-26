@@ -92,16 +92,28 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .header-icon{width:34px;height:34px;background:var(--accent-dim);border:1px solid rgba(0,229,160,0.3);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px}
 .header-title{font-size:17px;font-weight:700;letter-spacing:-.4px}
 .header-sub{font-size:11px;color:var(--text2);margin-top:1px;transition:opacity .1s ease}
-.header-right{text-align:right}
-.header-right .lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.9px;font-weight:600}
-.header-right .val{font-size:19px;font-weight:800;font-family:var(--mono);letter-spacing:-.5px;transition:color .25s}
 .val.pnl-flash{animation:pnl-pop .3s cubic-bezier(.32,.72,0,1)}
 @keyframes pnl-pop{0%{transform:scale(1)}50%{transform:scale(1.06)}100%{transform:scale(1)}}
 .positive{color:var(--green)}.negative{color:var(--red)}
 
 /* ── Account bar ── */
-.acct-bar{display:flex;align-items:center;padding:8px 16px;border-bottom:1px solid var(--border);background:var(--surface)}
-.acct-select{flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--accent);font-family:var(--font);font-size:13px;font-weight:700;padding:7px 32px 7px 12px;outline:none;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2300e5a0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;transition:border-color .15s}
+.acct-bar{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--surface)}
+/* ── Account header card (Batch 5b) — icon + selector/status + balance,
+   replacing the old plain <select>-only bar. Icon is a generic initials
+   avatar for now — a reserved slot, per the roadmap's "same shape
+   MT5-connected accounts will need later, no redesign required when that
+   lands": once broker sync exists, an account's real platform logo can
+   swap into #acctHeaderIcon in place of initials, same size/position. ── */
+.acct-header-icon{width:38px;height:38px;border-radius:50%;background:var(--accent-dim);border:1px solid rgba(0,229,160,0.3);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;letter-spacing:.2px;flex-shrink:0}
+.acct-header-mid{flex:1;min-width:0}
+.acct-header-balance{text-align:right;flex-shrink:0}
+.acct-header-balance .lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.9px;font-weight:600}
+.acct-header-balance .val{font-size:19px;font-weight:800;font-family:var(--mono);letter-spacing:-.5px;transition:color .25s}
+.acct-select{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font);font-size:13px;font-weight:700;padding:7px 30px 7px 10px;outline:none;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238896a8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;transition:border-color .15s}
+/* Reuses .acct-status-row/.acct-status-refresh from the Prop account-status
+   pattern (Batch 4) directly, so the header card and Prop cards read as the
+   same visual language rather than two similar-but-different components. */
+.acct-header-status{margin-top:5px}
 .acct-select:focus{border-color:rgba(0,229,160,0.5);box-shadow:0 0 0 3px rgba(0,229,160,0.08)}
 .acct-select option{background:#1a1f2b;color:var(--text);font-weight:600}
 
@@ -228,7 +240,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
 /* ── Chart wrap ── */
 .chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px}
-.chart-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.9px;margin-bottom:12px}
+.chart-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.9px;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.chart-title svg{width:13px;height:13px;flex-shrink:0;color:var(--accent)}
 /* ── Stats panel consolidation (Batch 4) — groups several related charts/
    breakdowns into one taller card with labeled subsections, instead of each
    being its own separate card. Panels get the loosened ~24px gap called for
@@ -516,10 +529,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:0">
-      <div class="header-right">
-        <div class="lbl">Total P&L</div>
-        <div class="val positive" id="totalPnlHeader">$0.00</div>
-      </div>
       <button class="theme-toggle" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle light / dark mode" aria-label="Toggle theme">🌙</button>
     </div>
   </div>
@@ -934,22 +943,22 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
   <!-- Panel 1: trade-by-trade performance over time -->
   <div class="card stats-panel">
-    <div class="stats-subsection"><div class="chart-title">Equity Curve</div><canvas id="equityChart" height="150"></canvas></div>
-    <div class="stats-subsection"><div class="chart-title">P&L per Trade</div><canvas id="pnlChart" height="130"></canvas></div>
-    <div class="stats-subsection"><div class="chart-title">R-Multiple Distribution</div><canvas id="rChart" height="130"></canvas></div>
+    <div class="stats-subsection"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Equity Curve</div><canvas id="equityChart" height="150"></canvas></div>
+    <div class="stats-subsection"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>P&L per Trade</div><canvas id="pnlChart" height="130"></canvas></div>
+    <div class="stats-subsection"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="14" width="4" height="7"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="11" width="4" height="10"/></svg>R-Multiple Distribution</div><canvas id="rChart" height="130"></canvas></div>
   </div>
 
   <!-- Panel 2: breakdowns by setup / pair / day / session -->
   <div class="card stats-panel">
-    <div class="stats-subsection"><div class="chart-title">Win Rate by Setup</div><div id="winBySetup"></div></div>
-    <div class="stats-subsection"><div class="chart-title">Pair Performance</div><div id="pairBreakdown"></div></div>
-    <div class="stats-subsection"><div class="chart-title">Best Day of Week</div><div id="dowBreakdown"></div></div>
-    <div class="stats-subsection"><div class="chart-title">Session Performance</div><div id="sessionBreakdown"></div></div>
+    <div class="stats-subsection"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg>Win Rate by Setup</div><div id="winBySetup"></div></div>
+    <div class="stats-subsection"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>Pair Performance</div><div id="pairBreakdown"></div></div>
+    <div class="stats-subsection"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Best Day of Week</div><div id="dowBreakdown"></div></div>
+    <div class="stats-subsection"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>Session Performance</div><div id="sessionBreakdown"></div></div>
   </div>
 
   <!-- Panel 3: individual trade highlights — kept separate since it's a
        highlight list, not an aggregate breakdown like Panel 2's contents -->
-  <div class="card stats-panel"><div class="chart-title">Best & Worst Trades</div><div id="bestWorst"></div></div>
+  <div class="card stats-panel"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4"/><path d="M17 4H7v6a5 5 0 0 0 10 0V4z"/><path d="M7 4H4.5A1.5 1.5 0 0 0 3 5.5v.5a3 3 0 0 0 3 3M17 4h2.5A1.5 1.5 0 0 1 21 5.5v.5a3 3 0 0 1-3 3"/></svg>Best & Worst Trades</div><div id="bestWorst"></div></div>
 </div>
 
 <!-- ══ TAB: Settings ══ -->
@@ -3772,10 +3781,21 @@ function switchTab(name){
 // ─── Account bar ───
 function renderAcctBar(){
   const bar=document.getElementById('acctBar');
-  bar.innerHTML='<select class="acct-select" onchange="setAcctFilter(this.value)">'
-    +[{id:'all',name:'All Accounts'},...accounts].map(a=>
-      `<option value="${a.id}"${activeAcctFilter===a.id?' selected':''}>${escapeHtml(a.name)}</option>`
-    ).join('')+'</select>';
+  const current = activeAcctFilter==='all' ? null : accounts.find(a=>a.id===activeAcctFilter);
+  // Generic initials avatar for now — reserved slot for a real platform
+  // badge (e.g. MT5) once broker sync exists; see the CSS comment on
+  // .acct-header-icon for why this is deliberately built as a swappable slot.
+  const initials = current ? current.name.trim().slice(0,2).toUpperCase() : 'ALL';
+  const statusHtml = current
+    ? `<span class="acct-status-row acct-header-status"><span class="acct-status-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Synced ${timeAgo(_lastDriveSave)}<button class="acct-status-refresh" onclick="event.stopPropagation();this.classList.add('spinning');refreshAcctSync(()=>{renderAcctBar();renderHeader();});" aria-label="Refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button></span>`
+    : '';
+  bar.innerHTML = `<div class="acct-header-icon">${escapeHtml(initials)}</div>`
+    + `<div class="acct-header-mid"><select class="acct-select" onchange="setAcctFilter(this.value)">`
+    + [{id:'all',name:'All Accounts'},...accounts].map(a=>
+        `<option value="${a.id}"${activeAcctFilter===a.id?' selected':''}>${escapeHtml(a.name)}</option>`
+      ).join('')
+    + `</select>${statusHtml}</div>`
+    + `<div class="acct-header-balance"><div class="lbl">Total P&L</div><div class="val positive" id="totalPnlHeader">$0.00</div></div>`;
 }
 function setAcctFilter(id){
   activeAcctFilter=id;
@@ -5631,7 +5651,7 @@ function renderCalSummaryView(f, fromVal, toVal){
       </div>
     </div>
     <div class="card" style="padding:12px">
-      <div class="chart-title" style="margin-bottom:10px">Daily Breakdown</div>
+      <div class="chart-title" style="margin-bottom:10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Daily Breakdown</div>
       ${dayRows}
     </div>
   `;
@@ -6173,7 +6193,7 @@ function destroyCharts(){
   charts={};
   [['equityChart',150],['pnlChart',130],['rChart',130]].forEach(([id,h])=>{
     const el=document.getElementById(id); if(el){
-      const title=el.parentElement.querySelector('.chart-title')?.textContent||'';
+      const title=el.parentElement.querySelector('.chart-title')?.innerHTML||'';
       el.parentElement.innerHTML=`<div class="chart-title">${title}</div><canvas id="${id}" height="${h}"></canvas>`;
     }
   });
@@ -6194,6 +6214,16 @@ function timeAgo(isoString){
   const m=Math.floor(diffSec/60); if(m<60) return m+'m ago';
   const h=Math.floor(m/60); if(h<24) return h+'h ago';
   return Math.floor(h/24)+'d ago';
+}
+// Shared "refresh" handler for every account-status row (header card, Prop
+// cards, and any future MT5-synced account card that reuses this pattern).
+// Actually forces a fresh Drive write and re-renders afterward, rather than
+// just re-rendering with the same stale _lastDriveSave timestamp — a manual
+// stand-in today for what becomes the real "Sync Now" trigger once MT5
+// polling exists, per the roadmap.
+async function refreshAcctSync(rerenderFn){
+  await gdriveForceSave();
+  rerenderFn();
 }
 function showToast(msg,type='success'){
   const el=document.getElementById('toast');
@@ -7170,7 +7200,7 @@ function renderPropFirms(){
           <div class="prop-firm-acct" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             <span>$${Number(f.acctSize||0).toLocaleString()} account</span>
             ${isLinked
-              ? `<span class="acct-status-row"><span class="acct-status-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>${escapeHtml(linkedAcctName)} · Synced ${timeAgo(_lastDriveSave)}<button class="acct-status-refresh" onclick="event.stopPropagation();this.classList.add('spinning');renderPropFirms();showToast('Synced');" aria-label="Refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button></span>`
+              ? `<span class="acct-status-row"><span class="acct-status-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>${escapeHtml(linkedAcctName)} · Synced ${timeAgo(_lastDriveSave)}<button class="acct-status-refresh" onclick="event.stopPropagation();this.classList.add('spinning');refreshAcctSync(renderPropFirms);" aria-label="Refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button></span>`
               : (f.manualPnL!=null?`<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;background:var(--surface2);color:var(--text3);border:1px solid var(--border2)">Manual P&L</span>`:'')}
           </div>
           ${consistBadgeHTML}
