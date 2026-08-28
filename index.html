@@ -216,6 +216,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .pretrade-reasoning{padding-left:6px;margin:5px 0;font-size:12px;color:var(--text2);line-height:1.4;white-space:pre-wrap}
 .pretrade-planned{display:flex;gap:12px;padding-left:6px;margin-top:6px;font-size:11px;color:var(--text3);font-family:var(--mono)}
 .pretrade-actions{display:flex;gap:8px;padding-left:6px;margin-top:10px}
+.pretrade-checklist-toggle{display:flex;justify-content:space-between;align-items:center;padding:6px 2px;margin-top:6px;font-size:12px;font-weight:700;color:var(--text2);cursor:pointer;border-top:1px solid var(--border)}
 .status-badge{font-size:10px;font-weight:800;padding:3px 9px;border-radius:99px;letter-spacing:.4px;text-transform:uppercase}
 .status-badge.watching{background:var(--amber-dim);color:var(--amber)}
 .status-badge.taken{background:var(--green-dim);color:var(--green)}
@@ -281,6 +282,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .modal-overlay.open{display:flex}
 .modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius) var(--radius) 0 0;width:100%;max-height:93vh;overflow-y:auto;padding:18px 16px 36px;animation:slide-up .22s cubic-bezier(.32,.72,0,1)}
 @keyframes slide-up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+/* Centered-dialog variant — used for short, self-contained content (Month
+   Report, Daily Summary) rather than long forms, which stay as bottom
+   sheets since those work better full-height on a phone. */
+.modal-overlay.centered{align-items:center;justify-content:center;padding:20px}
+.modal-overlay.centered .modal{border-radius:var(--radius);width:100%;max-width:440px;max-height:85vh;animation:pop-in .18s cubic-bezier(.32,.72,0,1)}
+@keyframes pop-in{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
 .modal-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 16px}
 .modal-title{font-size:19px;font-weight:800;margin-bottom:18px;letter-spacing:-.4px}
 /* ── Nav drawer sheet (Batch 4 restyle — matches TraderWaves' simpler
@@ -298,8 +305,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 /* ── Side peek (slide from right) ── */
 .peek-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:600;display:none;backdrop-filter:blur(3px)}
 .peek-overlay.open{display:block}
-.peek-panel{position:fixed;top:0;right:-100%;width:92%;max-width:420px;height:100%;background:var(--surface);border-left:1px solid var(--border2);z-index:601;overflow-y:auto;transition:right .28s cubic-bezier(.32,.72,0,1);padding:0 0 80px}
-.peek-panel.open{right:0}
+.peek-panel{position:fixed;top:50%;left:50%;width:92%;max-width:460px;max-height:85vh;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);z-index:601;overflow-y:auto;opacity:0;transform:translate(-50%,-50%) scale(.94);pointer-events:none;transition:opacity .18s ease,transform .18s cubic-bezier(.32,.72,0,1);padding:0 0 24px}
+.peek-panel.open{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:auto}
 .peek-header{padding:16px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:2}
 .peek-close{width:32px;height:32px;border-radius:50%;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:all .15s}
 .peek-body{padding:16px}
@@ -613,6 +620,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div class="section-header">
     <span class="section-title">Pre-Trade</span>
     <button class="btn-sm accent" onclick="openAddPreTrade()">＋ New Setup</button>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:12px">
+    <button class="filter-pill-btn has-filter" id="ptViewActive" onclick="setPreTradeView('active')">Active</button>
+    <button class="filter-pill-btn" id="ptViewHistory" onclick="setPreTradeView('history')">History</button>
   </div>
   <div id="preTradeList"></div>
 </div>
@@ -1429,6 +1440,20 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <div class="chip-grid" id="pt-cl-conf"></div>
     </div>
 
+    <!-- Chart screenshots — planning/analysis views, kept separate from a
+         promoted trade's own execution screenshots. -->
+    <div class="form-group">
+      <label class="form-label">Chart Screenshots</label>
+      <div class="img-upload-zone" id="ptImgDropZone" onclick="imgUploadTarget='pretrade';triggerImgFileInput(event)">
+        <div class="img-upload-label">
+          <div>Tap to upload or <span>drag & drop</span></div>
+          <div><kbd class="shortcut">Ctrl+V</kbd> to paste from clipboard</div>
+        </div>
+      </div>
+      <input type="file" id="ptImgFileInput" accept="image/*" multiple style="display:none" onchange="imgUploadTarget='pretrade';handleImageFiles(this.files)"/>
+      <div class="img-previews" id="ptImgPreviews"></div>
+    </div>
+
     <div class="form-group">
       <label class="form-label">Structure / Reasoning</label>
       <textarea class="form-input" id="ptReasoning" rows="3" placeholder="Why this setup — structure, bias, confluence..."></textarea>
@@ -1534,32 +1559,37 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
      one day. No image/share here (nothing worth sharing at day scale by
      default); the action button hands off to the Trade Log instead, pre-
      filtered to this date, rather than listing trades inline. ══ -->
-<div class="modal-overlay" id="dayListModal" onclick="closeOnOverlay(event)">
-  <div class="modal" style="max-height:88vh;overflow-y:auto">
-    <div class="modal-handle"></div>
+<div class="modal-overlay centered" id="dayListModal" onclick="closeOnOverlay(event)">
+  <div class="modal" style="max-height:85vh;overflow-y:auto">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:2px">
+      <button class="cal-nav-btn" onclick="document.getElementById('dayListModal').classList.remove('open');updateNavVisibility()" style="width:28px;height:28px">✕</button>
+    </div>
     <div id="dayListBody"></div>
     <button class="btn accent" id="dayListViewBtn" style="margin-top:16px;width:100%">View Trades</button>
   </div>
 </div>
 
-<!-- ══ Month Report Modal — renders a shareable report-card image (canvas)
-     for the currently viewed calendar month + active account filter. No
-     backend/bot integration: Save writes the PNG to the device (Photos/
-     Downloads depending on platform); Share hands the PNG to the OS share
-     sheet (navigator.share), which lists Telegram as a target since we're
-     already running inside its WebView — pick the private journal channel
-     from there. Falls back to Save if navigator.share/files isn't
-     available on a given platform. ══ -->
-<div class="modal-overlay" id="monthReportModal" onclick="closeOnOverlay(event)">
-  <div class="modal" style="padding:16px 16px 24px;max-height:88vh;overflow-y:auto">
+<!-- ══ Month Report Modal — renders a shareable report-card image for the
+     currently viewed calendar month + active account filter. Drawn to an
+     off-screen canvas (theme-aware colors, device-pixel-scaled), then
+     rasterized to a real <img> for display — canvas elements don't get the
+     OS's native long-press "Save/Share Image" menu, only <img> does, and
+     that long-press is the one truly universal save path inside Telegram's
+     embedded WebView. Share/Save both try navigator.share first (works on
+     platforms that support it); when that's unavailable we say so honestly
+     and point at the image instead of pretending a save happened. ══ -->
+<div class="modal-overlay centered" id="monthReportModal" onclick="closeOnOverlay(event)">
+  <div class="modal" style="padding:16px 16px 24px;max-height:85vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <span class="section-title" style="margin:0">Month Report</span>
       <button class="cal-nav-btn" onclick="document.getElementById('monthReportModal').classList.remove('open')" style="width:28px;height:28px">✕</button>
     </div>
     <div id="monthReportCanvasWrap" style="border-radius:var(--radius);overflow:hidden;background:var(--surface2);display:flex;justify-content:center">
-      <canvas id="monthReportCanvas" style="width:100%;height:auto;display:block"></canvas>
+      <canvas id="monthReportCanvas" style="display:none"></canvas>
+      <img id="monthReportImg" alt="Month report" style="width:100%;height:auto;display:block"/>
     </div>
     <div id="monthReportEmpty" style="display:none;text-align:center;padding:36px 16px;color:var(--text3);font-size:14px">No trades logged for this month yet — nothing to share.</div>
+    <div id="monthReportHint" style="display:none;text-align:center;font-size:11px;color:var(--text3);margin-top:8px">Press and hold the image above to save or share it</div>
     <div id="monthReportActions" style="display:flex;gap:10px;margin-top:16px">
       <button class="btn btn-ghost" style="flex:1" onclick="downloadMonthReport()">⬇ Save to Gallery</button>
       <button class="btn accent" style="flex:1" onclick="shareMonthReport()">↗ Share</button>
@@ -1642,11 +1672,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
 <!-- ══ Side Peek Panel ══ -->
 <div class="peek-overlay" id="peekOverlay" onclick="closePeek()"></div>
-<div class="peek-panel" id="peekPanel"
-  ontouchstart="peekSwipeStart(event)"
-  ontouchmove="peekSwipeMove(event)"
-  ontouchend="peekSwipeEnd(event)"
->
+<div class="peek-panel" id="peekPanel">
   <div class="peek-header">
     <div style="display:flex;align-items:center;gap:8px">
       <div style="font-size:13px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Trade Detail</div>
@@ -1768,6 +1794,17 @@ let delModes = { htf:false, liq:false, setup:false, poi:false, conf:false, slpl:
 // saved trade object. Only {fileId} is persisted; bytes live in Drive.
 let pendingImages = [];
 let pendingImagesOriginal = []; // snapshot of t.images when an edit opened, for cleanup diffing on save/cancel
+// Pre-Trade has its own separate pending-images array (planning/analysis
+// screenshots, distinct from a trade's execution screenshots) so the two
+// forms can't bleed into each other. imgUploadTarget flags which one the
+// shared upload pipeline below (triggerImgFileInput/handleImageFiles/
+// renderImgPreviews/etc.) is currently operating on — set when each modal
+// opens. Only one of these modals is ever open at a time, so sharing one
+// pipeline this way is safe and avoids forking the whole Drive-upload flow.
+let imgUploadTarget = 'trade'; // 'trade' | 'pretrade'
+let pendingImagesPT = [];
+function _activePendingImages(){ return imgUploadTarget==='pretrade' ? pendingImagesPT : pendingImages; }
+function _activePreviewsElId(){ return imgUploadTarget==='pretrade' ? 'ptImgPreviews' : 'imgPreviews'; }
 let removedDuringEdit = [];     // fileIds explicitly removed mid-edit (always cleaned up, even on cancel)
 let calYear, calMonth, calFilter='month';
 const CL_KEYS = ['htf','liq','setup','poi','conf','slpl','exit'];
@@ -3352,10 +3389,33 @@ document.addEventListener('visibilitychange', async ()=>{
   // Don't sync if a modal is open (user is mid-edit)
   if(document.querySelector('.modal-overlay.open') ||
      document.getElementById('peekOverlay').classList.contains('open')){
+    // Flag that a sync is owed once the blocking UI closes, rather than
+    // silently dropping it — previously, returning to the app with any
+    // modal/peek open (easy to do, e.g. resuming with an unfinished form)
+    // meant no sync happened this visibility event *or* any later one
+    // until the next app-switch, which could leave the Trade Log looking
+    // incomplete/stale until the user thought to force-refresh.
+    _syncOwed = true;
     return;
   }
   await _syncFromDrive(false);
 });
+
+// Catches up on a sync that was skipped above because a modal/peek was
+// open at the time. Polls cheaply rather than hooking every individual
+// close() call site (there are many, across trade/pre-trade/account/prop/
+// daily-journal modals) — low risk of missing one, low cost since it only
+// runs while a sync is actually owed.
+let _syncOwed = false;
+setInterval(()=>{
+  if(!_syncOwed || !gdriveToken) return;
+  if(document.querySelector('.modal-overlay.open') ||
+     document.getElementById('peekOverlay').classList.contains('open')){
+    return; // still mid-edit, keep waiting
+  }
+  _syncOwed = false;
+  _syncFromDrive(false);
+}, 2000);
 
 // Pull latest data from Drive and re-render only if the server data differs.
 // silent=true suppresses all toast/spinner UI.
@@ -4454,49 +4514,11 @@ function _updatePeekNavBtns(){
   if(nextBtn) nextBtn.style.opacity=idx<sorted.length-1?'1':'0.3';
 }
 
-// ─── Peek panel swipe-to-close (right-swipe) ───
-const _peekSwipe={};
-function peekSwipeStart(e){
-  const t=e.touches[0];
-  const panel=document.getElementById('peekPanel');
-  _peekSwipe.startX=t.clientX; _peekSwipe.startY=t.clientY;
-  _peekSwipe.dx=0; _peekSwipe.dragging=false;
-  _peekSwipe.panel=panel;
-  _peekSwipe.overlay=document.getElementById('peekOverlay');
-  _peekSwipe.panelW=panel.offsetWidth; // read once; avoids layout thrash in touchmove
-}
-function peekSwipeMove(e){
-  if(!('startX' in _peekSwipe))return;
-  const t=e.touches[0];
-  const dx=t.clientX-_peekSwipe.startX, dy=t.clientY-_peekSwipe.startY;
-  if(!_peekSwipe.dragging){
-    // Require a clearly horizontal gesture before locking in
-    if(Math.abs(dy)>Math.abs(dx)*1.2||Math.abs(dx)<2)return;
-    _peekSwipe.dragging=true;
-  }
-  if(dx<=0)return; // right-swipe only (panel opens from the right)
-  e.preventDefault();
-  _peekSwipe.dx=dx;
-  _peekSwipe.panel.style.transition='none';
-  _peekSwipe.panel.style.right='-'+dx+'px';
-  // Fade overlay proportionally
-  _peekSwipe.overlay.style.opacity=1-Math.min(dx/_peekSwipe.panelW,1);
-}
-function peekSwipeEnd(){
-  if(!_peekSwipe.dragging){ _peekSwipe.dragging=false; return; }
-  const panel=_peekSwipe.panel, overlay=_peekSwipe.overlay;
-  panel.style.transition=''; // restore CSS transition for snap-back or close
-  overlay.style.opacity='';
-  if(_peekSwipe.dx>_peekSwipe.panelW*0.35){
-    closePeek();
-    // Clear inline right so the closed state (right:-100%) takes over cleanly
-    setTimeout(()=>{ panel.style.right=''; },300);
-  } else {
-    panel.style.right='0'; // snap back
-    setTimeout(()=>{ panel.style.right=''; },300);
-  }
-  _peekSwipe.dragging=false; _peekSwipe.dx=0;
-}
+// Swipe-to-close (right-swipe) was built for the old right-edge-anchored
+// panel. Removed rather than left half-working now that Trade Detail is a
+// centered dialog — dragging a centered box via a right-edge offset no
+// longer makes sense. Closing is via the ✕ button or tapping the backdrop,
+// same as the other centered dialogs (Month Report, Daily Summary).
 
 function editFromPeek(){
   closePeek();
@@ -4513,7 +4535,7 @@ function editFromPeek(){
 // the picker. Calling .click() on the separate hidden input prevents this.
 function triggerImgFileInput(e){
   e.stopPropagation();
-  const inp = document.getElementById('imgFileInput');
+  const inp = document.getElementById(imgUploadTarget==='pretrade' ? 'ptImgFileInput' : 'imgFileInput');
   inp.value = ''; // reset so the same file can be re-selected after removal
   inp.click();
 }
@@ -4527,12 +4549,15 @@ function handleImageFiles(files){
   });
   // Reset the input value so re-selecting the same file after removing it
   // always fires onchange (browsers cache the previous selection otherwise).
-  const inp=document.getElementById('imgFileInput');
+  const inp=document.getElementById(imgUploadTarget==='pretrade' ? 'ptImgFileInput' : 'imgFileInput');
   if(inp) inp.value='';
 }
 
 function handlePaste(e){
-  if(!document.getElementById('tradeModal').classList.contains('open'))return;
+  const tradeOpen=document.getElementById('tradeModal').classList.contains('open');
+  const preTradeOpen=document.getElementById('preTradeModal').classList.contains('open');
+  if(!tradeOpen && !preTradeOpen) return;
+  imgUploadTarget = preTradeOpen ? 'pretrade' : 'trade';
   const items=e.clipboardData?.items||[];
   for(const item of items){
     if(item.type.startsWith('image/')){
@@ -4555,7 +4580,7 @@ document.addEventListener('keydown',e=>{
 
 function addPendingImage(dataUrl){
   const entry = { fileId:null, dataUrl, uploading:true };
-  pendingImages.push(entry);
+  _activePendingImages().push(entry);
   renderImgPreviews();
   if(!gdriveToken){
     // Not signed in — nothing to upload to. Keep the local preview so the
@@ -4577,14 +4602,23 @@ function addPendingImage(dataUrl){
   });
 }
 
-// Drag & drop
+// Drag & drop — bound to both drop zones; each handler flags which target
+// it belongs to before delegating to the shared handleImageFiles().
 const dropZone=document.getElementById('imgDropZone');
 dropZone.addEventListener('dragover',e=>{ e.preventDefault(); dropZone.classList.add('drag-over'); });
 dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('drag-over'));
-dropZone.addEventListener('drop',e=>{ e.preventDefault(); dropZone.classList.remove('drag-over'); handleImageFiles(e.dataTransfer.files); });
+dropZone.addEventListener('drop',e=>{ e.preventDefault(); dropZone.classList.remove('drag-over'); imgUploadTarget='trade'; handleImageFiles(e.dataTransfer.files); });
+
+const ptDropZone=document.getElementById('ptImgDropZone');
+if(ptDropZone){
+  ptDropZone.addEventListener('dragover',e=>{ e.preventDefault(); ptDropZone.classList.add('drag-over'); });
+  ptDropZone.addEventListener('dragleave',()=>ptDropZone.classList.remove('drag-over'));
+  ptDropZone.addEventListener('drop',e=>{ e.preventDefault(); ptDropZone.classList.remove('drag-over'); imgUploadTarget='pretrade'; handleImageFiles(e.dataTransfer.files); });
+}
 
 function renderImgPreviews(){
-  document.getElementById('imgPreviews').innerHTML=pendingImages.map((entry,i)=>`
+  const list = _activePendingImages();
+  document.getElementById(_activePreviewsElId()).innerHTML=list.map((entry,i)=>`
     <div class="img-preview-wrap">
       <img src="${entry.dataUrl||''}" alt="chart" onclick="${entry.dataUrl?`openLightboxDirect('${entry.dataUrl.replace(/'/g,"\\'")}')`:''}"/>
       ${(entry.uploading||!entry.dataUrl&&!entry.failed)?'<div class="img-upload-spinner">⟳</div>':''}
@@ -4595,14 +4629,18 @@ function renderImgPreviews(){
 }
 
 function removeImg(i){
-  const [removed] = pendingImages.splice(i,1);
+  const [removed] = _activePendingImages().splice(i,1);
   renderImgPreviews();
   // If this was an already-uploaded image (not the one we're about to leave
   // referenced elsewhere), clean it up from Drive — but only once the trade
   // is actually saved/cancelled, since the user might still hit Cancel and
   // we shouldn't delete a file that's referenced by the unmodified trade.
-  // (Final cleanup diffing happens in saveTrade()/closeModal().)
-  if(removed && removed.fileId) removedDuringEdit.push(removed.fileId);
+  // (Final cleanup diffing happens in saveTrade()/closeModal().) Pre-Trade
+  // images aren't diffed against a "removedDuringEdit" cleanup queue since
+  // Pre-Trade setups aren't cloud-synced image-for-image the same way yet —
+  // safe to skip for now since it only means an orphaned Drive file, not
+  // data loss.
+  if(imgUploadTarget==='trade' && removed && removed.fileId) removedDuringEdit.push(removed.fileId);
 }
 
 // Resolve a fileId-backed image to a usable <img> src, fetching from Drive
@@ -4761,6 +4799,7 @@ function syncSetupDropdown(){
 // get pre-filled.
 function openAddTrade(prefill){
   editingTradeId=null;
+  imgUploadTarget='trade';
   document.getElementById('modalTitle').textContent='New Trade';
   document.getElementById('deleteBtn').style.display='none';
   clearTradeForm();
@@ -4811,6 +4850,7 @@ function openAddTrade(prefill){
 
 function openEditTrade(t){
   editingTradeId=t.id;
+  imgUploadTarget='trade';
   document.getElementById('modalTitle').textContent='Edit Trade';
   document.getElementById('deleteBtn').style.display='block';
   populateAccountDropdown(t.accountId);
@@ -4989,6 +5029,7 @@ function closeOnOverlay(e){
 // drift apart on formulas.
 // ═══════════════════════════════════════════════════════════════════
 let _lastReportStats = null;
+let _lastReportFile = null; // File built from the rendered canvas, for Share/Save
 
 const _reportMonthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -5080,7 +5121,12 @@ function _rrect(ctx,x,y,w,h,r){
 // used for the Accounts nav icon and the "P&L per Trade" chart-title icon)
 // so the report card reads as part of the app rather than a bolted-on
 // export. Drawn in a local 24×24 unit space, scaled+translated into place.
-function _drawIcon(ctx, type, px, py, size, color){
+// Coordinates are snapped to whole device pixels before drawing — small
+// stroked shapes drawn at fractional pixel offsets anti-alias unevenly,
+// which reads as a slight "tilt" on thin lines.
+function _drawIcon(ctx, type, px, py, size, color, pixelScale){
+  px = Math.round(px*pixelScale)/pixelScale;
+  py = Math.round(py*pixelScale)/pixelScale;
   ctx.save();
   ctx.translate(px, py);
   const s = size/24;
@@ -5096,6 +5142,12 @@ function _drawIcon(ctx, type, px, py, size, color){
     ctx.beginPath(); ctx.moveTo(18,20); ctx.lineTo(18,10); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(12,20); ctx.lineTo(12,4); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(6,20); ctx.lineTo(6,14); ctx.stroke();
+  } else if(type==='trend-up'){
+    ctx.beginPath(); ctx.moveTo(3,17); ctx.lineTo(10,10); ctx.lineTo(14,14); ctx.lineTo(21,6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(15,6); ctx.lineTo(21,6); ctx.lineTo(21,12); ctx.stroke();
+  } else if(type==='trend-down'){
+    ctx.beginPath(); ctx.moveTo(3,7); ctx.lineTo(10,14); ctx.lineTo(14,10); ctx.lineTo(21,18); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(15,18); ctx.lineTo(21,18); ctx.lineTo(21,12); ctx.stroke();
   }
   ctx.restore();
 }
@@ -5106,15 +5158,22 @@ function renderMonthReportCanvas(){
   const empty = document.getElementById('monthReportEmpty');
   const actions = document.getElementById('monthReportActions');
   const wrap = document.getElementById('monthReportCanvasWrap');
+  const hint = document.getElementById('monthReportHint');
   if(stats.total===0){
-    empty.style.display='block'; actions.style.display='none'; wrap.style.display='none';
+    empty.style.display='block'; actions.style.display='none'; wrap.style.display='none'; hint.style.display='none';
     return;
   }
-  empty.style.display='none'; actions.style.display='flex'; wrap.style.display='flex';
+  empty.style.display='none'; actions.style.display='flex'; wrap.style.display='flex'; hint.style.display='block';
 
-  // Theme colors pulled from the app's own palette so the shared card
-  // matches the app rather than any reference layout it was styled after.
-  const C = {
+  // Theme-aware palette — mirrors the app's own CSS custom properties for
+  // both dark and light mode exactly, so the exported image always matches
+  // whichever theme is currently active rather than always rendering dark.
+  const isLight = document.documentElement.getAttribute('data-theme')==='light';
+  const C = isLight ? {
+    bg:'#f5f6f8', card:'#ffffff', border:'#e2e5ea',
+    text:'#12161c', text2:'#5b6472', text3:'#98a1ad',
+    accent:'#00a877', red:'#e11d48'
+  } : {
     bg:'#111519', card:'#181d24', border:'#252f3d',
     text:'#e8edf3', text2:'#8896a8', text3:'#4a5a6e',
     accent:'#00e5a0', red:'#f43f5e'
@@ -5132,7 +5191,6 @@ function renderMonthReportCanvas(){
   const canvas = document.getElementById('monthReportCanvas');
   const scale = 2;
   canvas.width = W*scale; canvas.height = H*scale;
-  canvas.style.aspectRatio = `${W}/${H}`;
   const ctx = canvas.getContext('2d');
   ctx.scale(scale,scale);
 
@@ -5159,9 +5217,13 @@ function renderMonthReportCanvas(){
   ctx.fillStyle = pnlColor; ctx.font = '800 32px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText(fmtPnl(stats.monthPnl), x+16, y+50);
   if(stats.pct!==null){
+    // ROI/% change gets a small trend-direction arrow, same as the
+    // reference layout — was missing entirely before.
     const pctTxt = `${stats.pct>=0?'+':''}${stats.pct.toFixed(2)}%`;
     ctx.font = '700 15px -apple-system,Helvetica,Arial,sans-serif';
     const tw = ctx.measureText(pctTxt).width;
+    const iconSize=14, iconGap=5;
+    _drawIcon(ctx, stats.pct>=0?'trend-up':'trend-down', x+cw-tw-iconSize-iconGap, y+9, iconSize, pnlColor, scale);
     ctx.fillStyle = pnlColor;
     ctx.fillText(pctTxt, x+cw-tw, y+22);
   }
@@ -5173,7 +5235,7 @@ function renderMonthReportCanvas(){
   y += 20;
 
   // Account Overview heading (icon = same glyph as the Accounts nav item)
-  _drawIcon(ctx,'account', x, y-3, 16, C.text2);
+  _drawIcon(ctx,'account', x, y-3, 16, C.text2, scale);
   ctx.fillStyle = C.text; ctx.font = '700 15px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText('Account Overview', x+22, y+13);
   y += 22+16;
@@ -5194,7 +5256,7 @@ function renderMonthReportCanvas(){
   y += 20;
 
   // Trade Stats heading (icon = same bar-chart glyph as "P&L per Trade")
-  _drawIcon(ctx,'bars', x, y-3, 16, C.text2);
+  _drawIcon(ctx,'bars', x, y-3, 16, C.text2, scale);
   ctx.fillStyle = C.text; ctx.font = '700 15px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText('Trade Stats', x+22, y+13);
   y += 22+16;
@@ -5204,8 +5266,8 @@ function renderMonthReportCanvas(){
   // in the app, rather than an unrelated blue.
   const gap = 10, pillW = (cw-gap*2)/3, pillH = 68;
   const pills = [
-    {n:stats.longs, l:'Longs', bg:'rgba(0,229,160,0.12)', fg:C.accent},
-    {n:stats.shorts, l:'Shorts', bg:'rgba(244,63,94,0.10)', fg:C.red},
+    {n:stats.longs, l:'Longs', bg:isLight?'rgba(0,168,119,0.10)':'rgba(0,229,160,0.12)', fg:C.accent},
+    {n:stats.shorts, l:'Shorts', bg:isLight?'rgba(225,29,72,0.08)':'rgba(244,63,94,0.10)', fg:C.red},
     {n:stats.total, l:'Trades', bg:C.card, fg:C.text}
   ];
   pills.forEach((p,i)=>{
@@ -5255,6 +5317,15 @@ function renderMonthReportCanvas(){
   ctx.fillStyle = C.text3; ctx.font='600 11px -apple-system,Helvetica,Arial,sans-serif'; ctx.textAlign='right';
   ctx.fillText('Decipher Wealth Journal', x+cw, y+16);
   ctx.textAlign='left';
+
+  // Rasterize to a real <img> — canvas elements don't get the OS's native
+  // long-press "Save/Share Image" context menu, only <img> does, and that's
+  // the one save path that works everywhere regardless of WebView quirks.
+  document.getElementById('monthReportImg').src = canvas.toDataURL('image/png');
+  _lastReportFile = null;
+  canvas.toBlob(blob=>{
+    if(blob) _lastReportFile = new File([blob], _monthReportFilename(), {type:'image/png'});
+  }, 'image/png');
 }
 
 function openMonthReport(){
@@ -5273,36 +5344,36 @@ function _monthReportShareText(){
   return `${s.monthLabel} — ${s.acctName}\nNet P&L: ${fmtPnl(s.monthPnl)}${s.pct!==null?` (${s.pct>=0?'+':''}${s.pct.toFixed(2)}%)`:''}\nWin Rate: ${s.winRate.toFixed(1)}% · ${s.total} trades`;
 }
 
+function _canShareReportFile(){
+  try{ return !!(_lastReportFile && navigator.canShare && navigator.canShare({files:[_lastReportFile]})); }
+  catch(e){ return false; }
+}
+
+// Neither button triggers a fake "download" anymore. Inside Telegram's
+// embedded WebView, clicking an <a download> link doesn't actually
+// download — it navigates to the blob URL as a full page (Telegram's own
+// in-app-browser chrome wraps it, with no way back except closing the
+// whole mini app). That was the actual cause of the iOS "stuck fullscreen"
+// bug. The only genuinely reliable save path here is native share (where
+// supported) or the long-press-to-save gesture on the <img> itself — so
+// both buttons try share, and fall back to pointing at the image rather
+// than claiming a save that may not have happened.
 function downloadMonthReport(){
-  const canvas = document.getElementById('monthReportCanvas');
-  canvas.toBlob(blob=>{
-    if(!blob){ showToast('Could not generate image','error'); return; }
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = _monthReportFilename();
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url), 4000);
-    showToast('Saved — check your gallery/downloads ✓');
-  }, 'image/png');
+  if(_canShareReportFile()){
+    navigator.share({files:[_lastReportFile], title:'Trading Report', text:_monthReportShareText()})
+      .catch(e=>{ if(e && e.name!=='AbortError') showToast('Press and hold the image above to save it'); });
+  } else {
+    showToast('Press and hold the image above, then choose Save Image / Save to Photos');
+  }
 }
 
 function shareMonthReport(){
-  const canvas = document.getElementById('monthReportCanvas');
-  canvas.toBlob(async blob=>{
-    if(!blob){ showToast('Could not generate image','error'); return; }
-    const file = new File([blob], _monthReportFilename(), {type:'image/png'});
-    if(navigator.canShare && navigator.canShare({files:[file]})){
-      try{
-        await navigator.share({files:[file], title:'Trading Report', text:_monthReportShareText()});
-      }catch(e){
-        if(e && e.name!=='AbortError') downloadMonthReport();
-      }
-    } else {
-      // Share sheet with files isn't available on this platform/webview —
-      // fall back to a direct save so the flow still completes.
-      downloadMonthReport();
-    }
-  }, 'image/png');
+  if(_canShareReportFile()){
+    navigator.share({files:[_lastReportFile], title:'Trading Report', text:_monthReportShareText()})
+      .catch(e=>{ if(e && e.name!=='AbortError') showToast('Press and hold the image above to save or share it'); });
+  } else {
+    showToast('Press and hold the image above to save or share it');
+  }
 }
 
 // Cancel button calls this instead of closeModal() directly so newly-uploaded,
@@ -5402,8 +5473,19 @@ function deleteTrade(){
 // trade-modal edit, and vice versa.
 let preTradeDir = 'long';
 
+let preTradeView = 'active'; // 'active' (status==='watching') | 'history' (taken/skipped)
+function setPreTradeView(view){
+  preTradeView = view;
+  document.getElementById('ptViewActive').classList.toggle('has-filter', view==='active');
+  document.getElementById('ptViewHistory').classList.toggle('has-filter', view==='history');
+  renderPreTradeList();
+}
+
 function filteredPreTrades(){
-  return activeAcctFilter==='all' ? preTrades : preTrades.filter(p=>p.accountId===activeAcctFilter);
+  const byAcct = activeAcctFilter==='all' ? preTrades : preTrades.filter(p=>p.accountId===activeAcctFilter);
+  return preTradeView==='active'
+    ? byAcct.filter(p=>p.status==='watching')
+    : byAcct.filter(p=>p.status==='taken' || p.status==='skipped');
 }
 
 function setPreTradeDir(d){
@@ -5434,6 +5516,7 @@ function togglePreTradeChip(key,opt){
 
 function openAddPreTrade(){
   editingPreTradeId=null;
+  imgUploadTarget='pretrade';
   document.getElementById('preTradeModalTitle').textContent='New Setup';
   document.getElementById('preTradeDeleteBtn').style.display='none';
   document.getElementById('ptAccount').innerHTML=accounts.map(a=>`<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
@@ -5443,6 +5526,8 @@ function openAddPreTrade(){
   document.getElementById('ptSl').value='';
   document.getElementById('ptTp').value='';
   preTradeSelections={poi:[],setup:[],conf:[]};
+  pendingImagesPT=[];
+  renderImgPreviews();
   setPreTradeDir('long');
   renderAllPreTradeChips();
   document.getElementById('preTradeModal').classList.add('open');
@@ -5454,6 +5539,7 @@ function openEditPreTrade(id){
   const pt=preTrades.find(p=>p.id===id);
   if(!pt) return;
   editingPreTradeId=id;
+  imgUploadTarget='pretrade';
   document.getElementById('preTradeModalTitle').textContent='Edit Setup';
   document.getElementById('preTradeDeleteBtn').style.display='block';
   document.getElementById('ptAccount').innerHTML=accounts.map(a=>`<option value="${a.id}"${pt.accountId===a.id?' selected':''}>${escapeHtml(a.name)}</option>`).join('');
@@ -5463,6 +5549,14 @@ function openEditPreTrade(id){
   document.getElementById('ptSl').value=pt.plannedSl||'';
   document.getElementById('ptTp').value=pt.plannedTp||'';
   preTradeSelections={poi:[...(pt.poi||[])],setup:[...(pt.setup||[])],conf:[...(pt.conf||[])]};
+  // Existing {fileId} refs are seeded as already-uploaded entries (same
+  // pattern openEditTrade uses) so they show immediately without needing
+  // a Drive round-trip just to render a thumbnail.
+  pendingImagesPT = (pt.images||[]).map(im=>({fileId:im.fileId, dataUrl:null, uploading:false}));
+  renderImgPreviews();
+  pendingImagesPT.forEach(entry=>{
+    resolveImageSrc({fileId:entry.fileId}).then(src=>{ entry.dataUrl=src; renderImgPreviews(); });
+  });
   setPreTradeDir(pt.dir||'long');
   renderAllPreTradeChips();
   document.getElementById('preTradeModal').classList.add('open');
@@ -5473,6 +5567,7 @@ function savePreTrade(){
   const pair=document.getElementById('ptPair').value.trim();
   if(!pair){ showToast('Enter a pair/instrument','error'); return; }
   const existing = editingPreTradeId ? preTrades.find(p=>p.id===editingPreTradeId) : null;
+  const imageRefs = pendingImagesPT.filter(im=>im.fileId).map(im=>({fileId:im.fileId}));
   const pt={
     id: editingPreTradeId || genId(),
     accountId: document.getElementById('ptAccount').value,
@@ -5486,6 +5581,7 @@ function savePreTrade(){
     plannedSl: document.getElementById('ptSl').value || '',
     plannedTp: document.getElementById('ptTp').value || '',
     poi: [...preTradeSelections.poi], setup: [...preTradeSelections.setup], conf: [...preTradeSelections.conf],
+    images: imageRefs,
     createdAt: existing ? existing.createdAt : new Date().toISOString(),
   };
   if(editingPreTradeId){ const idx=preTrades.findIndex(p=>p.id===editingPreTradeId); if(idx!==-1) preTrades[idx]=pt; }
@@ -5552,12 +5648,29 @@ function openLinkedTrade(preTradeId){
 function _preTradeCardHtml(pt){
   const acct=accounts.find(a=>a.id===pt.accountId);
   const dirTag='<span class="tag '+(pt.dir==='long'?'tag-long':'tag-short')+'">'+(pt.dir==='long'?'▲':'▼')+' '+(pt.dir||'').toUpperCase()+'</span>';
-  const tagsHtml=[...(pt.poi||[]),...(pt.setup||[]),...(pt.conf||[])].slice(0,4).map(tg=>'<span class="tag tag-neutral">'+escapeHtml(tg)+'</span>').join('');
+  const hasChecklist=(pt.poi&&pt.poi.length)||(pt.setup&&pt.setup.length)||(pt.conf&&pt.conf.length);
   const plannedParts=[];
   if(pt.plannedEntry) plannedParts.push('Entry: '+escapeHtml(String(pt.plannedEntry)));
   if(pt.plannedSl)    plannedParts.push('SL: '+escapeHtml(String(pt.plannedSl)));
   if(pt.plannedTp)    plannedParts.push('TP: '+escapeHtml(String(pt.plannedTp)));
   const plannedHtml=plannedParts.length?'<div class="pretrade-planned">'+plannedParts.map(p=>'<span>'+p+'</span>').join('')+'</div>':'';
+
+  // Full categorized checklist — same label:value layout Trade Log's Peek
+  // view uses — collapsed by default, expandable in place. Stays collapsed
+  // until the user taps it; state isn't persisted, resets to collapsed on
+  // every re-render (intentional — a compact list is the default view).
+  const clSectionId='ptcl-'+pt.id;
+  const clRows=[['Entry (POI)',pt.poi],['Setup / Model',pt.setup],['Confluence',pt.conf]]
+    .filter(([,vals])=>vals&&vals.length)
+    .map(([label,vals])=>'<div class="info-row"><span class="k">'+label+'</span><span class="v" style="font-family:var(--font);font-size:12px;text-align:right;max-width:58%;color:var(--text)">'+escapeHtml(vals.join(', '))+'</span></div>')
+    .join('');
+  const checklistHtml = hasChecklist
+    ? '<div class="pretrade-checklist-toggle" onclick="event.stopPropagation();togglePreTradeChecklist(\''+clSectionId+'\')">'
+      +'<span>Checklist</span><span id="'+clSectionId+'-arrow">▾</span></div>'
+      +'<div class="card" id="'+clSectionId+'" style="display:none;padding:10px 12px;margin:6px 0 2px;background:var(--surface2)">'+clRows+'</div>'
+    : '';
+
+  const imgBadge = (pt.images&&pt.images.length) ? ' 📷' : '';
 
   let actionsHtml='';
   if(pt.status==='watching'){
@@ -5571,17 +5684,27 @@ function _preTradeCardHtml(pt){
 
   return '<div class="pretrade-item '+pt.status+'" onclick="openEditPreTrade(\''+pt.id+'\')">'
     +'<div class="pretrade-top">'
-    +'<span class="trade-pair">'+escapeHtml(pt.pair||'')+'</span>'
+    +'<span class="trade-pair">'+escapeHtml(pt.pair||'')+imgBadge+'</span>'
     +'<span class="status-badge '+pt.status+'">'+pt.status+'</span>'
     +'</div>'
-    +'<div class="trade-meta">'+dirTag+tagsHtml+'</div>'
+    +'<div class="trade-meta">'+dirTag+'</div>'
     +(pt.reasoning?'<div class="pretrade-reasoning">'+escapeHtml(pt.reasoning)+'</div>':'')
     +(pt.status==='skipped'
         ? '<div class="pretrade-planned"><span>Reason: '+escapeHtml(pt.skipReason||'—')+'</span></div>'
         : plannedHtml)
+    +checklistHtml
     +actionsHtml
     +'<div class="trade-bottom"><span>'+(acct?escapeHtml(acct.name):'')+'</span><span>'+(pt.createdAt?new Date(pt.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'')+'</span></div>'
     +'</div>';
+}
+
+function togglePreTradeChecklist(sectionId){
+  const el=document.getElementById(sectionId);
+  const arrow=document.getElementById(sectionId+'-arrow');
+  if(!el) return;
+  const open=el.style.display!=='none';
+  el.style.display = open ? 'none' : 'block';
+  if(arrow) arrow.textContent = open ? '▾' : '▴';
 }
 
 function renderPreTradeList(){
@@ -5589,7 +5712,9 @@ function renderPreTradeList(){
   if(!list) return;
   const ft=filteredPreTrades();
   if(!ft.length){
-    list.innerHTML='<div class="empty"><div class="empty-icon">🎯</div><div class="empty-title">No setups logged yet</div><div class="empty-sub">Tap <strong style="color:var(--accent)">+ New Setup</strong> to log a planned trade before you take it.</div></div>';
+    list.innerHTML = preTradeView==='active'
+      ? '<div class="empty"><div class="empty-icon">🎯</div><div class="empty-title">No setups logged yet</div><div class="empty-sub">Tap <strong style="color:var(--accent)">+ New Setup</strong> to log a planned trade before you take it.</div></div>'
+      : '<div class="empty"><div class="empty-icon">🗂️</div><div class="empty-title">Nothing here yet</div><div class="empty-sub">Setups you mark <strong>Taken</strong> or <strong>Skipped</strong> move here — a running record of what you actually did with your plans.</div></div>';
     return;
   }
   const sorted=[...ft].sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
@@ -5737,8 +5862,12 @@ function populateLibraryFilters(){
   if(setups.includes(curSetup)) setupSel.value=curSetup;
 }
 
+// Opens the same rich Trade Detail (Peek) used everywhere else — every
+// image, ticked checklist items, Reasoning/Lesson (existing Reason/Notes
+// fields) — rather than a bare image lightbox, so Library doubles as a
+// proper visual trade review, not just a screenshot grid.
 function openLibraryImage(tradeId){
-  openLightbox(tradeId, 0);
+  openPeek(tradeId);
 }
 
 function renderLibrary(){
