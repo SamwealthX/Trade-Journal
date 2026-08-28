@@ -405,13 +405,28 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .cal-cell.today{border-color:var(--accent)!important}
 .cal-cell.win-day{background:rgba(0,229,160,0.13);border-color:rgba(0,229,160,0.3)}
 .cal-cell.loss-day{background:rgba(244,63,94,0.13);border-color:rgba(244,63,94,0.28)}
-.cal-cell.no-trade{background:var(--surface2);border-color:var(--border);opacity:.6}
+.cal-cell.no-trade{background:var(--surface2);border-color:var(--border);opacity:.6;cursor:default;pointer-events:none}
 .cal-day-num{font-size:10px;font-weight:700;color:var(--text3)}
 .cal-day-pnl{font-size:10px;font-weight:800;font-family:var(--mono);letter-spacing:-.3px;line-height:1.2}
 .cal-day-pnl.pos{color:var(--green)}
 .cal-day-pnl.neg{color:var(--red)}
 .cal-day-count{font-size:9px;color:var(--text3);font-weight:600}
 .cal-dash{font-size:13px;color:var(--text3);text-align:center;line-height:1}
+/* ── Yearly Performance grid (Calendar tab, Year/All Time filters) ── */
+.yp-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -14px;padding:0 14px}
+.yp-grid{display:grid;grid-template-columns:50px repeat(13,72px);gap:6px;width:max-content}
+.yp-ycell{position:sticky;left:0;background:var(--surface);z-index:2;display:flex;align-items:center;font-weight:800;color:var(--text2);font-size:13px}
+.yp-mcell{border:1px solid var(--border);border-radius:10px;padding:8px 4px;text-align:center;min-height:50px;display:flex;flex-direction:column;justify-content:center;gap:2px;cursor:pointer;transition:transform .1s}
+.yp-mcell:active{transform:scale(.96)}
+.yp-mcell.yp-win{background:var(--accent-dim);border-color:var(--accent-glow)}
+.yp-mcell.yp-loss{background:var(--red-dim);border-color:rgba(244,63,94,0.28)}
+.yp-mcell.yp-empty{opacity:.4;cursor:default}
+.yp-mcell.yp-total{background:var(--surface2);border-color:var(--border2)}
+.yp-mcell.yp-label{border-color:transparent;background:none;min-height:auto;padding:0 4px 4px;font-size:11px;font-weight:700;color:var(--text3);cursor:default}
+.yp-pnl{font-size:12px;font-weight:800;font-family:var(--mono);letter-spacing:-.3px}
+.yp-mcell.yp-win .yp-pnl{color:var(--accent)}
+.yp-mcell.yp-loss .yp-pnl{color:var(--red)}
+.yp-count{font-size:9px;color:var(--text3);font-weight:600}
 /* Trade pip dots */
 .cal-pips{display:flex;gap:2px;flex-wrap:wrap;margin-top:2px;min-height:6px}
 .cal-pip{width:4px;height:4px;border-radius:50%;flex-shrink:0}
@@ -670,7 +685,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
         <div class="cal-month-label" id="calMonthLabel">—</div>
         <div class="cal-nav-btn" onclick="calGoToday()" id="calTodayBtn" title="Go to today" style="font-size:11px;font-weight:700;width:auto;padding:0 9px;color:var(--accent);border-color:rgba(0,229,160,0.3);display:none">Today</div>
       </div>
-      <div class="cal-nav-btn" onclick="calNav(1)">›</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="cal-nav-btn" onclick="openMonthReport()" title="Share month report" style="font-size:13px">↗</div>
+        <div class="cal-nav-btn" onclick="calNav(1)">›</div>
+      </div>
     </div>
     <div class="goal-row" id="goalRow">
       <div class="goal-row-top">
@@ -1512,13 +1530,40 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   </div>
 </div>
 
-<!-- ══ Day Trades List Modal ══ -->
+<!-- ══ Daily Summary Modal — same stat set as the Month Report, scoped to
+     one day. No image/share here (nothing worth sharing at day scale by
+     default); the action button hands off to the Trade Log instead, pre-
+     filtered to this date, rather than listing trades inline. ══ -->
 <div class="modal-overlay" id="dayListModal" onclick="closeOnOverlay(event)">
-  <div class="modal">
+  <div class="modal" style="max-height:88vh;overflow-y:auto">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="dayListTitle">Trades</div>
     <div id="dayListBody"></div>
-    <button class="btn btn-ghost" onclick="document.getElementById('dayListModal').classList.remove('open')" style="margin-top:14px">Close</button>
+    <button class="btn accent" id="dayListViewBtn" style="margin-top:16px;width:100%">View Trades</button>
+  </div>
+</div>
+
+<!-- ══ Month Report Modal — renders a shareable report-card image (canvas)
+     for the currently viewed calendar month + active account filter. No
+     backend/bot integration: Save writes the PNG to the device (Photos/
+     Downloads depending on platform); Share hands the PNG to the OS share
+     sheet (navigator.share), which lists Telegram as a target since we're
+     already running inside its WebView — pick the private journal channel
+     from there. Falls back to Save if navigator.share/files isn't
+     available on a given platform. ══ -->
+<div class="modal-overlay" id="monthReportModal" onclick="closeOnOverlay(event)">
+  <div class="modal" style="padding:16px 16px 24px;max-height:88vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span class="section-title" style="margin:0">Month Report</span>
+      <button class="cal-nav-btn" onclick="document.getElementById('monthReportModal').classList.remove('open')" style="width:28px;height:28px">✕</button>
+    </div>
+    <div id="monthReportCanvasWrap" style="border-radius:var(--radius);overflow:hidden;background:var(--surface2);display:flex;justify-content:center">
+      <canvas id="monthReportCanvas" style="width:100%;height:auto;display:block"></canvas>
+    </div>
+    <div id="monthReportEmpty" style="display:none;text-align:center;padding:36px 16px;color:var(--text3);font-size:14px">No trades logged for this month yet — nothing to share.</div>
+    <div id="monthReportActions" style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-ghost" style="flex:1" onclick="downloadMonthReport()">⬇ Save to Gallery</button>
+      <button class="btn accent" style="flex:1" onclick="shareMonthReport()">↗ Share</button>
+    </div>
   </div>
 </div>
 
@@ -4935,6 +4980,331 @@ function closeOnOverlay(e){
   else { e.currentTarget.classList.remove('open'); updateNavVisibility(); }
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// Period Reports — shared stat engine behind both the Month Report
+// (shareable canvas image) and the Daily Summary (in-modal HTML).
+// computePeriodStats() does the actual number-crunching for an
+// arbitrary inclusive date range; monthReportStats()/dayReportStats()
+// just supply the range. Keeping one engine means the two views can't
+// drift apart on formulas.
+// ═══════════════════════════════════════════════════════════════════
+let _lastReportStats = null;
+
+const _reportMonthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function computePeriodStats(fromDate, toDate, acctId){
+  const scoped = acctId==='all' ? trades : trades.filter(t=>t.accountId===acctId);
+  const chrono = [...scoped].sort((a,b)=>{
+    const da=(a.date||'')+(a.time?'T'+a.time:''), db=(b.date||'')+(b.time?'T'+b.time:'');
+    return da.localeCompare(db);
+  });
+  const periodTrades = chrono.filter(t=>t.date && t.date>=fromDate && t.date<=toDate);
+  const beforeTrades = chrono.filter(t=>t.date && t.date<fromDate);
+
+  const startBase = acctId==='all'
+    ? accounts.reduce((s,a)=>s+(a.balance||0),0)
+    : (accounts.find(a=>a.id===acctId)?.balance || 0);
+  const startBalance = startBase + beforeTrades.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
+  const periodPnl = periodTrades.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
+  const endBalance = startBalance + periodPnl;
+  const pct = startBalance>0 ? (periodPnl/startBalance*100) : null;
+
+  const longs = periodTrades.filter(t=>t.dir==='long').length;
+  const shorts = periodTrades.filter(t=>t.dir==='short').length;
+  const wins = periodTrades.filter(t=>parseFloat(t.pnl)>0);
+  const losses = periodTrades.filter(t=>parseFloat(t.pnl)<0);
+  const winRate = periodTrades.length ? (wins.length/periodTrades.length*100) : 0;
+  const gp = wins.reduce((s,t)=>s+parseFloat(t.pnl),0);
+  const gl = Math.abs(losses.reduce((s,t)=>s+parseFloat(t.pnl),0));
+  const pf = gl>0 ? (gp/gl) : (wins.length ? Infinity : null);
+  const avgWin = wins.length ? gp/wins.length : 0;
+  const avgLoss = losses.length ? gl/losses.length : 0;
+  const exp = periodTrades.length ? ((winRate/100*avgWin)-((1-winRate/100)*avgLoss)) : 0;
+
+  const pnls = periodTrades.map(t=>parseFloat(t.pnl)||0);
+  const bestTrade = pnls.length ? Math.max(...pnls) : null;
+  const worstTrade = pnls.length ? Math.min(...pnls) : null;
+
+  // Avg Hold Time depends on Close Time being logged, which is optional —
+  // hasHoldData tells the renderer whether it's safe to show the row at
+  // all, rather than showing a bare "—" for something that just wasn't
+  // entered.
+  const durList = periodTrades.map(t=>tradeDurationMinutes(t)).filter(m=>m!==null);
+  const hasHoldData = durList.length>0;
+  const avgHold = hasHoldData ? durList.reduce((s,m)=>s+m,0)/durList.length : null;
+
+  // Max balance drawdown within the period, running from the period's own
+  // start balance (not the all-time equity curve — this card is scoped
+  // to the range being shown).
+  let running=startBalance, peak=startBalance, maxDD=0;
+  periodTrades.forEach(t=>{
+    running += parseFloat(t.pnl)||0;
+    if(running>peak) peak=running;
+    const dd = peak-running;
+    if(dd>maxDD) maxDD=dd;
+  });
+
+  return {
+    acctName: acctId==='all' ? 'All Accounts' : (accounts.find(a=>a.id===acctId)?.name || ''),
+    startBalance, endBalance, periodPnl, pct,
+    longs, shorts, total: periodTrades.length,
+    winsCount: wins.length, lossesCount: losses.length,
+    winRate, pf, exp, bestTrade, worstTrade, avgHold, hasHoldData, maxDD
+  };
+}
+
+function monthReportStats(){
+  const monthKey = `${calYear}-${String(calMonth+1).padStart(2,'0')}`;
+  const core = computePeriodStats(monthKey+'-01', monthKey+'-31', activeAcctFilter);
+  return { monthKey, monthLabel: `${_reportMonthNames[calMonth]} ${calYear}`, monthPnl: core.periodPnl, ...core };
+}
+
+function dayReportStats(dateStr, acctId){
+  const core = computePeriodStats(dateStr, dateStr, acctId);
+  const d = parseLocalDate(dateStr);
+  const dateLabel = d ? d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}) : dateStr;
+  return { dateStr, dateLabel, dayPnl: core.periodPnl, ...core };
+}
+
+function _rrect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+// Small stroke-based glyphs matching the app's own icon set (same paths
+// used for the Accounts nav icon and the "P&L per Trade" chart-title icon)
+// so the report card reads as part of the app rather than a bolted-on
+// export. Drawn in a local 24×24 unit space, scaled+translated into place.
+function _drawIcon(ctx, type, px, py, size, color){
+  ctx.save();
+  ctx.translate(px, py);
+  const s = size/24;
+  ctx.scale(s, s);
+  ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.lineCap='round'; ctx.lineJoin='round';
+  if(type==='account'){
+    _rrect(ctx,2,3,20,14,2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(8,21); ctx.lineTo(16,21); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(12,17); ctx.lineTo(12,21); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(7,8); ctx.lineTo(17,8); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(7,12); ctx.lineTo(13,12); ctx.stroke();
+  } else if(type==='bars'){
+    ctx.beginPath(); ctx.moveTo(18,20); ctx.lineTo(18,10); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(12,20); ctx.lineTo(12,4); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(6,20); ctx.lineTo(6,14); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function renderMonthReportCanvas(){
+  const stats = monthReportStats();
+  _lastReportStats = stats;
+  const empty = document.getElementById('monthReportEmpty');
+  const actions = document.getElementById('monthReportActions');
+  const wrap = document.getElementById('monthReportCanvasWrap');
+  if(stats.total===0){
+    empty.style.display='block'; actions.style.display='none'; wrap.style.display='none';
+    return;
+  }
+  empty.style.display='none'; actions.style.display='flex'; wrap.style.display='flex';
+
+  // Theme colors pulled from the app's own palette so the shared card
+  // matches the app rather than any reference layout it was styled after.
+  const C = {
+    bg:'#111519', card:'#181d24', border:'#252f3d',
+    text:'#e8edf3', text2:'#8896a8', text3:'#4a5a6e',
+    accent:'#00e5a0', red:'#f43f5e'
+  };
+  const W = 680, PAD = 30;
+  // Avg Hold Time only appears if at least one trade that period has a
+  // logged Close Time — otherwise the row is omitted entirely rather
+  // than showing a bare "—" on something the user never entered.
+  const rows = ['Best Trade','Worst Trade'];
+  if(stats.hasHoldData) rows.push('Avg Hold Time');
+  rows.push('Max Balance Drawdown','Win Rate','Profit Factor','Expectancy');
+  const ROW_H = 42;
+  const H = PAD + 34 + 20 + 20 + 64 + 26 + 20 + 20 + 22 + 16 + 58 + 22 + 20 + 22 + 16 + 68 + 10 + rows.length*ROW_H + 16 + 28 + PAD;
+
+  const canvas = document.getElementById('monthReportCanvas');
+  const scale = 2;
+  canvas.width = W*scale; canvas.height = H*scale;
+  canvas.style.aspectRatio = `${W}/${H}`;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(scale,scale);
+
+  // Background
+  ctx.fillStyle = C.bg; ctx.fillRect(0,0,W,H);
+
+  let y = PAD;
+  const x = PAD, cw = W-PAD*2;
+  ctx.textBaseline = 'alphabetic';
+
+  // Header
+  ctx.fillStyle = C.text; ctx.font = '700 24px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText(stats.monthLabel, x, y+24);
+  ctx.fillStyle = C.text2; ctx.font = '600 13px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText(stats.acctName, x, y+44);
+  y += 34+20;
+
+  // Net P&L block with accent bar
+  const pnlColor = stats.monthPnl>=0 ? C.accent : C.red;
+  ctx.fillStyle = pnlColor;
+  ctx.fillRect(x, y, 3, 58);
+  ctx.fillStyle = C.text2; ctx.font = '700 11px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText('NET P&L', x+16, y+14);
+  ctx.fillStyle = pnlColor; ctx.font = '800 32px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText(fmtPnl(stats.monthPnl), x+16, y+50);
+  if(stats.pct!==null){
+    const pctTxt = `${stats.pct>=0?'+':''}${stats.pct.toFixed(2)}%`;
+    ctx.font = '700 15px -apple-system,Helvetica,Arial,sans-serif';
+    const tw = ctx.measureText(pctTxt).width;
+    ctx.fillStyle = pnlColor;
+    ctx.fillText(pctTxt, x+cw-tw, y+22);
+  }
+  y += 58+26;
+
+  // Divider
+  ctx.strokeStyle = C.border; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+cw,y); ctx.stroke();
+  y += 20;
+
+  // Account Overview heading (icon = same glyph as the Accounts nav item)
+  _drawIcon(ctx,'account', x, y-3, 16, C.text2);
+  ctx.fillStyle = C.text; ctx.font = '700 15px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText('Account Overview', x+22, y+13);
+  y += 22+16;
+
+  // Start / End balance, 2-col
+  const colW = cw/2;
+  ctx.fillStyle = C.text2; ctx.font = '600 12px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText('Start Balance', x, y+13);
+  ctx.fillText('End Balance', x+colW, y+13);
+  ctx.fillStyle = C.text; ctx.font = '700 17px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText('$'+stats.startBalance.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}), x, y+38);
+  ctx.fillText('$'+stats.endBalance.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}), x+colW, y+38);
+  y += 58+22;
+
+  // Divider
+  ctx.strokeStyle = C.border;
+  ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+cw,y); ctx.stroke();
+  y += 20;
+
+  // Trade Stats heading (icon = same bar-chart glyph as "P&L per Trade")
+  _drawIcon(ctx,'bars', x, y-3, 16, C.text2);
+  ctx.fillStyle = C.text; ctx.font = '700 15px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.fillText('Trade Stats', x+22, y+13);
+  y += 22+16;
+
+  // Pills: Longs / Shorts / Trades — Longs uses the app's own accent
+  // (teal), matching the Direction toggle's Long/Short colors elsewhere
+  // in the app, rather than an unrelated blue.
+  const gap = 10, pillW = (cw-gap*2)/3, pillH = 68;
+  const pills = [
+    {n:stats.longs, l:'Longs', bg:'rgba(0,229,160,0.12)', fg:C.accent},
+    {n:stats.shorts, l:'Shorts', bg:'rgba(244,63,94,0.10)', fg:C.red},
+    {n:stats.total, l:'Trades', bg:C.card, fg:C.text}
+  ];
+  pills.forEach((p,i)=>{
+    const px = x+i*(pillW+gap);
+    ctx.fillStyle = p.bg; _rrect(ctx,px,y,pillW,pillH,12); ctx.fill();
+    ctx.fillStyle = p.fg; ctx.font='800 22px -apple-system,Helvetica,Arial,sans-serif'; ctx.textAlign='center';
+    ctx.fillText(String(p.n), px+pillW/2, y+32);
+    ctx.fillStyle = C.text2; ctx.font='600 12px -apple-system,Helvetica,Arial,sans-serif';
+    ctx.fillText(p.l, px+pillW/2, y+52);
+    ctx.textAlign='left';
+  });
+  y += pillH+10;
+
+  // Stat rows
+  const fmtSigned = v => v===null ? '—' : fmtPnl(v);
+  const rowValsMap = {
+    'Best Trade': [fmtSigned(stats.bestTrade), stats.bestTrade>=0 ? C.accent : C.red],
+    'Worst Trade': [fmtSigned(stats.worstTrade), stats.worstTrade!==null && stats.worstTrade<0 ? C.red : C.accent],
+    'Avg Hold Time': [stats.avgHold===null?'—':minutesToDuration(stats.avgHold), C.text],
+    'Max Balance Drawdown': [stats.maxDD>0?fmtPnl(-stats.maxDD):'—', stats.maxDD>0?C.red:C.text],
+    'Win Rate': [stats.winRate.toFixed(1)+'%', stats.winRate>=50?C.accent:C.red],
+    'Profit Factor': [stats.pf===null?'—':stats.pf===Infinity?'∞':stats.pf.toFixed(2), stats.pf===null?C.text:(stats.pf===Infinity||stats.pf>=1)?C.accent:C.red],
+    'Expectancy': [fmtPnl(stats.exp), stats.exp>=0?C.accent:C.red]
+  };
+  rows.forEach((label,i)=>{
+    const ry = y+i*ROW_H;
+    if(i>0){ ctx.strokeStyle=C.border; ctx.beginPath(); ctx.moveTo(x,ry); ctx.lineTo(x+cw,ry); ctx.stroke(); }
+    ctx.fillStyle = C.text2; ctx.font='600 14px -apple-system,Helvetica,Arial,sans-serif';
+    ctx.fillText(label, x, ry+26);
+    const [val,color] = rowValsMap[label];
+    ctx.fillStyle = color; ctx.font='700 15px -apple-system,Helvetica,Arial,sans-serif'; ctx.textAlign='right';
+    ctx.fillText(val, x+cw, ry+26);
+    ctx.textAlign='left';
+    // Win Rate gets a small "9W / 4L" breakdown just left of the percentage
+    if(label==='Win Rate'){
+      const pctW = ctx.measureText(val).width;
+      const sub = `${stats.winsCount}W / ${stats.lossesCount}L`;
+      ctx.font='600 11px -apple-system,Helvetica,Arial,sans-serif';
+      ctx.fillStyle = C.text3; ctx.textAlign='right';
+      ctx.fillText(sub, x+cw-pctW-10, ry+26);
+      ctx.textAlign='left';
+    }
+  });
+  y += rows.length*ROW_H+16;
+
+  // Footer branding / watermark
+  ctx.fillStyle = C.text3; ctx.font='600 11px -apple-system,Helvetica,Arial,sans-serif'; ctx.textAlign='right';
+  ctx.fillText('Decipher Wealth Journal', x+cw, y+16);
+  ctx.textAlign='left';
+}
+
+function openMonthReport(){
+  document.getElementById('monthReportModal').classList.add('open');
+  renderMonthReportCanvas();
+}
+
+function _monthReportFilename(){
+  const s = _lastReportStats;
+  const safeAcct = (s?.acctName||'account').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+  return `journal-report-${s?.monthKey||'month'}-${safeAcct}.png`;
+}
+
+function _monthReportShareText(){
+  const s = _lastReportStats; if(!s) return '';
+  return `${s.monthLabel} — ${s.acctName}\nNet P&L: ${fmtPnl(s.monthPnl)}${s.pct!==null?` (${s.pct>=0?'+':''}${s.pct.toFixed(2)}%)`:''}\nWin Rate: ${s.winRate.toFixed(1)}% · ${s.total} trades`;
+}
+
+function downloadMonthReport(){
+  const canvas = document.getElementById('monthReportCanvas');
+  canvas.toBlob(blob=>{
+    if(!blob){ showToast('Could not generate image','error'); return; }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = _monthReportFilename();
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    showToast('Saved — check your gallery/downloads ✓');
+  }, 'image/png');
+}
+
+function shareMonthReport(){
+  const canvas = document.getElementById('monthReportCanvas');
+  canvas.toBlob(async blob=>{
+    if(!blob){ showToast('Could not generate image','error'); return; }
+    const file = new File([blob], _monthReportFilename(), {type:'image/png'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      try{
+        await navigator.share({files:[file], title:'Trading Report', text:_monthReportShareText()});
+      }catch(e){
+        if(e && e.name!=='AbortError') downloadMonthReport();
+      }
+    } else {
+      // Share sheet with files isn't available on this platform/webview —
+      // fall back to a direct save so the flow still completes.
+      downloadMonthReport();
+    }
+  }, 'image/png');
+}
+
 // Cancel button calls this instead of closeModal() directly so newly-uploaded,
 // never-saved images don't linger in Drive forever.
 function cancelModal(){
@@ -5578,6 +5948,68 @@ function parseLocalDate(str){
   return new Date(y,m-1,d);
 }
 
+// Multi-year month-by-month grid, shown above the existing Daily Breakdown
+// list on the Year/All Time filters. 'year' shows a single row (the current
+// year); 'all' shows one row per year that has trades, newest first, plus a
+// Total column. Uses the same account filter as the rest of the Calendar
+// tab. Cells with no trades render inert (no click handler).
+function yearlyPerfGrid(f){
+  if(f!=='year' && f!=='all') return '';
+  const scoped = filteredTrades().filter(t=>t.date);
+  const map = {}; // year -> [ {pnl,count} x12 ]
+  scoped.forEach(t=>{
+    const d = parseLocalDate(t.date); if(!d) return;
+    const y = d.getFullYear(), m = d.getMonth();
+    if(!map[y]) map[y] = Array.from({length:12},()=>({pnl:0,count:0}));
+    map[y][m].pnl += (parseFloat(t.pnl)||0);
+    map[y][m].count++;
+  });
+  const nowYear = new Date().getFullYear();
+  let years;
+  if(f==='year'){
+    years=[nowYear];
+  } else {
+    years = Object.keys(map).map(Number).sort((a,b)=>b-a);
+    if(!years.length) years=[nowYear];
+  }
+  const monthAbbr=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  const headerCells = `<div class="yp-mcell yp-ycell yp-label"></div>` +
+    monthAbbr.map(m=>`<div class="yp-mcell yp-label">${m}</div>`).join('') +
+    `<div class="yp-mcell yp-label">Total</div>`;
+
+  const bodyCells = years.map(y=>{
+    const monthsArr = map[y] || Array.from({length:12},()=>({pnl:0,count:0}));
+    const yearTotal = monthsArr.reduce((s,mo)=>s+mo.pnl,0);
+    const yearCount = monthsArr.reduce((s,mo)=>s+mo.count,0);
+    const cells = monthsArr.map((mo,i)=>{
+      if(mo.count===0) return `<div class="yp-mcell yp-empty"><div class="yp-pnl">–</div></div>`;
+      const cls = mo.pnl>=0 ? 'yp-win' : 'yp-loss';
+      return `<div class="yp-mcell ${cls}" onclick="openMonthReportFor(${y},${i})">
+        <div class="yp-pnl">${mo.pnl>=0?'+':'-'}${Math.abs(mo.pnl).toFixed(0)}</div>
+        <div class="yp-count">${mo.count} trade${mo.count!==1?'s':''}</div>
+      </div>`;
+    }).join('');
+    const totalCell = yearCount===0
+      ? `<div class="yp-mcell yp-empty"><div class="yp-pnl">–</div></div>`
+      : `<div class="yp-mcell yp-total"><div class="yp-pnl ${yearTotal>=0?'positive':'negative'}">${yearTotal>=0?'+':'-'}${Math.abs(yearTotal).toFixed(0)}</div><div class="yp-count">${yearCount} trades</div></div>`;
+    return `<div class="yp-mcell yp-ycell">${y}</div>${cells}${totalCell}`;
+  }).join('');
+
+  return `<div class="card" style="padding:14px;margin-bottom:14px">
+    <div class="chart-title" style="margin-bottom:12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Yearly Performance</div>
+    <div class="yp-wrap"><div class="yp-grid">${headerCells}${bodyCells}</div></div>
+  </div>`;
+}
+
+// Tapping a month cell in the Yearly Performance grid opens the same
+// canvas Month Report used elsewhere — just pointed at the tapped
+// year/month instead of whatever the Month-grid view currently shows.
+function openMonthReportFor(year, monthIdx){
+  calYear = year; calMonth = monthIdx;
+  openMonthReport();
+}
+
 function renderCalSummaryView(f, fromVal, toVal){
   const now=new Date();
   let ft=filteredTrades().filter(t=>{
@@ -5650,6 +6082,7 @@ function renderCalSummaryView(f, fromVal, toVal){
         <div class="cal-stat-value" style="color:var(--text)">${wins.length}W / ${losses.length}L</div>
       </div>
     </div>
+    ${yearlyPerfGrid(f)}
     <div class="card" style="padding:12px">
       <div class="chart-title" style="margin-bottom:10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Daily Breakdown</div>
       ${dayRows}
@@ -5796,55 +6229,92 @@ function renderCalendar(){
           </div>
         </div>`;
       } else {
-        const dateStr=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        cells+=`<div class="${cls}" onclick="openQuickAdd('${dateStr}')"><div class="cal-day-num">${d}</div><div class="cal-dash">—</div></div>`;
+        // Empty days are inert — no trades to summarize, so nothing to tap.
+        // (Use the +Add / Quick Add buttons elsewhere to log a trade for a
+        // specific date.)
+        cells+=`<div class="${cls}"><div class="cal-day-num">${d}</div><div class="cal-dash">—</div></div>`;
       }
     }
   }
   document.getElementById('calGrid').innerHTML=cells;
 }
 
-function showDayTrades(day){
-  const dayStr=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-  const dayTrades=filteredTrades().filter(t=>t.date===dayStr);
-  if(!dayTrades.length) return;
+// Builds the same stat set as the Month Report (via the shared
+// computePeriodStats engine) but as plain HTML rather than canvas, since
+// there's nothing here that needs to be an exportable image — the action
+// button hands off to the Trade Log instead.
+function dayReportHtml(stats){
+  const pnlCls = stats.dayPnl>=0 ? 'positive' : 'negative';
+  const fmtSigned = v => v===null ? '—' : fmtPnl(v);
+  const rows = [
+    ['Best Trade', fmtSigned(stats.bestTrade), stats.bestTrade>=0?'positive':'negative'],
+    ['Worst Trade', fmtSigned(stats.worstTrade), (stats.worstTrade!==null && stats.worstTrade<0)?'negative':'positive']
+  ];
+  // Same rule as the Month Report: only show Avg Hold Time if at least
+  // one trade that day actually has a logged Close Time.
+  if(stats.hasHoldData) rows.push(['Avg Hold Time', minutesToDuration(stats.avgHold), '']);
+  rows.push(['Max Balance Drawdown', stats.maxDD>0?fmtPnl(-stats.maxDD):'—', stats.maxDD>0?'negative':'']);
+  rows.push(['Win Rate', `${stats.winRate.toFixed(1)}%`, stats.winRate>=50?'positive':'negative', `${stats.winsCount}W / ${stats.lossesCount}L`]);
+  rows.push(['Profit Factor', stats.pf===null?'—':stats.pf===Infinity?'∞':stats.pf.toFixed(2), stats.pf===null?'':(stats.pf===Infinity||stats.pf>=1)?'positive':'negative']);
+  rows.push(['Expectancy', fmtPnl(stats.exp), stats.exp>=0?'positive':'negative']);
 
-  // Single trade — go straight to peek
-  if(dayTrades.length===1){ openPeek(dayTrades[0].id); return; }
-
-  // Multiple trades — show day-list modal
-  const sorted=[...dayTrades].sort((a,b)=>{
-    return (a.time||'').localeCompare(b.time||'');
-  });
-  const totalPnl=sorted.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
-  const monthNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  document.getElementById('dayListTitle').textContent=`${day} ${monthNames[calMonth]} — ${sorted.length} trades`;
-
-  document.getElementById('dayListBody').innerHTML=sorted.map(t=>{
-    const pnl=parseFloat(t.pnl)||0;
-    const r=calcR(t);
-    const dirTag=`<span class="tag ${t.dir==='long'?'tag-long':'tag-short'}" style="font-size:10px">${t.dir==='long'?'▲':'▼'} ${t.dir.toUpperCase()}</span>`;
-    const outcomeTag=pnl>0?'<span class="tag tag-win" style="font-size:10px">WIN</span>':pnl<0?'<span class="tag tag-loss" style="font-size:10px">LOSS</span>':'<span class="tag tag-neutral" style="font-size:10px">BE</span>';
-    const rTag=r!==null?`<span class="tag ${parseFloat(r)>=0?'tag-r-pos':'tag-r-neg'}" style="font-size:10px">${parseFloat(r)>=0?'+':''}${r}R</span>`:'';
-    return `<div class="day-list-item" onclick="openDayTrade('${t.id}')">
-      <div>
-        <div class="day-list-pair">${escapeHtml(t.pair)}${t.images&&t.images.length?' 📷':''}</div>
-        <div class="day-list-meta">${dirTag}${outcomeTag}${rTag}${t.setup?`<span class="tag tag-neutral" style="font-size:10px">${escapeHtml(t.setup)}</span>`:''}</div>
-        ${t.time?`<div style="font-size:10px;color:var(--text3);margin-top:3px;font-family:var(--mono)">${escapeHtml(t.time)}${t.session?' · '+t.session:''}</div>`:''}
+  const rowsMarkup = rows.map(([label,val,cls,sub])=>`
+    <div class="info-row">
+      <span class="k">${label}</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        ${sub?`<span style="font-size:11px;color:var(--text3)">${sub}</span>`:''}
+        <span class="v ${cls}">${val}</span>
       </div>
-      <div class="day-list-pnl ${pnl>=0?'positive':'negative'}">${fmtPnl(pnl)}</div>
-    </div>`;
-  }).join('')+`<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-    <span style="font-size:12px;color:var(--text3);font-weight:700">Day Total</span>
-    <span style="font-size:16px;font-weight:800;font-family:var(--mono)" class="${totalPnl>=0?'positive':'negative'}">${fmtPnl(totalPnl)}</span>
-  </div>`;
+    </div>`).join('');
 
+  return `
+    <div style="font-size:19px;font-weight:800;letter-spacing:-.3px">${stats.dateLabel}</div>
+    <div style="font-size:12px;color:var(--text2);font-weight:600;margin-bottom:14px">${escapeHtml(stats.acctName)}</div>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:14px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:14px">
+      <div style="border-left:3px solid var(${stats.dayPnl>=0?'--accent':'--red'});padding-left:12px">
+        <div style="font-size:11px;font-weight:700;color:var(--text2);letter-spacing:.3px">NET P&L</div>
+        <div class="${pnlCls}" style="font-size:26px;font-weight:800;font-family:var(--mono)">${fmtPnl(stats.dayPnl)}</div>
+      </div>
+      ${stats.pct!==null?`<div class="${pnlCls}" style="font-size:14px;font-weight:700;margin-top:2px">${stats.pct>=0?'+':''}${stats.pct.toFixed(2)}%</div>`:''}
+    </div>
+    <div class="chart-title" style="margin-bottom:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M7 8h10M7 12h6"/></svg>Account Overview</div>
+    <div class="cal-summary-row" style="margin-bottom:14px">
+      <div class="cal-stat"><div class="cal-stat-label">Start Balance</div><div class="cal-stat-value" style="color:var(--text)">$${stats.startBalance.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+      <div class="cal-stat"><div class="cal-stat-label">End Balance</div><div class="cal-stat-value" style="color:var(--text)">$${stats.endBalance.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+    </div>
+    <div class="chart-title" style="margin-bottom:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Trade Stats</div>
+    <div class="cal-summary-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:10px">
+      <div class="cal-stat"><div class="cal-stat-label">Longs</div><div class="cal-stat-value" style="color:var(--accent)">${stats.longs}</div></div>
+      <div class="cal-stat"><div class="cal-stat-label">Shorts</div><div class="cal-stat-value" style="color:var(--red)">${stats.shorts}</div></div>
+      <div class="cal-stat"><div class="cal-stat-label">Trades</div><div class="cal-stat-value" style="color:var(--text)">${stats.total}</div></div>
+    </div>
+    <div class="card" style="padding:4px 12px">${rowsMarkup}</div>
+  `;
+}
+
+// Tapping any day with trades — whether it's one trade or several — opens
+// this Daily Summary first now, rather than jumping straight to a trade
+// or a raw list. Empty days are inert (handled in renderCalendar itself).
+function showDayTrades(day){
+  const dateStr=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  const stats = dayReportStats(dateStr, activeAcctFilter);
+  if(stats.total===0) return;
+
+  document.getElementById('dayListBody').innerHTML = dayReportHtml(stats);
+  document.getElementById('dayListViewBtn').onclick = ()=>viewDayInJournal(dateStr);
   document.getElementById('dayListModal').classList.add('open');
 }
 
-function openDayTrade(id){
+// "View Trades" hands off to the Trade Log, pre-filtered to this exact
+// date, using the filters that already exist there — no new UI needed.
+function viewDayInJournal(dateStr){
   document.getElementById('dayListModal').classList.remove('open');
-  setTimeout(()=>openPeek(id), 180); // let modal close animate first
+  setTimeout(()=>{
+    const fromEl=document.getElementById('filterDateFrom'), toEl=document.getElementById('filterDateTo');
+    if(fromEl) fromEl.value=dateStr;
+    if(toEl) toEl.value=dateStr;
+    switchTab('Journal');
+  }, 180); // let the modal close animate first
 }
 
 function openGoalEdit(){
