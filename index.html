@@ -94,6 +94,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .header-sub{font-size:11px;color:var(--text2);margin-top:1px;transition:opacity .1s ease}
 .val.pnl-flash{animation:pnl-pop .3s cubic-bezier(.32,.72,0,1)}
 @keyframes pnl-pop{0%{transform:scale(1)}50%{transform:scale(1.06)}100%{transform:scale(1)}}
+.hint-flash{animation:hint-flash 1.6s ease}
+@keyframes hint-flash{0%{color:var(--accent);transform:scale(1.04)}25%{color:var(--accent);transform:scale(1.04)}100%{color:var(--text3);transform:scale(1)}}
 .positive{color:var(--green)}.negative{color:var(--red)}
 
 /* ── Account bar ── */
@@ -371,7 +373,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .acct-status-refresh.spinning svg{animation:spin .6s linear}
 
 /* ── Toast ── */
-.toast{position:fixed;top:68px;left:50%;transform:translateX(-50%) translateY(-16px);background:var(--surface);border:1px solid var(--border2);color:var(--text);font-size:13px;font-weight:600;padding:9px 18px;border-radius:20px;z-index:999;opacity:0;transition:opacity .22s,transform .22s;white-space:nowrap;pointer-events:none;box-shadow:var(--shadow);backdrop-filter:blur(8px);display:flex;align-items:center;gap:7px}
+.toast{position:fixed;top:68px;left:50%;transform:translateX(-50%) translateY(-16px);background:var(--surface);border:1px solid var(--border2);color:var(--text);font-size:13px;font-weight:600;padding:9px 18px;border-radius:20px;z-index:999;opacity:0;transition:opacity .22s,transform .22s;white-space:normal;text-align:center;max-width:min(86vw,360px);pointer-events:none;box-shadow:var(--shadow);backdrop-filter:blur(8px);display:flex;align-items:center;gap:7px}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast.success{background:var(--accent-dim);border-color:rgba(0,229,160,0.4);color:var(--accent)}
 .toast.error{background:var(--red-dim);border-color:rgba(244,63,94,0.3);color:var(--red)}
@@ -1230,8 +1232,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <div class="img-previews" id="imgPreviews"></div>
     </div>
 
-    <!-- Trade Checklist -->
-    <div class="section-divider-label"><span>Trade Checklist</span></div>
+    <!-- Trade Checklist — collapsible, same smart default as Pre-Trade's
+         New/Edit Setup checklist: collapsed for a brand-new trade, only
+         auto-expands on edit (or on Pre-Trade promotion) if there's
+         already checklist data to show. Decided fresh each open, never a
+         remembered preference. -->
+    <div class="checklist-collapse-toggle" id="clChecklistToggle" onclick="toggleClChecklistSection()">
+      <span>Trade Checklist</span>
+      <span class="cl-collapse-summary" id="clChecklistSummary"></span>
+      <span class="cl-collapse-arrow" id="clChecklistArrow">▾</span>
+    </div>
+    <div class="checklist-collapse-body" id="clChecklistBody">
 
     <!-- HTF Direction/Bias -->
     <div class="checklist-section">
@@ -1350,6 +1361,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
         <button class="btn-sm accent" onclick="confirmAddOption('exit')">Add</button>
         <button class="btn-sm" onclick="hideAddOption('exit')">✕</button>
       </div>
+    </div>
+
     </div>
 
     <!-- Psychology & Notes -->
@@ -4839,9 +4852,38 @@ function renderChecklistField(key){
     else { badge.textContent=''; badge.classList.remove('visible'); }
   }
   if(clTarget==='pretrade') updatePtChecklistSummary();
+  else updateClChecklistSummary();
 }
 
 function renderAllChecklists(){ CL_KEYS.forEach(k=>renderChecklistField(k)); }
+
+// ─── Trade Checklist collapse (New/Edit Trade modal) ───
+// Same smart default as Pre-Trade's checklist: collapsed when there's
+// nothing to show yet, auto-expanded when there already is. Decided fresh
+// at open time, not remembered — see collapseClChecklist/expandClChecklist
+// callers in openAddTrade/openEditTrade below.
+function collapseClChecklist(){
+  document.getElementById('clChecklistBody').classList.remove('open');
+  document.getElementById('clChecklistArrow').textContent='▾';
+  updateClChecklistSummary();
+}
+function expandClChecklist(){
+  document.getElementById('clChecklistBody').classList.add('open');
+  document.getElementById('clChecklistArrow').textContent='▴';
+  updateClChecklistSummary();
+}
+function toggleClChecklistSection(){
+  const body=document.getElementById('clChecklistBody');
+  const arrow=document.getElementById('clChecklistArrow');
+  const open=body.classList.toggle('open');
+  arrow.textContent = open ? '▴' : '▾';
+}
+function updateClChecklistSummary(){
+  const el=document.getElementById('clChecklistSummary');
+  if(!el) return;
+  const n=CL_KEYS.reduce((sum,k)=>sum+(clSelections[k]?clSelections[k].length:0),0);
+  el.textContent = n>0 ? n+' selected' : '';
+}
 
 function handleChipClick(e){
   const chip=e.currentTarget, key=chip.dataset.key, opt=chip.dataset.opt;
@@ -4998,6 +5040,11 @@ function openAddTrade(prefill){
     syncSetupDropdown();
     autoCalc();
   }
+  // Smart default: collapsed for a truly blank trade; auto-expanded if
+  // Pre-Trade promotion (or any other prefill) already carried checklist
+  // selections in, so that data isn't hidden behind a tap.
+  const hasChecklistData = CL_KEYS.some(k=>clSelections[k] && clSelections[k].length);
+  if(hasChecklistData) expandClChecklist(); else collapseClChecklist();
   document.getElementById('tradeModal').classList.add('open');
   updateNavVisibility();
   setTimeout(()=>document.getElementById('fPair').focus(),120);
@@ -5061,6 +5108,9 @@ function openEditTrade(t){
     }
   });
   renderAllChecklists(); syncSetupDropdown();
+  // Smart default: expand only if this trade already has checklist data.
+  const hasChecklistData = CL_KEYS.some(k=>clSelections[k] && clSelections[k].length);
+  if(hasChecklistData) expandClChecklist(); else collapseClChecklist();
   // restore setup dropdown value
   if(t.setup) document.getElementById('fSetup').value=t.setup;
   document.getElementById('tradeModal').classList.add('open');
@@ -5528,18 +5578,32 @@ function _canShareReportFile(){
 // Neither reliably saves anything. The one save path that's actually
 // native OS behavior, not something Telegram's WebView can restrict, is
 // long-press-to-save on the <img> itself. So Save skips navigator.share
-// entirely and just points straight at that gesture — no wasted tap
-// through a sheet that can't do the one thing this button promises.
+// entirely and just points straight at that gesture.
+//
+// The modal already has a permanent, always-visible hint line under the
+// image saying exactly this ("Press and hold the image above…") — firing
+// a second, separate floating toast with nearly the same message on top
+// of it was redundant, and on small iPhone screens the fixed-position
+// toast could visually overlap the modal's own content. So instead of a
+// toast, Save/Share just draw the eye to the hint that's already there.
+function _flashReportHint(){
+  const hint=document.getElementById('monthReportHint');
+  if(!hint) return;
+  hint.scrollIntoView({block:'nearest', behavior:'smooth'});
+  hint.classList.remove('hint-flash');
+  void hint.offsetWidth; // restart the animation if it's already mid-flash
+  hint.classList.add('hint-flash');
+}
 function downloadMonthReport(){
-  showToast('Press and hold the image above, then choose Save Image / Save to Photos');
+  _flashReportHint();
 }
 
 function shareMonthReport(){
   if(_canShareReportFile()){
     navigator.share({files:[_lastReportFile], title:'Trading Report', text:_monthReportShareText()})
-      .catch(e=>{ if(e && e.name!=='AbortError') showToast('Press and hold the image above to save or share it'); });
+      .catch(e=>{ if(e && e.name!=='AbortError') _flashReportHint(); });
   } else {
-    showToast('Press and hold the image above to save or share it');
+    _flashReportHint();
   }
 }
 
