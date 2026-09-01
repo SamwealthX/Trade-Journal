@@ -276,6 +276,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .add-option-row{display:flex;gap:7px;margin-top:8px;align-items:center}
 .add-option-row .form-input{flex:1;font-size:13px;padding:8px 11px}
 .add-option-row .btn-sm{flex-shrink:0;height:36px}
+/* ── Collapsible checklist section (Pre-Trade modal) — collapsed by
+   default every time the modal opens, never persisted, so the full
+   7-category checklist doesn't dominate the form until the user is
+   actually ready to fill it in. ── */
+.checklist-collapse-toggle{display:flex;align-items:center;gap:8px;padding:12px 2px;margin:2px 0 4px;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;border-top:1px solid var(--border);border-bottom:1px solid var(--border);user-select:none;-webkit-user-select:none}
+.checklist-collapse-toggle .cl-collapse-summary{font-size:11px;font-weight:700;color:var(--text3);margin-left:auto}
+.checklist-collapse-toggle .cl-collapse-arrow{color:var(--text3);font-size:12px}
+.checklist-collapse-body{display:none;padding-top:14px}
+.checklist-collapse-body.open{display:block}
 
 /* ── Modal (bottom sheet) ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:500;display:none;align-items:flex-end;backdrop-filter:blur(4px)}
@@ -720,6 +729,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div id="calSummaryView" style="display:none"></div>
 </div>
 
+<!-- ══ TAB: Trading Accounts ══ -->
+<div id="tabTradingAccounts" class="tab">
+  <div class="section-header">
+    <span class="section-title">Trading Accounts</span>
+    <button class="btn-sm accent" onclick="openAddAccount()">＋ Add Account</button>
+  </div>
+  <div id="acctList"></div>
+</div>
+
 <!-- ══ TAB: Prop Firm ══ -->
 <div id="tabProp" class="tab">
   <div class="section-header">
@@ -992,12 +1010,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
 <!-- ══ TAB: Settings ══ -->
 <div id="tabSettings" class="tab">
-  <div class="section-header">
-    <span class="section-title">Accounts</span>
-    <button class="btn-sm accent" onclick="openAddAccount()">＋ Add Account</button>
-  </div>
-  <div id="acctList"></div>
-  <div style="height:16px"></div>
   <div class="section-header"><span class="section-title">Data</span></div>
   <div class="card" style="padding:12px">
     <div class="info-row"><span class="k">Total Trades</span><span class="v" id="settingsTrades">0</span></div>
@@ -1427,17 +1439,132 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       </div>
     </div>
 
-    <div class="checklist-section">
-      <div class="checklist-label">Entry (POI)</div>
-      <div class="chip-grid" id="pt-cl-poi"></div>
+    <!-- Trade Checklist — same full categorized checklist as New Trade
+         (HTF/Liquidity/Setup/POI/Confluence/SL Placement/Exit), including
+         Add/Remove custom-option support, sharing the same option lists via
+         allOptions(). Selection STATE stays separate (preTradeSelections),
+         so this can be open without touching an in-progress trade edit.
+         Collapsed by default, every time the modal opens — expand only
+         when ready to fill it in; state is never persisted. -->
+    <div class="checklist-collapse-toggle" id="ptChecklistToggle" onclick="togglePtChecklistSection()">
+      <span>Trade Checklist</span>
+      <span class="cl-collapse-summary" id="ptChecklistSummary"></span>
+      <span class="cl-collapse-arrow" id="ptChecklistArrow">▾</span>
     </div>
-    <div class="checklist-section">
-      <div class="checklist-label">Setup / Model</div>
-      <div class="chip-grid" id="pt-cl-setup"></div>
-    </div>
-    <div class="checklist-section">
-      <div class="checklist-label">Confluence</div>
-      <div class="chip-grid" id="pt-cl-conf"></div>
+    <div class="checklist-collapse-body" id="ptChecklistBody">
+
+      <div class="checklist-section">
+        <div class="checklist-label">
+          HTF Direction / Bias<span class="cl-count-badge" id="pt-cl-count-htf"></span>
+          <div class="cl-actions">
+            <span class="cl-del-toggle" id="pt-del-toggle-htf" onclick="toggleDelMode('htf')">− Remove</span>
+            <span class="cl-add" onclick="showAddOption('htf')">＋ Add</span>
+          </div>
+        </div>
+        <div class="chip-grid" id="pt-cl-htf"></div>
+        <div class="add-option-row" id="pt-add-htf-row" style="display:none">
+          <input class="form-input" id="pt-add-htf-input" placeholder="New option..." onkeydown="addOptionKey(event,'htf')"/>
+          <button class="btn-sm accent" onclick="confirmAddOption('htf')">Add</button>
+          <button class="btn-sm" onclick="hideAddOption('htf')">✕</button>
+        </div>
+      </div>
+
+      <div class="checklist-section">
+        <div class="checklist-label">
+          Liquidity Taken<span class="cl-count-badge" id="pt-cl-count-liq"></span>
+          <div class="cl-actions">
+            <span class="cl-del-toggle" id="pt-del-toggle-liq" onclick="toggleDelMode('liq')">− Remove</span>
+            <span class="cl-add" onclick="showAddOption('liq')">＋ Add</span>
+          </div>
+        </div>
+        <div class="chip-grid" id="pt-cl-liq"></div>
+        <div class="add-option-row" id="pt-add-liq-row" style="display:none">
+          <input class="form-input" id="pt-add-liq-input" placeholder="New option..." onkeydown="addOptionKey(event,'liq')"/>
+          <button class="btn-sm accent" onclick="confirmAddOption('liq')">Add</button>
+          <button class="btn-sm" onclick="hideAddOption('liq')">✕</button>
+        </div>
+      </div>
+
+      <div class="checklist-section">
+        <div class="checklist-label">
+          Setup / Model (LTF)<span class="cl-count-badge" id="pt-cl-count-setup"></span>
+          <div class="cl-actions">
+            <span class="cl-del-toggle" id="pt-del-toggle-setup" onclick="toggleDelMode('setup')">− Remove</span>
+            <span class="cl-add" onclick="showAddOption('setup')">＋ Add</span>
+          </div>
+        </div>
+        <div class="chip-grid" id="pt-cl-setup"></div>
+        <div class="add-option-row" id="pt-add-setup-row" style="display:none">
+          <input class="form-input" id="pt-add-setup-input" placeholder="New option..." onkeydown="addOptionKey(event,'setup')"/>
+          <button class="btn-sm accent" onclick="confirmAddOption('setup')">Add</button>
+          <button class="btn-sm" onclick="hideAddOption('setup')">✕</button>
+        </div>
+      </div>
+
+      <div class="checklist-section">
+        <div class="checklist-label">
+          Entry (POI)<span class="cl-count-badge" id="pt-cl-count-poi"></span>
+          <div class="cl-actions">
+            <span class="cl-del-toggle" id="pt-del-toggle-poi" onclick="toggleDelMode('poi')">− Remove</span>
+            <span class="cl-add" onclick="showAddOption('poi')">＋ Add</span>
+          </div>
+        </div>
+        <div class="chip-grid" id="pt-cl-poi"></div>
+        <div class="add-option-row" id="pt-add-poi-row" style="display:none">
+          <input class="form-input" id="pt-add-poi-input" placeholder="New option..." onkeydown="addOptionKey(event,'poi')"/>
+          <button class="btn-sm accent" onclick="confirmAddOption('poi')">Add</button>
+          <button class="btn-sm" onclick="hideAddOption('poi')">✕</button>
+        </div>
+      </div>
+
+      <div class="checklist-section">
+        <div class="checklist-label">
+          Confluence<span class="cl-count-badge" id="pt-cl-count-conf"></span>
+          <div class="cl-actions">
+            <span class="cl-del-toggle" id="pt-del-toggle-conf" onclick="toggleDelMode('conf')">− Remove</span>
+            <span class="cl-add" onclick="showAddOption('conf')">＋ Add</span>
+          </div>
+        </div>
+        <div class="chip-grid" id="pt-cl-conf"></div>
+        <div class="add-option-row" id="pt-add-conf-row" style="display:none">
+          <input class="form-input" id="pt-add-conf-input" placeholder="New option..." onkeydown="addOptionKey(event,'conf')"/>
+          <button class="btn-sm accent" onclick="confirmAddOption('conf')">Add</button>
+          <button class="btn-sm" onclick="hideAddOption('conf')">✕</button>
+        </div>
+      </div>
+
+      <div class="checklist-section">
+        <div class="checklist-label">
+          SL Placement<span class="cl-count-badge" id="pt-cl-count-slpl"></span>
+          <div class="cl-actions">
+            <span class="cl-del-toggle" id="pt-del-toggle-slpl" onclick="toggleDelMode('slpl')">− Remove</span>
+            <span class="cl-add" onclick="showAddOption('slpl')">＋ Add</span>
+          </div>
+        </div>
+        <div class="chip-grid" id="pt-cl-slpl"></div>
+        <div class="add-option-row" id="pt-add-slpl-row" style="display:none">
+          <input class="form-input" id="pt-add-slpl-input" placeholder="New option..." onkeydown="addOptionKey(event,'slpl')"/>
+          <button class="btn-sm accent" onclick="confirmAddOption('slpl')">Add</button>
+          <button class="btn-sm" onclick="hideAddOption('slpl')">✕</button>
+        </div>
+      </div>
+
+      <div class="checklist-section">
+        <div class="checklist-label">
+          Exit<span class="cl-count-badge" id="pt-cl-count-exit"></span>
+          <div class="cl-actions">
+            <span class="cl-del-toggle" id="pt-del-toggle-exit" onclick="toggleDelMode('exit')">− Remove</span>
+            <span class="cl-add" onclick="showAddOption('exit')">＋ Add</span>
+          </div>
+        </div>
+        <div class="chip-grid" id="pt-cl-exit"></div>
+        <div class="add-option-row" id="pt-add-exit-row" style="display:none">
+          <input class="form-input" id="pt-add-exit-input" placeholder="New option..." onkeydown="addOptionKey(event,'exit')"/>
+          <button class="btn-sm accent" onclick="confirmAddOption('exit')">Add</button>
+          <button class="btn-sm" onclick="hideAddOption('exit')">✕</button>
+        </div>
+      </div>
+
     </div>
 
     <!-- Chart screenshots — planning/analysis views, kept separate from a
@@ -1591,7 +1718,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <div id="monthReportEmpty" style="display:none;text-align:center;padding:36px 16px;color:var(--text3);font-size:14px">No trades logged for this month yet — nothing to share.</div>
     <div id="monthReportHint" style="display:none;text-align:center;font-size:11px;color:var(--text3);margin-top:8px">Press and hold the image above to save or share it</div>
     <div id="monthReportActions" style="display:flex;gap:10px;margin-top:16px">
-      <button class="btn btn-ghost" style="flex:1" onclick="downloadMonthReport()">⬇ Save to Gallery</button>
+      <button class="btn btn-ghost" style="flex:1" onclick="downloadMonthReport()">⬇ Save Image</button>
       <button class="btn accent" style="flex:1" onclick="shareMonthReport()">↗ Share</button>
     </div>
   </div>
@@ -1768,7 +1895,7 @@ let trades = [], accounts = [], strategy = {}, edgeTags = [];
 //   skipReason, pair, dir, reasoning, plannedEntry, plannedSl, plannedTp,
 //   poi:[], setup:[], conf:[], createdAt }
 let preTrades = [];
-let preTradeSelections = { poi:[], setup:[], conf:[] }; // own state — never touches clSelections, so the trade modal's checklist is unaffected while this form is open
+let preTradeSelections = { htf:[], liq:[], setup:[], poi:[], conf:[], slpl:[], exit:[] }; // own state — never touches clSelections, so the trade modal's checklist is unaffected while this form is open
 let editingPreTradeId = null;
 // Daily Journal (Priority 3): reflection entries, separate from per-trade
 // notes. { id, date, tag, reflection, createdAt }. One entry per date is
@@ -1789,6 +1916,22 @@ let editingTradeId = null, editingAcctId = null, viewingId = null;
 let tradeDir = 'long', activeAcctFilter = 'all', activeTab = 'Journal', charts = {}, chartsRenderToken = 0;
 let clSelections = { htf:[], liq:[], setup:[], poi:[], conf:[], slpl:[], exit:[] };
 let delModes = { htf:false, liq:false, setup:false, poi:false, conf:false, slpl:false, exit:false };
+// Pre-Trade's own del-mode state, parallel to delModes, so removing a
+// preset/custom option mid-edit in one form never bleeds into the other.
+let ptDelModes = { htf:false, liq:false, setup:false, poi:false, conf:false, slpl:false, exit:false };
+// Which checklist state the shared render/toggle/add/remove functions below
+// currently operate on — same generalization pattern as imgUploadTarget.
+// Set at the top of openAddTrade/openEditTrade ('trade') and
+// openAddPreTrade/openEditPreTrade ('pretrade'). Only one of these modals
+// is ever open at a time, so sharing one set of functions this way is safe.
+let clTarget = 'trade'; // 'trade' | 'pretrade'
+function _activeClSelections(){ return clTarget==='pretrade' ? preTradeSelections : clSelections; }
+function _activeDelModes(){ return clTarget==='pretrade' ? ptDelModes : delModes; }
+function _clGridId(key){ return (clTarget==='pretrade'?'pt-':'')+'cl-'+key; }
+function _clCountId(key){ return (clTarget==='pretrade'?'pt-':'')+'cl-count-'+key; }
+function _clDelToggleId(key){ return (clTarget==='pretrade'?'pt-':'')+'del-toggle-'+key; }
+function _clAddRowId(key){ return (clTarget==='pretrade'?'pt-':'')+'add-'+key+'-row'; }
+function _clAddInputId(key){ return (clTarget==='pretrade'?'pt-':'')+'add-'+key+'-input'; }
 // Each entry: {fileId, dataUrl, uploading}. dataUrl is a local preview only
 // (used immediately and while uploading) — it is NEVER written into the
 // saved trade object. Only {fileId} is persisted; bytes live in Drive.
@@ -3808,6 +3951,7 @@ const NAV_DRAWER_CONFIG = {
     { label:'Strategy',  tab:'Strategy', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>' },
   ],
   Accounts: [
+    { label:'Trading Accounts', tab:'TradingAccounts', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/></svg>' },
     { label:'Prop Payout Tracker', tab:'Prop', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M7 8h10M7 12h6"/></svg>' },
     // Reserved slot for Connect MT5 (Deferred — MT5/MT4 broker sync).
   ],
@@ -3853,8 +3997,8 @@ function switchTab(name){
   // Persist active tab to Telegram CloudStorage (session state)
   CS.set('active_tab', name);
   // Update header title and subtitle to reflect current tab
-  const tabLabels={Journal:'Trade Journal',PreTrade:'Pre-Trade',DailyJournal:'Daily Journal',Library:'Library',Calendar:'Calendar',Stats:'Performance',Prop:'Prop Firm Tracker',Strategy:'Strategy & Edge',Settings:'Settings'};
-  const tabSubs={PreTrade:'Planned Setups',DailyJournal:'Daily Reflections',Library:'Screenshot Review',Calendar:'P&L Overview',Stats:'Analytics',Prop:'Phases & Payouts',Strategy:'Plan & Rules',Settings:'Accounts & Data'};
+  const tabLabels={Journal:'Trade Journal',PreTrade:'Pre-Trade',DailyJournal:'Daily Journal',Library:'Library',Calendar:'Calendar',Stats:'Performance',Prop:'Prop Firm Tracker',TradingAccounts:'Trading Accounts',Strategy:'Strategy & Edge',Settings:'Settings'};
+  const tabSubs={PreTrade:'Planned Setups',DailyJournal:'Daily Reflections',Library:'Screenshot Review',Calendar:'P&L Overview',Stats:'Analytics',Prop:'Phases & Payouts',TradingAccounts:'Manage Accounts',Strategy:'Plan & Rules',Settings:'Accounts & Data'};
   document.getElementById('headerTitle').textContent=tabLabels[name]||name;
   const subEl=document.getElementById('headerSub');
   subEl.style.opacity='0';
@@ -3868,7 +4012,7 @@ function switchTab(name){
   },100);
   // Hide acct bar on tabs where it serves no purpose
   const acctBar=document.getElementById('acctBar');
-  acctBar.style.display=(name==='Strategy'||name==='Settings'||name==='Prop')?'none':'flex';
+  acctBar.style.display=(name==='Strategy'||name==='Settings'||name==='Prop'||name==='TradingAccounts')?'none':'flex';
   if(name==='Stats')    renderStats();
   if(name==='Journal')  renderTradeList();
   if(name==='PreTrade') renderPreTradeList();
@@ -3876,6 +4020,7 @@ function switchTab(name){
   if(name==='Library')  renderLibrary();
   if(name==='Settings') renderSettings();
   if(name==='Prop')     renderPropFirms();
+  if(name==='TradingAccounts') renderAcctList();
   if(name==='Calendar'){
     if(calFilter==='month') renderCalendar();
     else if(calFilter==='custom') applyCalCustomRange();
@@ -3955,6 +4100,8 @@ function renderAll(){
   markStatsDirty();
   // Re-render Prop tab if visible; mark Calendar dirty so switchTab re-renders it.
   if(activeTab==='Prop') renderPropFirms();
+  if(activeTab==='TradingAccounts') renderAcctList();
+  if(activeTab==='Settings') renderSettings();
   if(activeTab==='Calendar'){
     if(calFilter==='month') renderCalendar();
     else if(calFilter==='custom') applyCalCustomRange();
@@ -4675,20 +4822,23 @@ function allOptions(key){
 }
 
 function renderChecklistField(key){
-  const opts=allOptions(key), sel=clSelections[key]||[], isDelMode=delModes[key];
-  document.getElementById('cl-'+key).innerHTML=opts.map(opt=>{
+  const opts=allOptions(key), sel=_activeClSelections()[key]||[], isDelMode=_activeDelModes()[key];
+  const gridEl=document.getElementById(_clGridId(key));
+  if(!gridEl) return;
+  gridEl.innerHTML=opts.map(opt=>{
     const isSelected=sel.includes(opt);
     const canRemove=isDelMode; // allow removing any option (preset or custom) when in del mode
     const safeKey=key, safeOpt=escapeHtml(opt);
     return '<div class="chip'+(isSelected?' selected':'')+(canRemove?' removable':'')+'" data-key="'+safeKey+'" data-opt="'+safeOpt+'" onclick="handleChipClick(event)">'+safeOpt+'<span class="chip-x" onclick="event.stopPropagation();handleChipRemove(event)">✕</span></div>';
   }).join('');
   // Update selected-count badge in the section header
-  const badge=document.getElementById('cl-count-'+key);
+  const badge=document.getElementById(_clCountId(key));
   if(badge){
     const n=sel.length;
     if(n>0){ badge.textContent=n+' ✓'; badge.classList.add('visible'); }
     else { badge.textContent=''; badge.classList.remove('visible'); }
   }
+  if(clTarget==='pretrade') updatePtChecklistSummary();
 }
 
 function renderAllChecklists(){ CL_KEYS.forEach(k=>renderChecklistField(k)); }
@@ -4702,23 +4852,26 @@ function handleChipRemove(e){
   removeOption(e,key,opt);
 }
 function toggleChip(key,opt){
-  if(delModes[key])return; // don't select when in delete mode
-  const idx=clSelections[key].indexOf(opt);
+  const dm=_activeDelModes();
+  if(dm[key])return; // don't select when in delete mode
+  const sel=_activeClSelections();
+  const idx=sel[key].indexOf(opt);
   if(SINGLE_SELECT_KEYS.includes(key)){
     // single-select: toggle off if already selected, else replace
-    clSelections[key]=idx===-1?[opt]:[];
+    sel[key]=idx===-1?[opt]:[];
   } else {
-    if(idx===-1) clSelections[key].push(opt); else clSelections[key].splice(idx,1);
+    if(idx===-1) sel[key].push(opt); else sel[key].splice(idx,1);
   }
   renderChecklistField(key);
-  if(key==='setup') syncSetupDropdown();
+  if(key==='setup' && clTarget==='trade') syncSetupDropdown();
 }
 
 function toggleDelMode(key){
-  delModes[key]=!delModes[key];
-  const btn=document.getElementById('del-toggle-'+key);
-  btn.classList.toggle('active',delModes[key]);
-  btn.textContent=delModes[key]?'✓ Done':'− Remove';
+  const dm=_activeDelModes();
+  dm[key]=!dm[key];
+  const btn=document.getElementById(_clDelToggleId(key));
+  btn.classList.toggle('active',dm[key]);
+  btn.textContent=dm[key]?'✓ Done':'− Remove';
   renderChecklistField(key);
 }
 
@@ -4734,6 +4887,7 @@ function showConfirm(title, msg, onOk){
 function removeOption(e,key,opt){
   e.stopPropagation();
   const isPreset=DEFAULT_CHECKLIST[key]&&DEFAULT_CHECKLIST[key].includes(opt);
+  const sel=_activeClSelections();
   if(isPreset){
     showConfirm(
       `Remove "${opt}"?`,
@@ -4742,39 +4896,39 @@ function removeOption(e,key,opt){
         if(!customOptions.__removed__)customOptions.__removed__={};
         if(!customOptions.__removed__[key])customOptions.__removed__[key]=[];
         if(!customOptions.__removed__[key].includes(opt)) customOptions.__removed__[key].push(opt);
-        clSelections[key]=clSelections[key].filter(o=>o!==opt);
+        sel[key]=sel[key].filter(o=>o!==opt);
         saveCustomOpts();
         renderChecklistField(key);
-        if(key==='setup') syncSetupDropdown();
+        if(key==='setup' && clTarget==='trade') syncSetupDropdown();
         showToast('Option removed ✓');
       }
     );
   } else {
     customOptions[key]=(customOptions[key]||[]).filter(o=>o!==opt);
-    clSelections[key]=clSelections[key].filter(o=>o!==opt);
+    sel[key]=sel[key].filter(o=>o!==opt);
     saveCustomOpts();
     renderChecklistField(key);
-    if(key==='setup') syncSetupDropdown();
+    if(key==='setup' && clTarget==='trade') syncSetupDropdown();
   }
 }
 
 function showAddOption(key){
-  document.getElementById('add-'+key+'-row').style.display='flex';
-  document.getElementById('add-'+key+'-input').focus();
+  document.getElementById(_clAddRowId(key)).style.display='flex';
+  document.getElementById(_clAddInputId(key)).focus();
 }
 function hideAddOption(key){
-  document.getElementById('add-'+key+'-row').style.display='none';
-  document.getElementById('add-'+key+'-input').value='';
+  document.getElementById(_clAddRowId(key)).style.display='none';
+  document.getElementById(_clAddInputId(key)).value='';
 }
 function addOptionKey(e,key){ if(e.key==='Enter'){e.preventDefault();confirmAddOption(key);} }
 function confirmAddOption(key){
-  const input=document.getElementById('add-'+key+'-input');
+  const input=document.getElementById(_clAddInputId(key));
   const val=input.value.trim(); if(!val)return;
   if(allOptions(key).includes(val)){showToast('Already exists','error');return;}
   if(!customOptions[key])customOptions[key]=[];
   customOptions[key].push(val);
   saveCustomOpts(); hideAddOption(key); renderChecklistField(key);
-  if(key==='setup') syncSetupDropdown();
+  if(key==='setup' && clTarget==='trade') syncSetupDropdown();
   showToast('Option added ✓');
 }
 
@@ -4800,6 +4954,7 @@ function syncSetupDropdown(){
 function openAddTrade(prefill){
   editingTradeId=null;
   imgUploadTarget='trade';
+  clTarget='trade';
   document.getElementById('modalTitle').textContent='New Trade';
   document.getElementById('deleteBtn').style.display='none';
   clearTradeForm();
@@ -4836,7 +4991,7 @@ function openAddTrade(prefill){
       document.getElementById('fPlannedSl').value=prefill.plannedSl||'';
       document.getElementById('fPlannedTp').value=prefill.plannedTp||'';
     }
-    ['poi','setup','conf'].forEach(k=>{
+    CL_KEYS.forEach(k=>{
       if(prefill[k] && prefill[k].length) clSelections[k]=[...prefill[k]];
     });
     renderAllChecklists();
@@ -4851,6 +5006,7 @@ function openAddTrade(prefill){
 function openEditTrade(t){
   editingTradeId=t.id;
   imgUploadTarget='trade';
+  clTarget='trade';
   document.getElementById('modalTitle').textContent='Edit Trade';
   document.getElementById('deleteBtn').style.display='block';
   populateAccountDropdown(t.accountId);
@@ -5030,6 +5186,7 @@ function closeOnOverlay(e){
 // ═══════════════════════════════════════════════════════════════════
 let _lastReportStats = null;
 let _lastReportFile = null; // File built from the rendered canvas, for Share/Save
+let _lastReportImgUrl = null; // blob: URL currently assigned to #monthReportImg, revoked on next render
 
 const _reportMonthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -5321,10 +5478,23 @@ function renderMonthReportCanvas(){
   // Rasterize to a real <img> — canvas elements don't get the OS's native
   // long-press "Save/Share Image" context menu, only <img> does, and that's
   // the one save path that works everywhere regardless of WebView quirks.
-  document.getElementById('monthReportImg').src = canvas.toDataURL('image/png');
+  //
+  // Deliberately a blob: URL, not canvas.toDataURL()'s data: URI. A data:
+  // URI embeds the entire PNG as base64 text directly in the DOM; handing
+  // that off to Android's native download manager means passing the raw
+  // bytes through an Android intent, which has a hard IPC size ceiling —
+  // large embedded images commonly fail that silently (no error, download
+  // just does nothing, which is exactly what was observed on-device).
+  // A blob: URL is a small in-memory reference instead, so the long-press
+  // "Download image" / "Save Image" native menu on both platforms doesn't
+  // need to shuttle megabytes through that same restrictive path.
   _lastReportFile = null;
+  if(_lastReportImgUrl){ URL.revokeObjectURL(_lastReportImgUrl); _lastReportImgUrl = null; }
   canvas.toBlob(blob=>{
-    if(blob) _lastReportFile = new File([blob], _monthReportFilename(), {type:'image/png'});
+    if(!blob) return;
+    _lastReportFile = new File([blob], _monthReportFilename(), {type:'image/png'});
+    _lastReportImgUrl = URL.createObjectURL(blob);
+    document.getElementById('monthReportImg').src = _lastReportImgUrl;
   }, 'image/png');
 }
 
@@ -5349,22 +5519,19 @@ function _canShareReportFile(){
   catch(e){ return false; }
 }
 
-// Neither button triggers a fake "download" anymore. Inside Telegram's
-// embedded WebView, clicking an <a download> link doesn't actually
-// download — it navigates to the blob URL as a full page (Telegram's own
-// in-app-browser chrome wraps it, with no way back except closing the
-// whole mini app). That was the actual cause of the iOS "stuck fullscreen"
-// bug. The only genuinely reliable save path here is native share (where
-// supported) or the long-press-to-save gesture on the <img> itself — so
-// both buttons try share, and fall back to pointing at the image rather
-// than claiming a save that may not have happened.
+// Save and Share are now deliberately different actions, not two buttons
+// wired to the same code. navigator.share's sheet inside Telegram's
+// embedded browser is composed by Telegram/the OS, not by us — on iOS it
+// omits the "Save Image" quick action entirely (Files/Copy/socials only),
+// and on Android it's been observed producing a degraded generic
+// "Open in… / Download / Copy Link" chooser instead of a real share sheet.
+// Neither reliably saves anything. The one save path that's actually
+// native OS behavior, not something Telegram's WebView can restrict, is
+// long-press-to-save on the <img> itself. So Save skips navigator.share
+// entirely and just points straight at that gesture — no wasted tap
+// through a sheet that can't do the one thing this button promises.
 function downloadMonthReport(){
-  if(_canShareReportFile()){
-    navigator.share({files:[_lastReportFile], title:'Trading Report', text:_monthReportShareText()})
-      .catch(e=>{ if(e && e.name!=='AbortError') showToast('Press and hold the image above to save it'); });
-  } else {
-    showToast('Press and hold the image above, then choose Save Image / Save to Photos');
-  }
+  showToast('Press and hold the image above, then choose Save Image / Save to Photos');
 }
 
 function shareMonthReport(){
@@ -5494,29 +5661,40 @@ function setPreTradeDir(d){
   document.getElementById('ptDirShort').classList.toggle('active',d==='short');
 }
 
-function renderPreTradeChip(key){
-  const opts=allOptions(key), sel=preTradeSelections[key]||[];
-  const el=document.getElementById('pt-cl-'+key);
+// ─── Pre-Trade checklist collapse (New/Edit Setup modal) ───
+// Smart default: New Setup always starts collapsed (nothing to show yet,
+// stay out of the way). Edit Setup auto-expands ONLY if the setup already
+// has checklist selections, so existing data isn't hidden behind a tap;
+// an existing setup with an empty checklist still starts collapsed. Either
+// way this is a fresh decision made at open time, not a remembered
+// preference — it never carries over between different setups.
+function collapsePtChecklist(){
+  document.getElementById('ptChecklistBody').classList.remove('open');
+  document.getElementById('ptChecklistArrow').textContent='▾';
+  updatePtChecklistSummary();
+}
+function expandPtChecklist(){
+  document.getElementById('ptChecklistBody').classList.add('open');
+  document.getElementById('ptChecklistArrow').textContent='▴';
+  updatePtChecklistSummary();
+}
+function togglePtChecklistSection(){
+  const body=document.getElementById('ptChecklistBody');
+  const arrow=document.getElementById('ptChecklistArrow');
+  const open=body.classList.toggle('open');
+  arrow.textContent = open ? '▴' : '▾';
+}
+function updatePtChecklistSummary(){
+  const el=document.getElementById('ptChecklistSummary');
   if(!el) return;
-  el.innerHTML=opts.map(opt=>{
-    const isSelected=sel.includes(opt), safeOpt=escapeHtml(opt);
-    return '<div class="chip'+(isSelected?' selected':'')+'" data-key="'+key+'" data-opt="'+safeOpt+'" onclick="handlePreTradeChipClick(event)">'+safeOpt+'</div>';
-  }).join('');
-}
-function renderAllPreTradeChips(){ ['poi','setup','conf'].forEach(renderPreTradeChip); }
-function handlePreTradeChipClick(e){
-  const chip=e.currentTarget;
-  togglePreTradeChip(chip.dataset.key, chip.dataset.opt);
-}
-function togglePreTradeChip(key,opt){
-  const idx=preTradeSelections[key].indexOf(opt);
-  if(idx===-1) preTradeSelections[key].push(opt); else preTradeSelections[key].splice(idx,1);
-  renderPreTradeChip(key);
+  const n=CL_KEYS.reduce((sum,k)=>sum+(preTradeSelections[k]?preTradeSelections[k].length:0),0);
+  el.textContent = n>0 ? n+' selected' : '';
 }
 
 function openAddPreTrade(){
   editingPreTradeId=null;
   imgUploadTarget='pretrade';
+  clTarget='pretrade';
   document.getElementById('preTradeModalTitle').textContent='New Setup';
   document.getElementById('preTradeDeleteBtn').style.display='none';
   document.getElementById('ptAccount').innerHTML=accounts.map(a=>`<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
@@ -5525,11 +5703,12 @@ function openAddPreTrade(){
   document.getElementById('ptEntry').value='';
   document.getElementById('ptSl').value='';
   document.getElementById('ptTp').value='';
-  preTradeSelections={poi:[],setup:[],conf:[]};
+  CL_KEYS.forEach(k=>{preTradeSelections[k]=[];ptDelModes[k]=false;});
   pendingImagesPT=[];
   renderImgPreviews();
   setPreTradeDir('long');
-  renderAllPreTradeChips();
+  renderAllChecklists();
+  collapsePtChecklist(); // nothing to show yet — always collapsed for a new setup
   document.getElementById('preTradeModal').classList.add('open');
   updateNavVisibility();
   setTimeout(()=>document.getElementById('ptPair').focus(),120);
@@ -5540,6 +5719,7 @@ function openEditPreTrade(id){
   if(!pt) return;
   editingPreTradeId=id;
   imgUploadTarget='pretrade';
+  clTarget='pretrade';
   document.getElementById('preTradeModalTitle').textContent='Edit Setup';
   document.getElementById('preTradeDeleteBtn').style.display='block';
   document.getElementById('ptAccount').innerHTML=accounts.map(a=>`<option value="${a.id}"${pt.accountId===a.id?' selected':''}>${escapeHtml(a.name)}</option>`).join('');
@@ -5548,7 +5728,7 @@ function openEditPreTrade(id){
   document.getElementById('ptEntry').value=pt.plannedEntry||'';
   document.getElementById('ptSl').value=pt.plannedSl||'';
   document.getElementById('ptTp').value=pt.plannedTp||'';
-  preTradeSelections={poi:[...(pt.poi||[])],setup:[...(pt.setup||[])],conf:[...(pt.conf||[])]};
+  CL_KEYS.forEach(k=>{preTradeSelections[k]=pt[k]?[...pt[k]]:[];ptDelModes[k]=false;});
   // Existing {fileId} refs are seeded as already-uploaded entries (same
   // pattern openEditTrade uses) so they show immediately without needing
   // a Drive round-trip just to render a thumbnail.
@@ -5558,7 +5738,10 @@ function openEditPreTrade(id){
     resolveImageSrc({fileId:entry.fileId}).then(src=>{ entry.dataUrl=src; renderImgPreviews(); });
   });
   setPreTradeDir(pt.dir||'long');
-  renderAllPreTradeChips();
+  renderAllChecklists();
+  // Smart default: expand only if this setup already has checklist data.
+  const hasExistingChecklist = CL_KEYS.some(k=>preTradeSelections[k] && preTradeSelections[k].length);
+  if(hasExistingChecklist) expandPtChecklist(); else collapsePtChecklist();
   document.getElementById('preTradeModal').classList.add('open');
   updateNavVisibility();
 }
@@ -5580,7 +5763,9 @@ function savePreTrade(){
     plannedEntry: document.getElementById('ptEntry').value || '',
     plannedSl: document.getElementById('ptSl').value || '',
     plannedTp: document.getElementById('ptTp').value || '',
-    poi: [...preTradeSelections.poi], setup: [...preTradeSelections.setup], conf: [...preTradeSelections.conf],
+    htf: [...preTradeSelections.htf], liq: [...preTradeSelections.liq], setup: [...preTradeSelections.setup],
+    poi: [...preTradeSelections.poi], conf: [...preTradeSelections.conf],
+    slpl: [...preTradeSelections.slpl], exit: [...preTradeSelections.exit],
     images: imageRefs,
     createdAt: existing ? existing.createdAt : new Date().toISOString(),
   };
@@ -5612,12 +5797,14 @@ function deletePreTrade(){
 function markPreTradeTaken(id){
   const pt=preTrades.find(p=>p.id===id);
   if(!pt) return;
+  const clPrefill={};
+  CL_KEYS.forEach(k=>{ clPrefill[k]=pt[k]||[]; });
   openAddTrade({
     accountId: pt.accountId, pair: pt.pair, dir: pt.dir,
     entry: pt.plannedEntry, sl: pt.plannedSl, tp: pt.plannedTp,
     plannedEntry: pt.plannedEntry, plannedSl: pt.plannedSl, plannedTp: pt.plannedTp,
     reason: pt.reasoning,
-    poi: pt.poi, setup: pt.setup, conf: pt.conf,
+    ...clPrefill,
     linkedPreTradeId: pt.id,
   });
 }
@@ -5648,7 +5835,7 @@ function openLinkedTrade(preTradeId){
 function _preTradeCardHtml(pt){
   const acct=accounts.find(a=>a.id===pt.accountId);
   const dirTag='<span class="tag '+(pt.dir==='long'?'tag-long':'tag-short')+'">'+(pt.dir==='long'?'▲':'▼')+' '+(pt.dir||'').toUpperCase()+'</span>';
-  const hasChecklist=(pt.poi&&pt.poi.length)||(pt.setup&&pt.setup.length)||(pt.conf&&pt.conf.length);
+  const hasChecklist=CL_KEYS.some(k=>pt[k]&&pt[k].length);
   const plannedParts=[];
   if(pt.plannedEntry) plannedParts.push('Entry: '+escapeHtml(String(pt.plannedEntry)));
   if(pt.plannedSl)    plannedParts.push('SL: '+escapeHtml(String(pt.plannedSl)));
@@ -5660,7 +5847,10 @@ function _preTradeCardHtml(pt){
   // until the user taps it; state isn't persisted, resets to collapsed on
   // every re-render (intentional — a compact list is the default view).
   const clSectionId='ptcl-'+pt.id;
-  const clRows=[['Entry (POI)',pt.poi],['Setup / Model',pt.setup],['Confluence',pt.conf]]
+  const clRows=[
+    ['HTF Direction',pt.htf],['Liquidity Taken',pt.liq],['Setup / Model',pt.setup],
+    ['Entry (POI)',pt.poi],['Confluence',pt.conf],['SL Placement',pt.slpl],['Exit',pt.exit],
+  ]
     .filter(([,vals])=>vals&&vals.length)
     .map(([label,vals])=>'<div class="info-row"><span class="k">'+label+'</span><span class="v" style="font-family:var(--font);font-size:12px;text-align:right;max-width:58%;color:var(--text)">'+escapeHtml(vals.join(', '))+'</span></div>')
     .join('');
@@ -5937,7 +6127,7 @@ function saveAccount(){
   else accounts.push({id:genId(),name,balance:bal});
   saveAccounts(); document.getElementById('acctModal').classList.remove('open');
   updateNavVisibility();
-  renderAll(); renderSettings(); showToast(editingAcctId?'Account updated ✓':'Account added ✓');
+  renderAll(); renderAcctList(); renderSettings(); showToast(editingAcctId?'Account updated ✓':'Account added ✓');
 }
 function deleteAccount(){
   if(!editingAcctId)return;
@@ -5949,17 +6139,14 @@ function deleteAccount(){
   }
   saveAccounts(); saveTrades(); document.getElementById('acctModal').classList.remove('open');
   updateNavVisibility();
-  renderAll(); renderSettings(); showToast('Account deleted');
+  renderAll(); renderAcctList(); renderSettings(); showToast('Account deleted');
 }
-function renderSettings(){
-  document.getElementById('settingsTrades').textContent=trades.length;
-  document.getElementById('settingsAccts').textContent=accounts.length;
-  // Refresh Drive panel state
-  // Always resolve the card based on token presence, not gdriveReady.
-  // On iOS, GSI never loads so gdriveReady stays false — the card would
-  // otherwise stay stuck on the "Connecting to Google…" loading state.
-  if(gdriveToken){ gdriveShowSignedIn(); } else { gdriveShowSignedOut(); }
+// Trading Accounts tab — the editable account list. Split out from
+// renderSettings() so it can be rendered on its own tab (switchTab's
+// name==='TradingAccounts' branch) without Settings needing to be open.
+function renderAcctList(){
   const list=document.getElementById('acctList');
+  if(!list) return;
   if(!accounts.length){list.innerHTML='<div class="empty" style="padding:24px 0"><div class="empty-title">No accounts</div></div>';return;}
   list.innerHTML=accounts.map(a=>{
     const at=trades.filter(t=>t.accountId===a.id), ap=at.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
@@ -5971,6 +6158,15 @@ function renderSettings(){
       <div style="font-size:11px;color:var(--text3);margin-top:2px">${at.length} trade${at.length!==1?'s':''}</div>
     </div><button class="btn-sm" onclick="editAccount('${a.id}')">Edit</button></div>`;
   }).join('');
+}
+function renderSettings(){
+  document.getElementById('settingsTrades').textContent=trades.length;
+  document.getElementById('settingsAccts').textContent=accounts.length;
+  // Refresh Drive panel state
+  // Always resolve the card based on token presence, not gdriveReady.
+  // On iOS, GSI never loads so gdriveReady stays false — the card would
+  // otherwise stay stuck on the "Connecting to Google…" loading state.
+  if(gdriveToken){ gdriveShowSignedIn(); } else { gdriveShowSignedOut(); }
 }
 function editAccount(id){
   editingAcctId=id; const a=accounts.find(x=>x.id===id); if(!a)return;
@@ -7249,7 +7445,7 @@ function importJSON(input){
           tradesVersion++;
           gdriveScheduleSave(); // all save* helpers just schedule the same debounced Drive flush — one call is enough
           activeAcctFilter = 'all';
-          renderAll(); renderSettings();
+          renderAll(); renderAcctList(); renderSettings();
           showToast(`Restored ${trades.length} trades ✓`);
           await rehydrateBackupImages();   // turn embedded image data (v2) into fresh Drive files for this account
           migrateLegacyImages();           // in case this backup predates image externalisation entirely (no fileId, no data)
