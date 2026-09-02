@@ -2997,6 +2997,19 @@ function _isAndroidTelegram(){
   return (tg.platform || '').toLowerCase() === 'android';
 }
 
+// Whether touch is the PRIMARY input method, not just whether touch
+// hardware is present. `navigator.maxTouchPoints > 0` / `'ontouchstart' in
+// window` alone misfire on plenty of Windows laptops — a touch-capable
+// trackpad or a touchscreen hybrid still reports touch support even when
+// the person is driving the whole session with a mouse, which was
+// misrouting real desktop browsers into the mobile button-visibility
+// branch below. `pointer: coarse` reflects the primary pointing device
+// instead, so a hybrid laptop used with a mouse still reads as desktop.
+function _isTouchPrimary(){
+  if(window.matchMedia) return window.matchMedia('(pointer: coarse)').matches;
+  return ('ontouchstart' in window) || navigator.maxTouchPoints>0; // fallback for very old browsers without matchMedia
+}
+
 // Sign-in screen helpers
 function showSignInScreen(){
   const screen = document.getElementById('signInScreen');
@@ -5495,7 +5508,7 @@ function renderMonthReportCanvas(){
   //                         Copy works.
   const saveBtn=document.getElementById('saveReportBtn'), shareBtn=document.getElementById('shareReportBtn'),
         browserBtn=document.getElementById('openReportBrowserBtn'), copyBtn=document.getElementById('copyReportBtn');
-  const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints>0;
+  const isTouch = _isTouchPrimary();
   if(_isAndroidTelegram()){
     saveBtn.style.display='none';
     copyBtn.style.display='none';
@@ -5741,7 +5754,7 @@ function _reportSaveHintText(){
   if(_isAndroidTelegram()) return 'Tap "Open in Browser" below to save this image';
   if(_isTelegramDesktop()) return 'Tap "Open in Browser" below to save this image, or use Share';
   if(_isIosTelegram()) return 'Use Copy to paste the image elsewhere, or Share to save or send it';
-  const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints>0;
+  const isTouch = _isTouchPrimary();
   if(!isTouch) return 'Right-click the image above to save it, or use Copy to paste it elsewhere';
   return 'Press and hold the image above to save it, or use Copy to paste it elsewhere';
 }
@@ -6821,6 +6834,16 @@ function renderCalendar(){
 // computePeriodStats engine) but as plain HTML rather than canvas, since
 // there's nothing here that needs to be an exportable image — the action
 // button hands off to the Trade Log instead.
+// Inline-SVG version of the exact same trend-direction glyph the Month
+// Report canvas draws via _drawIcon(ctx,'trend-up'/'trend-down',...) — same
+// path coordinates, just as markup instead of canvas draw calls, so the
+// Daily Summary's ROI figure looks identical to the Month Report's rather
+// than using an unrelated glyph (a plain ▲/▼ triangle) for the same thing.
+function _trendArrowSvg(isUp){
+  const points = isUp ? ['3 17 10 10 14 14 21 6','15 6 21 6 21 12'] : ['3 7 10 14 14 10 21 18','15 18 21 18 21 12'];
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0"><polyline points="${points[0]}"/><polyline points="${points[1]}"/></svg>`;
+}
+
 function dayReportHtml(stats){
   const pnlCls = stats.dayPnl>=0 ? 'positive' : 'negative';
   const fmtSigned = v => v===null ? '—' : fmtPnl(v);
@@ -6853,7 +6876,7 @@ function dayReportHtml(stats){
         <div style="font-size:11px;font-weight:700;color:var(--text2);letter-spacing:.3px">NET P&L</div>
         <div class="${pnlCls}" style="font-size:26px;font-weight:800;font-family:var(--mono)">${fmtPnl(stats.dayPnl)}</div>
       </div>
-      ${stats.pct!==null?`<div class="${pnlCls}" style="font-size:14px;font-weight:700;margin-top:2px;display:flex;align-items:center;gap:3px;justify-content:flex-end">${stats.pct>=0?'▲':'▼'} ${stats.pct>=0?'+':''}${stats.pct.toFixed(2)}%</div>`:''}
+      ${stats.pct!==null?`<div class="${pnlCls}" style="font-size:14px;font-weight:700;margin-top:2px;display:flex;align-items:center;gap:3px;justify-content:flex-end">${_trendArrowSvg(stats.pct>=0)}${stats.pct>=0?'+':''}${stats.pct.toFixed(2)}%</div>`:''}
     </div>
     <div class="chart-title" style="margin-bottom:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/></svg>Account Overview</div>
     <div class="cal-summary-row" style="margin-bottom:14px">
