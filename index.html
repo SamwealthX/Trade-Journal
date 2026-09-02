@@ -1096,7 +1096,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <span class="nav-badge" id="journalBadge" style="display:none"></span>
   </button>
   <button class="nav-item" onclick="openNavDrawer('Accounts')" id="navAccounts">
-    <span class="nav-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M7 8h10M7 12h6"/></svg></span>
+    <span class="nav-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/></svg></span>
     Accounts
   </button>
   <button class="nav-item" onclick="switchTab('Settings')" id="navSettings">
@@ -5445,11 +5445,13 @@ function _drawIcon(ctx, type, px, py, size, color, pixelScale){
   ctx.scale(s, s);
   ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.lineCap='round'; ctx.lineJoin='round';
   if(type==='account'){
-    _rrect(ctx,2,3,20,14,2); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(8,21); ctx.lineTo(16,21); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(12,17); ctx.lineTo(12,21); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(7,8); ctx.lineTo(17,8); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(7,12); ctx.lineTo(13,12); ctx.stroke();
+    // Wallet/card glyph — matches the Trading Accounts nav icon (see
+    // navAccounts button and NAV_DRAWER_CONFIG.Accounts), not the old
+    // Prop-Tracker-specific monitor icon this used to share before the
+    // Accounts drawer was split into two distinct destinations.
+    _rrect(ctx,2,5,20,14,2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(2,10); ctx.lineTo(22,10); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(6,15); ctx.lineTo(10,15); ctx.stroke();
   } else if(type==='bars'){
     ctx.beginPath(); ctx.moveTo(18,20); ctx.lineTo(18,10); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(12,20); ctx.lineTo(12,4); ctx.stroke();
@@ -5477,17 +5479,23 @@ function renderMonthReportCanvas(){
   }
   empty.style.display='none'; actions.style.display='flex'; wrap.style.display='flex'; hint.style.display='block';
   hint.textContent = _reportSaveHintText();
-  // Per-platform button visibility — only show buttons that actually work
-  // in the current environment, rather than leaving dead ones for the
-  // person to discover by tapping. On-device testing showed Save/Copy/
-  // Share all fail identically inside Telegram's Android in-app browser
-  // (a container-level restriction, not fixable client-side — see
-  // downloadMonthReport/shareMonthReport comments), and Telegram Desktop's
-  // embedded WebView blocks Save and Copy the same way, leaving only Share.
-  // "Open in Browser" (Drive-hosted, opened via tg.openLink to escape the
-  // restricted WebView) is the one path proven to work in both cases.
+  // Per-platform button visibility — only show buttons confirmed to
+  // actually work in that environment, rather than leaving dead ones for
+  // the person to discover by tapping. Confirmed on-device, per platform:
+  //   Android Telegram   — Save/Copy/Share all fail; Open in Browser works.
+  //   Telegram Desktop    — Save/Copy fail; Share and Open in Browser work.
+  //   iOS Telegram        — Save's long-press doesn't work in Telegram's
+  //                         WKWebView (unlike real Safari); Copy and Share
+  //                         both work (Share can even reach Photos via the
+  //                         OS sheet there).
+  //   Plain desktop browser — Share (Web Share API) isn't available; Save's
+  //                         hint pointed at a button when the browser's own
+  //                         native right-click already does the job — so
+  //                         there's nothing for a Save button to add here.
+  //                         Copy works.
   const saveBtn=document.getElementById('saveReportBtn'), shareBtn=document.getElementById('shareReportBtn'),
         browserBtn=document.getElementById('openReportBrowserBtn'), copyBtn=document.getElementById('copyReportBtn');
+  const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints>0;
   if(_isAndroidTelegram()){
     saveBtn.style.display='none';
     copyBtn.style.display='none';
@@ -5498,13 +5506,27 @@ function renderMonthReportCanvas(){
     copyBtn.style.display='none';
     shareBtn.style.display='';
     browserBtn.style.display='';
+  } else if(_isIosTelegram()){
+    saveBtn.style.display='none';
+    copyBtn.style.display = _clipboardImageSupported() ? '' : 'none';
+    shareBtn.style.display='';
+    browserBtn.style.display='none';
+  } else if(!isTouch){
+    // Plain desktop browser (not Telegram) — right-click already covers
+    // Save natively, and the Web Share API is essentially never available
+    // on desktop, so neither button adds anything here.
+    saveBtn.style.display='none';
+    shareBtn.style.display='none';
+    browserBtn.style.display='none';
+    copyBtn.style.display = _clipboardImageSupported() ? '' : 'none';
   } else {
+    // Untested fallback bucket: a genuine (non-Telegram) mobile browser —
+    // e.g. visiting the site directly in mobile Safari/Chrome. No reason
+    // yet to believe long-press-save is restricted outside an embedded
+    // WebView, so default to showing everything.
     saveBtn.style.display='';
     shareBtn.style.display='';
     browserBtn.style.display='none';
-    // Copy-to-clipboard is a real device/browser capability gap, not
-    // something worth showing as a dead button — hide it outright rather
-    // than showing a button that will just fail on tap.
     copyBtn.style.display = _clipboardImageSupported() ? '' : 'none';
   }
 
@@ -5718,10 +5740,10 @@ function _canShareReportFile(){
 function _reportSaveHintText(){
   if(_isAndroidTelegram()) return 'Tap "Open in Browser" below to save this image';
   if(_isTelegramDesktop()) return 'Tap "Open in Browser" below to save this image, or use Share';
+  if(_isIosTelegram()) return 'Use Copy to paste the image elsewhere, or Share to save or send it';
   const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints>0;
-  return isTouch
-    ? 'Press and hold the image above to save it, or use Copy to paste it elsewhere'
-    : 'Right-click the image above to save it, or use Copy to paste it elsewhere';
+  if(!isTouch) return 'Right-click the image above to save it, or use Copy to paste it elsewhere';
+  return 'Press and hold the image above to save it, or use Copy to paste it elsewhere';
 }
 
 // The modal already has a permanent, always-visible hint line under the
@@ -6831,9 +6853,9 @@ function dayReportHtml(stats){
         <div style="font-size:11px;font-weight:700;color:var(--text2);letter-spacing:.3px">NET P&L</div>
         <div class="${pnlCls}" style="font-size:26px;font-weight:800;font-family:var(--mono)">${fmtPnl(stats.dayPnl)}</div>
       </div>
-      ${stats.pct!==null?`<div class="${pnlCls}" style="font-size:14px;font-weight:700;margin-top:2px">${stats.pct>=0?'+':''}${stats.pct.toFixed(2)}%</div>`:''}
+      ${stats.pct!==null?`<div class="${pnlCls}" style="font-size:14px;font-weight:700;margin-top:2px;display:flex;align-items:center;gap:3px;justify-content:flex-end">${stats.pct>=0?'▲':'▼'} ${stats.pct>=0?'+':''}${stats.pct.toFixed(2)}%</div>`:''}
     </div>
-    <div class="chart-title" style="margin-bottom:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M7 8h10M7 12h6"/></svg>Account Overview</div>
+    <div class="chart-title" style="margin-bottom:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/></svg>Account Overview</div>
     <div class="cal-summary-row" style="margin-bottom:14px">
       <div class="cal-stat"><div class="cal-stat-label">Start Balance</div><div class="cal-stat-value" style="color:var(--text)">$${stats.startBalance.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
       <div class="cal-stat"><div class="cal-stat-label">End Balance</div><div class="cal-stat-value" style="color:var(--text)">$${stats.endBalance.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
