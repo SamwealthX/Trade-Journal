@@ -1729,9 +1729,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <img id="monthReportImg" alt="Month report" style="width:100%;height:auto;display:block"/>
     </div>
     <div id="monthReportEmpty" style="display:none;text-align:center;padding:36px 16px;color:var(--text3);font-size:14px">No trades logged for this month yet — nothing to share.</div>
-    <div id="monthReportHint" style="display:none;text-align:center;font-size:11px;color:var(--text3);margin-top:8px">Press and hold the image above to save or share it</div>
-    <div id="monthReportActions" style="display:flex;gap:10px;margin-top:16px">
-      <button class="btn btn-ghost" style="flex:1" onclick="downloadMonthReport()">⬇ Save Image</button>
+    <div id="monthReportHint" style="display:none;text-align:center;font-size:11px;color:var(--text3);margin-top:8px">Press and hold the image above to save it, or use Copy to paste it elsewhere</div>
+    <div id="monthReportActions" style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-ghost" style="flex:1" onclick="downloadMonthReport()">⬇ Save</button>
+      <button class="btn btn-ghost" id="copyReportBtn" style="flex:1" onclick="copyMonthReportImage()">⧉ Copy</button>
       <button class="btn accent" style="flex:1" onclick="shareMonthReport()">↗ Share</button>
     </div>
   </div>
@@ -5371,6 +5372,11 @@ function renderMonthReportCanvas(){
     return;
   }
   empty.style.display='none'; actions.style.display='flex'; wrap.style.display='flex'; hint.style.display='block';
+  // Copy-to-clipboard is a real device/browser capability gap, not
+  // something worth showing as a dead button — hide it outright rather
+  // than showing a button that will just fail on tap.
+  const copyBtn = document.getElementById('copyReportBtn');
+  if(copyBtn) copyBtn.style.display = _clipboardImageSupported() ? '' : 'none';
 
   // Theme-aware palette — mirrors the app's own CSS custom properties for
   // both dark and light mode exactly, so the exported image always matches
@@ -5596,6 +5602,29 @@ function _flashReportHint(){
 }
 function downloadMonthReport(){
   _flashReportHint();
+}
+
+// Copy-to-clipboard: the one path here that doesn't depend on Telegram's
+// WebView composing a share sheet or wiring up a download handler at all —
+// it goes through the browser's own Clipboard API directly, so it works
+// (where supported) regardless of how Telegram's embedded browser handles
+// files or blobs. Once copied, the image can be pasted into Notes, a chat,
+// Files, or most Gallery apps that accept image paste — not a direct "Save
+// to Photos," but a genuinely reliable way to get the image out of the app
+// on devices where long-press-save doesn't work.
+function _clipboardImageSupported(){
+  return !!(navigator.clipboard && window.ClipboardItem && navigator.clipboard.write);
+}
+async function copyMonthReportImage(){
+  if(!_lastReportFile){ showToast('Report not ready yet — try again in a moment','error'); return; }
+  if(!_clipboardImageSupported()){ _flashReportHint(); return; }
+  try{
+    await navigator.clipboard.write([ new ClipboardItem({ 'image/png': _lastReportFile }) ]);
+    showToast('Image copied — paste it anywhere ✓');
+  } catch(e){
+    console.warn('Clipboard image copy failed:', e);
+    showToast('Copy failed — press and hold the image instead','error');
+  }
 }
 
 function shareMonthReport(){
