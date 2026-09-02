@@ -177,6 +177,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
 /* ── Buttons ── */
 .btn{display:block;width:100%;padding:13px;border-radius:var(--radius);border:none;font-size:15px;font-weight:700;cursor:pointer;text-align:center;letter-spacing:.2px;transition:opacity .15s,transform .1s}
+.btn:disabled{opacity:.55;cursor:not-allowed}
 .btn:active{transform:scale(.98);opacity:.82}
 .btn-primary{background:var(--accent);color:#000}
 .btn-ghost{background:var(--surface2);color:var(--text2);border:1px solid var(--border2)}
@@ -1729,11 +1730,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <img id="monthReportImg" alt="Month report" style="width:100%;height:auto;display:block"/>
     </div>
     <div id="monthReportEmpty" style="display:none;text-align:center;padding:36px 16px;color:var(--text3);font-size:14px">No trades logged for this month yet — nothing to share.</div>
-    <div id="monthReportHint" style="display:none;text-align:center;font-size:11px;color:var(--text3);margin-top:8px">Press and hold the image above to save it, or use Copy to paste it elsewhere</div>
+    <div id="monthReportHint" style="display:none;text-align:center;font-size:11px;color:var(--text3);margin-top:8px"></div>
     <div id="monthReportActions" style="display:flex;gap:8px;margin-top:16px">
-      <button class="btn btn-ghost" style="flex:1" onclick="downloadMonthReport()">⬇ Save</button>
+      <button class="btn btn-ghost" id="saveReportBtn" style="flex:1" onclick="downloadMonthReport()">⬇ Save</button>
       <button class="btn btn-ghost" id="copyReportBtn" style="flex:1" onclick="copyMonthReportImage()">⧉ Copy</button>
-      <button class="btn accent" style="flex:1" onclick="shareMonthReport()">↗ Share</button>
+      <button class="btn accent" id="shareReportBtn" style="flex:1" onclick="shareMonthReport()">↗ Share</button>
+      <button class="btn accent" id="openReportBrowserBtn" style="flex:1;display:none" onclick="openReportInBrowser()">🌐 Open in Browser</button>
     </div>
   </div>
 </div>
@@ -2063,8 +2065,17 @@ if (tg) {
 const GDRIVE_CONFIG = {
   // Replace with your own OAuth client ID from Google Cloud Console
   // Required scopes: https://www.googleapis.com/auth/drive.appdata
+  //                  https://www.googleapis.com/auth/drive.file
+  // drive.file was added for the "Open in Browser" report-sharing path
+  // (gdriveUploadPublicReport) — appdata-scoped files can never be made
+  // publicly shareable by design, so a real (non-appdata) Drive location
+  // is needed to get a URL Telegram's Android/Desktop clients can actually
+  // open outside the restricted in-app WebView. This scope must also be
+  // added under Google Cloud Console → OAuth consent screen → Data Access
+  // → Add or remove scopes, or Google will reject the request even though
+  // the code asks for it.
   CLIENT_ID: '975572674533-r7aiiq6qmu4m90p9brjct1kpp6l7h9eu.apps.googleusercontent.com',
-  SCOPES: 'https://www.googleapis.com/auth/drive.appdata',
+  SCOPES: 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file',
   FILE_NAME: 'trade-journal-data.json',
 };
 
@@ -2975,6 +2986,17 @@ function _isTelegramWebApp(){
   return p === 'weba' || p === 'webk';
 }
 
+// Detect Telegram for Android. On-device testing found Save (long-press),
+// Copy (Clipboard API), and Share (Web Share API) all fail identically
+// here regardless of technique — a container-level restriction inside
+// Telegram's Android in-app browser, not something any client-side
+// approach routes around. See _needsDriveFallback usage in
+// renderMonthReportCanvas() / _reportSaveHintText().
+function _isAndroidTelegram(){
+  if (!tg) return false;
+  return (tg.platform || '').toLowerCase() === 'android';
+}
+
 // Sign-in screen helpers
 function showSignInScreen(){
   const screen = document.getElementById('signInScreen');
@@ -3459,6 +3481,89 @@ async function gdriveUploadImage(dataUrl){
   const d = await res.json();
   gdriveImageCache.set(d.id, dataUrl); // we already have the bytes locally — cache immediately
   return { fileId: d.id };
+}
+
+// ─── Report image → public Drive link ("Open in Browser") ───
+// A dedicated, NON-appdata Drive location for just the most recently
+// exported report image, made public-readable so it can be opened as a
+// real https:// URL. appdata-scoped files (gdriveUploadImage above) can
+// never be shared publicly by design — that's exactly why this needs its
+// own upload path and its own drive.file-scoped folder, not a reuse of
+// the existing image pipeline. Opening that real URL via tg.openLink()
+// escapes Telegram's restricted embedded WebView into the phone/desktop's
+// actual browser, which is the one thing that reliably routes around the
+// Save/Copy/Share failures on Android and Telegram Desktop.
+let _reportsFolderId = null; // cached for the session once found/created
+
+async function _getOrCreateReportsFolderId(){
+  if(_reportsFolderId) return _reportsFolderId;
+  const q = encodeURIComponent("name='Trading Journal Reports' and mimeType='application/vnd.google-apps.folder' and trashed=false");
+  const listRes = await gdriveRequest('GET', `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)&spaces=drive`);
+  if(listRes.ok){
+    const data = await listRes.json();
+    if(data.files && data.files.length){ _reportsFolderId = data.files[0].id; return _reportsFolderId; }
+  }
+  const createRes = await gdriveRequest('POST', 'https://www.googleapis.com/drive/v3/files?fields=id', {
+    name:'Trading Journal Reports', mimeType:'application/vnd.google-apps.folder',
+  });
+  if(!createRes.ok) throw new Error('Could not create Drive folder');
+  const created = await createRes.json();
+  _reportsFolderId = created.id;
+  return _reportsFolderId;
+}
+
+// Keep only the most recent public report image — deletes whatever's
+// already in the folder before uploading the new one, so publicly-shared
+// files never quietly accumulate in the user's Drive over time. Best-effort:
+// a stray leftover file if a delete fails is harmless, unlike blocking the
+// whole upload on it.
+async function _clearReportsFolder(folderId){
+  const q = encodeURIComponent(`'${folderId}' in parents and trashed=false`);
+  const res = await gdriveRequest('GET', `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)&spaces=drive`);
+  if(!res.ok) return;
+  const data = await res.json();
+  await Promise.all((data.files||[]).map(f=>
+    gdriveRequest('DELETE', `https://www.googleapis.com/drive/v3/files/${f.id}`).catch(()=>{})
+  ));
+}
+
+async function gdriveUploadPublicReport(file){
+  if(!gdriveToken) throw new Error('Not signed in');
+  const folderId = await _getOrCreateReportsFolderId();
+  await _clearReportsFolder(folderId);
+  const form = new FormData();
+  form.append('metadata', new Blob([JSON.stringify({name:_monthReportFilename(), parents:[folderId]})], {type:'application/json'}));
+  form.append('file', file);
+  const uploadRes = await gdriveRequest('POST',
+    'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
+    form
+  );
+  if(!uploadRes.ok) throw new Error('Report upload failed');
+  const uploaded = await uploadRes.json();
+  const permRes = await gdriveRequest('POST',
+    `https://www.googleapis.com/drive/v3/files/${uploaded.id}/permissions`,
+    { role:'reader', type:'anyone' }
+  );
+  if(!permRes.ok) throw new Error('Could not make report link public');
+  return `https://drive.google.com/uc?export=download&id=${uploaded.id}`;
+}
+
+async function openReportInBrowser(){
+  if(!_lastReportFile){ showToast('Report not ready yet — try again in a moment','error'); return; }
+  if(!gdriveToken){ showToast('Sign in to Google Drive to use this','error'); return; }
+  const btn = document.getElementById('openReportBrowserBtn');
+  const originalLabel = btn ? btn.textContent : '';
+  if(btn){ btn.disabled = true; btn.textContent = 'Uploading…'; }
+  try{
+    const url = await gdriveUploadPublicReport(_lastReportFile);
+    if(tg && typeof tg.openLink === 'function') tg.openLink(url);
+    else window.open(url, '_blank');
+  } catch(e){
+    console.error('Open in Browser failed:', e);
+    showToast('Could not open report — try again','error');
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = originalLabel || '🌐 Open in Browser'; }
+  }
 }
 
 // Resolves a fileId to a displayable data URL, fetching from Drive on first use
@@ -5237,7 +5342,6 @@ function closeOnOverlay(e){
 // ═══════════════════════════════════════════════════════════════════
 let _lastReportStats = null;
 let _lastReportFile = null; // File built from the rendered canvas, for Share/Save
-let _lastReportImgUrl = null; // blob: URL currently assigned to #monthReportImg, revoked on next render
 
 const _reportMonthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -5372,11 +5476,37 @@ function renderMonthReportCanvas(){
     return;
   }
   empty.style.display='none'; actions.style.display='flex'; wrap.style.display='flex'; hint.style.display='block';
-  // Copy-to-clipboard is a real device/browser capability gap, not
-  // something worth showing as a dead button — hide it outright rather
-  // than showing a button that will just fail on tap.
-  const copyBtn = document.getElementById('copyReportBtn');
-  if(copyBtn) copyBtn.style.display = _clipboardImageSupported() ? '' : 'none';
+  hint.textContent = _reportSaveHintText();
+  // Per-platform button visibility — only show buttons that actually work
+  // in the current environment, rather than leaving dead ones for the
+  // person to discover by tapping. On-device testing showed Save/Copy/
+  // Share all fail identically inside Telegram's Android in-app browser
+  // (a container-level restriction, not fixable client-side — see
+  // downloadMonthReport/shareMonthReport comments), and Telegram Desktop's
+  // embedded WebView blocks Save and Copy the same way, leaving only Share.
+  // "Open in Browser" (Drive-hosted, opened via tg.openLink to escape the
+  // restricted WebView) is the one path proven to work in both cases.
+  const saveBtn=document.getElementById('saveReportBtn'), shareBtn=document.getElementById('shareReportBtn'),
+        browserBtn=document.getElementById('openReportBrowserBtn'), copyBtn=document.getElementById('copyReportBtn');
+  if(_isAndroidTelegram()){
+    saveBtn.style.display='none';
+    copyBtn.style.display='none';
+    shareBtn.style.display='none';
+    browserBtn.style.display='';
+  } else if(_isTelegramDesktop()){
+    saveBtn.style.display='none';
+    copyBtn.style.display='none';
+    shareBtn.style.display='';
+    browserBtn.style.display='';
+  } else {
+    saveBtn.style.display='';
+    shareBtn.style.display='';
+    browserBtn.style.display='none';
+    // Copy-to-clipboard is a real device/browser capability gap, not
+    // something worth showing as a dead button — hide it outright rather
+    // than showing a button that will just fail on tap.
+    copyBtn.style.display = _clipboardImageSupported() ? '' : 'none';
+  }
 
   // Theme-aware palette — mirrors the app's own CSS custom properties for
   // both dark and light mode exactly, so the exported image always matches
@@ -5532,25 +5662,20 @@ function renderMonthReportCanvas(){
   ctx.textAlign='left';
 
   // Rasterize to a real <img> — canvas elements don't get the OS's native
-  // long-press "Save/Share Image" context menu, only <img> does, and that's
-  // the one save path that works everywhere regardless of WebView quirks.
+  // long-press "Save/Share Image" context menu, only <img> does.
   //
-  // Deliberately a blob: URL, not canvas.toDataURL()'s data: URI. A data:
-  // URI embeds the entire PNG as base64 text directly in the DOM; handing
-  // that off to Android's native download manager means passing the raw
-  // bytes through an Android intent, which has a hard IPC size ceiling —
-  // large embedded images commonly fail that silently (no error, download
-  // just does nothing, which is exactly what was observed on-device).
-  // A blob: URL is a small in-memory reference instead, so the long-press
-  // "Download image" / "Save Image" native menu on both platforms doesn't
-  // need to shuttle megabytes through that same restrictive path.
+  // Back to a data: URI (not blob:) — on-device testing showed the blob:
+  // switch regressed iOS's native long-press-save (which worked with
+  // data: before) without fixing Android's, which fails identically
+  // regardless of URL scheme. That points at Android's failure being a
+  // platform/container restriction, not something either URL type routes
+  // around — so there's no upside left to blob: here, only the iOS
+  // downside. See the Drive-hosted "Open in Browser" path below for the
+  // actual Android/Telegram-Desktop fix.
+  document.getElementById('monthReportImg').src = canvas.toDataURL('image/png');
   _lastReportFile = null;
-  if(_lastReportImgUrl){ URL.revokeObjectURL(_lastReportImgUrl); _lastReportImgUrl = null; }
   canvas.toBlob(blob=>{
-    if(!blob) return;
-    _lastReportFile = new File([blob], _monthReportFilename(), {type:'image/png'});
-    _lastReportImgUrl = URL.createObjectURL(blob);
-    document.getElementById('monthReportImg').src = _lastReportImgUrl;
+    if(blob) _lastReportFile = new File([blob], _monthReportFilename(), {type:'image/png'});
   }, 'image/png');
 }
 
@@ -5579,19 +5704,32 @@ function _canShareReportFile(){
 // wired to the same code. navigator.share's sheet inside Telegram's
 // embedded browser is composed by Telegram/the OS, not by us — on iOS it
 // omits the "Save Image" quick action entirely (Files/Copy/socials only),
-// and on Android it's been observed producing a degraded generic
-// "Open in… / Download / Copy Link" chooser instead of a real share sheet.
-// Neither reliably saves anything. The one save path that's actually
-// native OS behavior, not something Telegram's WebView can restrict, is
-// long-press-to-save on the <img> itself. So Save skips navigator.share
-// entirely and just points straight at that gesture.
+// and on Android/Telegram Desktop it's been observed producing a degraded
+// generic chooser or doing nothing at all. Neither reliably saves anything
+// in those environments — see openReportInBrowser() for the actual fix
+// there. On platforms where long-press-save genuinely works (iOS, plain
+// desktop browsers), Save just points at that native gesture rather than
+// trying to trigger it via navigator.share.
 //
+// The hint text itself is platform-aware for the same reason the buttons
+// are — telling a desktop-browser user to "press and hold" (a touch
+// gesture) or an Android/Telegram-Desktop user to try a gesture that's
+// already been confirmed not to work would just be wrong instructions.
+function _reportSaveHintText(){
+  if(_isAndroidTelegram()) return 'Tap "Open in Browser" below to save this image';
+  if(_isTelegramDesktop()) return 'Tap "Open in Browser" below to save this image, or use Share';
+  const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints>0;
+  return isTouch
+    ? 'Press and hold the image above to save it, or use Copy to paste it elsewhere'
+    : 'Right-click the image above to save it, or use Copy to paste it elsewhere';
+}
+
 // The modal already has a permanent, always-visible hint line under the
-// image saying exactly this ("Press and hold the image above…") — firing
-// a second, separate floating toast with nearly the same message on top
-// of it was redundant, and on small iPhone screens the fixed-position
-// toast could visually overlap the modal's own content. So instead of a
-// toast, Save/Share just draw the eye to the hint that's already there.
+// image with the platform-appropriate instruction above — firing a
+// second, separate floating toast with nearly the same message on top of
+// it was redundant, and on small iPhone screens the fixed-position toast
+// could visually overlap the modal's own content. So instead of a toast,
+// Save/Share just draw the eye to the hint that's already there.
 function _flashReportHint(){
   const hint=document.getElementById('monthReportHint');
   if(!hint) return;
