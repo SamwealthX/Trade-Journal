@@ -125,7 +125,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .acct-header-chevron{font-size:10px;color:var(--text3)}
 .acct-header-pnl{font-size:11px;font-weight:700;margin-top:2px}
 .switch-acct-row{display:flex;align-items:center;gap:12px;padding:12px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);margin-bottom:8px;cursor:pointer;touch-action:pan-y}
-.switch-acct-row.active{border-color:var(--accent);background:var(--accent-dim)}
+.switch-acct-row.active{border-color:var(--accent)}
+/* Deliberately border-only, not a tinted fill (was background:var(--accent-dim)) —
+   accent-dim is translucent (10% opacity), so it didn't actually mask the
+   swipe-revealed Edit panel sitting behind it in .switch-swipe-wrap; it
+   blended with it instead, letting Edit bleed through on the right edge of
+   the active row even when nothing was swiped. Border-only keeps this row
+   fully opaque (inherits the solid background:var(--surface2) from the
+   base rule above) while still reading as visually distinct. */
 .switch-acct-mid{flex:1;min-width:0}
 .switch-acct-name{font-size:14px;font-weight:700;color:var(--text)}
 .switch-acct-sub{font-size:11px;color:var(--text3);margin-top:2px}
