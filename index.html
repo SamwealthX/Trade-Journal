@@ -73,7 +73,7 @@
 [data-theme="light"] .peek-overlay{background:rgba(0,0,0,.35)}
 [data-theme="light"] .lightbox{background:rgba(0,0,0,.88)}
 [data-theme="light"] .img-upload-spinner{background:rgba(240,242,245,.7)}
-[data-theme="light"] .acct-select option,[data-theme="light"] .form-select option,[data-theme="light"] .filter-select option{background:#ffffff;color:#111827}
+[data-theme="light"] .form-select option,[data-theme="light"] .filter-select option{background:#ffffff;color:#111827}
 [data-theme="light"] .date-group-header{background:var(--bg)}
 [data-theme="light"] .peek-header{background:var(--surface)}
 [data-theme="light"] .swipe-delete-bg{background:rgba(225,29,72,0.09)}
@@ -99,7 +99,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .positive{color:var(--green)}.negative{color:var(--red)}
 
 /* ── Account bar ── */
-.acct-bar{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--surface)}
+.acct-bar{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--surface);cursor:pointer}
 /* ── Account header card (Batch 5b) — icon + selector/status + balance,
    replacing the old plain <select>-only bar. Icon is a generic initials
    avatar for now — a reserved slot, per the roadmap's "same shape
@@ -111,13 +111,33 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .acct-header-balance{text-align:right;flex-shrink:0}
 .acct-header-balance .lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.9px;font-weight:600}
 .acct-header-balance .val{font-size:19px;font-weight:800;font-family:var(--mono);letter-spacing:-.5px;transition:color .25s}
-.acct-select{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font);font-size:13px;font-weight:700;padding:7px 30px 7px 10px;outline:none;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238896a8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;transition:border-color .15s}
 /* Reuses .acct-status-row/.acct-status-refresh from the Prop account-status
    pattern (Batch 4) directly, so the header card and Prop cards read as the
    same visual language rather than two similar-but-different components. */
 .acct-header-status{margin-top:5px}
-.acct-select:focus{border-color:rgba(0,229,160,0.5);box-shadow:0 0 0 3px rgba(0,229,160,0.08)}
-.acct-select option{background:#1a1f2b;color:var(--text);font-weight:600}
+/* ── Account switcher (bottom sheet) — replaces the native <select> above.
+   The whole .acct-bar is now a tap target (see its onclick) opening
+   #switchAcctModal, styled to match this app's own modal language
+   (modal-handle + tap-outside-to-close, no header X — consistent with
+   every other bottom sheet) rather than mirroring a specific reference
+   app's chrome pixel-for-pixel. ── */
+.acct-header-name{font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:5px}
+.acct-header-chevron{font-size:10px;color:var(--text3)}
+.acct-header-pnl{font-size:11px;font-weight:700;margin-top:2px}
+.switch-acct-row{display:flex;align-items:center;gap:12px;padding:12px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);margin-bottom:8px;cursor:pointer;touch-action:pan-y}
+.switch-acct-row.active{border-color:var(--accent);background:var(--accent-dim)}
+.switch-acct-mid{flex:1;min-width:0}
+.switch-acct-name{font-size:14px;font-weight:700;color:var(--text)}
+.switch-acct-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.switch-acct-right{text-align:right;flex-shrink:0}
+.switch-acct-bal{font-size:14px;font-weight:700;font-family:var(--mono)}
+.switch-acct-pnl{font-size:10px;font-weight:700;margin-top:2px}
+/* Swipe-to-reveal-Edit — only the account rows get this wrapper (not "All
+   Accounts", which has nothing to edit). One row open at a time; see
+   _swipeStart/_swipeMove/_swipeEnd and _openSwipeRow. */
+.switch-swipe-wrap{position:relative;overflow:hidden;border-radius:var(--radius-sm);margin-bottom:8px}
+.switch-swipe-wrap .switch-acct-row{margin-bottom:0;position:relative;transition:transform .18s ease}
+.switch-swipe-action{position:absolute;top:0;right:0;bottom:0;width:78px;background:var(--accent);color:#04342c;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;font-weight:700;cursor:pointer}
 
 /* ── Nav ── */
 .nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:200;padding-bottom:env(safe-area-inset-bottom);transition:opacity .15s,visibility .15s,transform .2s ease}
@@ -566,7 +586,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <button class="theme-toggle" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle light / dark mode" aria-label="Toggle theme">🌙</button>
     </div>
   </div>
-  <div class="acct-bar" id="acctBar"></div>
+  <div class="acct-bar" id="acctBar" onclick="openSwitchAcctModal()"></div>
 </div>
 
 <!-- ══ TAB: Journal ══ -->
@@ -1428,6 +1448,19 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <div id="acctDeleteBtn" style="display:none;margin-top:10px">
       <button class="btn btn-danger" onclick="deleteAccount()">Delete Account</button>
     </div>
+  </div>
+</div>
+
+<!-- ══ Switch Account (bottom sheet) — the account header's tap target.
+     Swipe a row left to reveal Edit (see _swipeStart/_swipeMove/_swipeEnd),
+     which reuses this same acctModal in edit mode rather than duplicating
+     the rename/balance form. ══ -->
+<div class="modal-overlay" id="switchAcctModal" onclick="closeOnOverlay(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Switch Account</div>
+    <div id="switchAcctList"></div>
+    <button class="btn btn-primary" style="margin-top:4px" onclick="closeSwitchAcctModal();openAddAccount();">＋ Add Account</button>
   </div>
 </div>
 
@@ -2997,6 +3030,15 @@ function _isAndroidTelegram(){
   return (tg.platform || '').toLowerCase() === 'android';
 }
 
+// Device-level Android check (user-agent based), independent of Telegram —
+// used for the "genuine mobile browser, not inside Telegram at all" case,
+// since Save's long-press was confirmed dead there too, same as inside
+// Telegram's Android WebView, but iOS/other touch browsers haven't been
+// tested and shouldn't be assumed broken without evidence.
+function _isAndroidDevice(){
+  return /Android/i.test(navigator.userAgent || '');
+}
+
 // Whether touch is the PRIMARY input method, not just whether touch
 // hardware is present. `navigator.maxTouchPoints > 0` / `'ontouchstart' in
 // window` alone misfire on plenty of Windows laptops — a touch-capable
@@ -4170,15 +4212,130 @@ function renderAcctBar(){
   const initials = current ? current.name.trim().slice(0,2).toUpperCase() : 'ALL';
   const statusHtml = current
     ? `<span class="acct-status-row acct-header-status"><span class="acct-status-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Synced ${timeAgo(_lastDriveSave)}<button class="acct-status-refresh" onclick="event.stopPropagation();this.classList.add('spinning');refreshAcctSync(()=>{renderAcctBar();renderHeader();});" aria-label="Refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button></span>`
+    : `<div class="switch-acct-sub" style="margin-top:3px">${accounts.length} account${accounts.length!==1?'s':''}</div>`;
+  // Whole bar opens the switcher (see its onclick in the static markup) —
+  // the native <select> this used to be couldn't show balance/sync/Edit
+  // per row, or be swiped, so it's now a tap target into #switchAcctModal
+  // instead. Balance block (see below) is entirely omitted for "All
+  // Accounts" — a blended balance across dissimilar accounts isn't a
+  // meaningful single number the way per-account balance is, same
+  // reasoning as the unresolved "All Accounts blends accounts" limitation
+  // for Max Drawdown elsewhere in the report cards.
+  //
+  // Values are left as placeholders here on purpose, not computed — this
+  // function only (re)builds the bar's structure (called on account
+  // switch/add/edit/delete), while renderHeader() owns writing the actual
+  // balance/P&L figures on every trade mutation, same split as before.
+  // Folding the computation into both would make renderHeader()'s
+  // change-detection always see "no change" (since this function just
+  // wrote the same value moments earlier) and silently kill the existing
+  // flash-on-change animation.
+  const balanceHtml = current
+    ? `<div class="acct-header-balance" id="acctHeaderBalance"><div class="lbl">Balance</div><div class="val" id="acctHeaderBalanceVal">$0.00</div><div class="acct-header-pnl" id="acctHeaderPnl">$0.00</div></div>`
     : '';
   bar.innerHTML = `<div class="acct-header-icon">${escapeHtml(initials)}</div>`
-    + `<div class="acct-header-mid"><select class="acct-select" onchange="setAcctFilter(this.value)">`
-    + [{id:'all',name:'All Accounts'},...accounts].map(a=>
-        `<option value="${a.id}"${activeAcctFilter===a.id?' selected':''}>${escapeHtml(a.name)}</option>`
-      ).join('')
-    + `</select>${statusHtml}</div>`
-    + `<div class="acct-header-balance"><div class="lbl">Total P&L</div><div class="val positive" id="totalPnlHeader">$0.00</div></div>`;
+    + `<div class="acct-header-mid"><div class="acct-header-name">${escapeHtml(current?current.name:'All Accounts')} <span class="acct-header-chevron">▾</span></div>${statusHtml}</div>`
+    + balanceHtml;
 }
+
+// ─── Switch Account (bottom sheet) ───
+let _swipeState = null;   // {row, startX, startTranslate, dragging, currentTranslate}
+let _openSwipeRow = null; // the one row currently slid open, if any
+let _suppressRowClick = false; // set briefly after a drag so the synthetic click doesn't also fire selection
+
+function openSwitchAcctModal(){
+  renderSwitchAcctList();
+  document.getElementById('switchAcctModal').classList.add('open');
+  updateNavVisibility();
+}
+function closeSwitchAcctModal(){
+  document.getElementById('switchAcctModal').classList.remove('open');
+  updateNavVisibility();
+  _openSwipeRow = null; // sheet is gone, nothing to still be "open"
+}
+
+function renderSwitchAcctList(){
+  const list = document.getElementById('switchAcctList');
+  _openSwipeRow = null;
+  const allActive = activeAcctFilter==='all';
+  let html = `<div class="switch-acct-row${allActive?' active':''}" onclick="selectSwitchAccount('all',this)">`
+    + `<div class="acct-header-icon">ALL</div>`
+    + `<div class="switch-acct-mid"><div class="switch-acct-name">All Accounts</div><div class="switch-acct-sub">${accounts.length} account${accounts.length!==1?'s':''}</div></div>`
+    + `</div>`;
+  html += accounts.map(a=>{
+    const at = trades.filter(t=>t.accountId===a.id);
+    const ap = at.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
+    const bal = a.balance + ap;
+    const active = activeAcctFilter===a.id;
+    const initials = a.name.trim().slice(0,2).toUpperCase();
+    return `<div class="switch-swipe-wrap">`
+      + `<div class="switch-swipe-action" onclick="event.stopPropagation();closeSwitchAcctModal();editAccount('${a.id}')">✎<span>Edit</span></div>`
+      + `<div class="switch-acct-row${active?' active':''}" onclick="selectSwitchAccount('${a.id}',this)" `
+      +   `ontouchstart="_swipeStart(event,this)" ontouchmove="_swipeMove(event,this)" ontouchend="_swipeEnd(event,this)" ontouchcancel="_swipeEnd(event,this)">`
+      +   `<div class="acct-header-icon">${escapeHtml(initials)}</div>`
+      +   `<div class="switch-acct-mid"><div class="switch-acct-name">${escapeHtml(a.name)}</div><div class="switch-acct-sub">Synced ${timeAgo(_lastDriveSave)}</div></div>`
+      +   `<div class="switch-acct-right"><div class="switch-acct-bal">$${bal.toFixed(2)}</div><div class="switch-acct-pnl ${ap>=0?'positive':'negative'}">${ap>=0?'+':''}$${Math.abs(ap).toFixed(2)}</div></div>`
+      + `</div></div>`;
+  }).join('');
+  list.innerHTML = html;
+}
+
+function selectSwitchAccount(id, rowEl){
+  if(_suppressRowClick) return; // a drag/swipe just ended on this row — don't also select
+  if(rowEl && _openSwipeRow===rowEl){
+    // Row is currently swiped open — a tap on its visible sliver closes it
+    // rather than selecting, matching how this gesture works everywhere else.
+    rowEl.style.transform = 'translateX(0)';
+    _openSwipeRow = null;
+    return;
+  }
+  setAcctFilter(id);
+  closeSwitchAcctModal();
+}
+
+// Swipe-left-to-reveal-Edit on each account row. Deliberately reveals only
+// Edit, not Remove — putting delete directly on a swipe in a quick-switch
+// context is an easy way to fat-finger a deletion; Edit opens the same
+// acctModal the Trading Accounts tab uses, which already has its own
+// Delete flow behind a confirmation. Touch-only: on desktop (no touch
+// events fire) rows just aren't swipeable — Edit is still reachable via
+// the Trading Accounts tab there.
+const SWIPE_REVEAL_PX = 78;
+function _swipeStart(e, row){
+  const t = e.touches[0];
+  _swipeState = { row, startX: t.clientX, startTranslate: (_openSwipeRow===row ? -SWIPE_REVEAL_PX : 0), dragging:false, currentTranslate:0 };
+}
+function _swipeMove(e, row){
+  if(!_swipeState || _swipeState.row!==row) return;
+  const t = e.touches[0];
+  const dx = t.clientX - _swipeState.startX;
+  if(!_swipeState.dragging && Math.abs(dx) > 6) _swipeState.dragging = true;
+  if(!_swipeState.dragging) return;
+  const translate = Math.max(-SWIPE_REVEAL_PX, Math.min(0, _swipeState.startTranslate + dx));
+  row.style.transition = 'none';
+  row.style.transform = `translateX(${translate}px)`;
+  _swipeState.currentTranslate = translate;
+  e.preventDefault(); // once it's clearly a horizontal drag, stop the sheet from also scrolling
+}
+function _swipeEnd(e, row){
+  if(!_swipeState || _swipeState.row!==row){ _swipeState=null; return; }
+  const { dragging, currentTranslate } = _swipeState;
+  row.style.transition = '';
+  if(dragging){
+    if(_openSwipeRow && _openSwipeRow!==row) _openSwipeRow.style.transform = 'translateX(0)';
+    if(currentTranslate < -SWIPE_REVEAL_PX/2){
+      row.style.transform = `translateX(-${SWIPE_REVEAL_PX}px)`;
+      _openSwipeRow = row;
+    } else {
+      row.style.transform = 'translateX(0)';
+      if(_openSwipeRow===row) _openSwipeRow = null;
+    }
+    _suppressRowClick = true;
+    setTimeout(()=>{ _suppressRowClick=false; }, 60);
+  }
+  _swipeState = null;
+}
+
 function setAcctFilter(id){
   activeAcctFilter=id;
   // Persist selected account to Telegram CloudStorage (session state)
@@ -4243,13 +4400,23 @@ function renderAll(){
 
 function renderHeader(){
   const ft=filteredTrades(), total=ft.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
-  const el=document.getElementById('totalPnlHeader');
-  const newText=fmtPnl(total), newClass='val '+(total>=0?'positive':'negative');
-  if(el.textContent!==newText){
-    el.textContent=newText; el.className=newClass;
-    el.classList.add('pnl-flash');
-    el.addEventListener('animationend',()=>el.classList.remove('pnl-flash'),{once:true});
-  } else { el.className=newClass; }
+  // filteredTrades() is already account-scoped by activeAcctFilter, so when
+  // a specific account is selected `total` here IS that account's P&L —
+  // no separate re-filter needed to get the figure for the balance below.
+  const current = activeAcctFilter==='all' ? null : accounts.find(a=>a.id===activeAcctFilter);
+  const balEl=document.getElementById('acctHeaderBalanceVal'), pnlEl=document.getElementById('acctHeaderPnl');
+  if(current && balEl && pnlEl){
+    const bal = current.balance + total;
+    const newBalText = (bal<0?'-':'')+'$'+Math.abs(bal).toFixed(2);
+    const newBalClass = 'val '+(bal>=0?'positive':'negative');
+    if(balEl.textContent!==newBalText){
+      balEl.textContent=newBalText; balEl.className=newBalClass;
+      balEl.classList.add('pnl-flash');
+      balEl.addEventListener('animationend',()=>balEl.classList.remove('pnl-flash'),{once:true});
+    } else { balEl.className=newBalClass; }
+    pnlEl.textContent=(total>=0?'+':'-')+'$'+Math.abs(total).toFixed(2);
+    pnlEl.className='acct-header-pnl '+(total>=0?'positive':'negative');
+  }
   // Only update the subtitle on the Journal tab — other tabs own their subtitle
   if(activeTab==='Journal'){
     const acctName=activeAcctFilter!=='all'?' · '+(accounts.find(a=>a.id===activeAcctFilter)?.name||''):'';
@@ -5387,9 +5554,18 @@ function computePeriodStats(fromDate, toDate, acctId){
   const avgLoss = losses.length ? gl/losses.length : 0;
   const exp = periodTrades.length ? ((winRate/100*avgWin)-((1-winRate/100)*avgLoss)) : 0;
 
-  const pnls = periodTrades.map(t=>parseFloat(t.pnl)||0);
-  const bestTrade = pnls.length ? Math.max(...pnls) : null;
-  const worstTrade = pnls.length ? Math.min(...pnls) : null;
+  // Best Trade = largest WINNING trade, Worst Trade = largest LOSING trade
+  // — not simply max/min across every trade regardless of sign. With the
+  // old max/min-of-everything approach, a period with zero losing trades
+  // would still show "Worst Trade" as whatever the smallest *winning*
+  // trade happened to be (a real positive number, easily confused for a
+  // second best-trade figure) instead of communicating "there was no
+  // losing trade this period." $0 is the explicit, unambiguous fallback
+  // for "no trade in that category" — colored per its category (red for
+  // Worst, green for Best) regardless of whether it's a real value or the
+  // $0 fallback, see the two render sites for this.
+  const bestTrade = wins.length ? Math.max(...wins.map(t=>parseFloat(t.pnl)||0)) : 0;
+  const worstTrade = losses.length ? Math.min(...losses.map(t=>parseFloat(t.pnl)||0)) : 0;
 
   // Avg Hold Time depends on Close Time being logged, which is optional —
   // hasHoldData tells the renderer whether it's safe to show the row at
@@ -5533,14 +5709,23 @@ function renderMonthReportCanvas(){
     browserBtn.style.display='none';
     copyBtn.style.display = _clipboardImageSupported() ? '' : 'none';
   } else {
-    // Untested fallback bucket: a genuine (non-Telegram) mobile browser —
-    // e.g. visiting the site directly in mobile Safari/Chrome. No reason
-    // yet to believe long-press-save is restricted outside an embedded
-    // WebView, so default to showing everything.
-    saveBtn.style.display='';
-    shareBtn.style.display='';
-    browserBtn.style.display='none';
-    copyBtn.style.display = _clipboardImageSupported() ? '' : 'none';
+    // Genuine (non-Telegram) mobile browser — e.g. visiting the site
+    // directly in mobile Chrome/Safari, not through Telegram at all.
+    // Confirmed on Android: Save's long-press-hint is a dead end there
+    // too, same as inside Telegram's Android WebView, so hide it — Copy
+    // and Share both work. iOS/other touch browsers are untested, so they
+    // keep the full default set rather than guessing.
+    if(_isAndroidDevice()){
+      saveBtn.style.display='none';
+      shareBtn.style.display='';
+      browserBtn.style.display='none';
+      copyBtn.style.display = _clipboardImageSupported() ? '' : 'none';
+    } else {
+      saveBtn.style.display='';
+      shareBtn.style.display='';
+      browserBtn.style.display='none';
+      copyBtn.style.display = _clipboardImageSupported() ? '' : 'none';
+    }
   }
 
   // Theme-aware palette — mirrors the app's own CSS custom properties for
@@ -5662,8 +5847,13 @@ function renderMonthReportCanvas(){
   // Stat rows
   const fmtSigned = v => v===null ? '—' : fmtPnl(v);
   const rowValsMap = {
-    'Best Trade': [fmtSigned(stats.bestTrade), stats.bestTrade>=0 ? C.accent : C.red],
-    'Worst Trade': [fmtSigned(stats.worstTrade), stats.worstTrade!==null && stats.worstTrade<0 ? C.red : C.accent],
+    // bestTrade/worstTrade are now always >=0 / <=0 respectively by
+    // construction (see computePeriodStats), including the $0 "no trade in
+    // that category" fallback — so color is unconditional per row, not
+    // sign-dependent. A $0 Worst Trade still renders red (there were no
+    // losses to show, not a neutral/positive result).
+    'Best Trade': [fmtSigned(stats.bestTrade), C.accent],
+    'Worst Trade': [fmtSigned(stats.worstTrade), C.red],
     'Avg Hold Time': [stats.avgHold===null?'—':minutesToDuration(stats.avgHold), C.text],
     'Max Balance Drawdown': [stats.maxDD>0?fmtPnl(-stats.maxDD):'—', stats.maxDD>0?C.red:C.text],
     'Win Rate': [stats.winRate.toFixed(1)+'%', stats.winRate>=50?C.accent:C.red],
@@ -6848,8 +7038,12 @@ function dayReportHtml(stats){
   const pnlCls = stats.dayPnl>=0 ? 'positive' : 'negative';
   const fmtSigned = v => v===null ? '—' : fmtPnl(v);
   const rows = [
-    ['Best Trade', fmtSigned(stats.bestTrade), stats.bestTrade>=0?'positive':'negative'],
-    ['Worst Trade', fmtSigned(stats.worstTrade), (stats.worstTrade!==null && stats.worstTrade<0)?'negative':'positive']
+    // Unconditional per row now — see the matching comment at the Month
+    // Report canvas render site for why (bestTrade/worstTrade are always
+    // >=0 / <=0 by construction, including the $0 "none this period"
+    // fallback, which should still read red/green respectively).
+    ['Best Trade', fmtSigned(stats.bestTrade), 'positive'],
+    ['Worst Trade', fmtSigned(stats.worstTrade), 'negative']
   ];
   // Same rule as the Month Report: only show Avg Hold Time if at least
   // one trade that day actually has a logged Close Time.
