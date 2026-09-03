@@ -7651,20 +7651,34 @@ async function renderCharts(ft){
   if(token !== chartsRenderToken) return;
   const sorted=[...(ft||filteredTrades())].sort((a,b)=>new Date(a.date)-new Date(b.date));
   if(!sorted.length)return;
+  // Bug fix (was: labels: sorted.map(t=>t.pair) below) — that gave Chart.js one
+  // x-axis label PER TRADE, so any account with repeat pairs produced dozens of
+  // duplicate, crowded, overlapping labels. Fixed by ticking on trade sequence
+  // number instead (1, 2, 3…) with Chart.js's own tick-thinning (maxTicksLimit)
+  // keeping the axis readable regardless of trade count, and moving the actual
+  // per-trade identity (pair + date) into the tooltip title, where it's still
+  // one tap/hover away but no longer fighting for axis space.
+  const tradeLabels=sorted.map((t,i)=>String(i+1));
+  const tooltipTitle=i=>{
+    const t=sorted[i]; if(!t) return '';
+    const d=parseLocalDate(t.date);
+    const dateStr=d?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):(t.date||'');
+    return (t.pair||'Trade')+' · '+dateStr;
+  };
   let running=0;
   const equity=sorted.map(t=>{running+=(parseFloat(t.pnl)||0);return +running.toFixed(2);});
-  charts.equity=new Chart(document.getElementById('equityChart'),{type:'line',data:{labels:sorted.map(t=>t.pair),datasets:[{data:equity,borderColor:'#00e5a0',backgroundColor:'rgba(0,229,160,0.07)',borderWidth:2,fill:true,tension:0.4,pointRadius:sorted.length<20?4:0,pointBackgroundColor:'#00e5a0',pointBorderColor:'#0a0d12',pointBorderWidth:2}]},options:chartOpts({prefix:'$'})});
+  charts.equity=new Chart(document.getElementById('equityChart'),{type:'line',data:{labels:tradeLabels,datasets:[{data:equity,borderColor:'#00e5a0',backgroundColor:'rgba(0,229,160,0.07)',borderWidth:2,fill:true,tension:0.4,pointRadius:sorted.length<20?4:0,pointBackgroundColor:'#00e5a0',pointBorderColor:'#0a0d12',pointBorderWidth:2}]},options:chartOpts({prefix:'$',tooltipTitle})});
   const pnls=sorted.map(t=>parseFloat(t.pnl)||0);
-  charts.pnl=new Chart(document.getElementById('pnlChart'),{type:'bar',data:{labels:sorted.map(t=>t.pair),datasets:[{data:pnls,backgroundColor:pnls.map(p=>p>=0?'rgba(0,229,160,0.65)':'rgba(244,63,94,0.65)'),borderRadius:4,borderSkipped:false}]},options:chartOpts({prefix:'$'})});
+  charts.pnl=new Chart(document.getElementById('pnlChart'),{type:'bar',data:{labels:tradeLabels,datasets:[{data:pnls,backgroundColor:pnls.map(p=>p>=0?'rgba(0,229,160,0.65)':'rgba(244,63,94,0.65)'),borderRadius:4,borderSkipped:false}]},options:chartOpts({prefix:'$',tooltipTitle})});
   const rData=sorted.map(t=>{const r=calcR(t);return r!==null?parseFloat(r):null;});
   if(rData.some(r=>r!==null)){
-    charts.r=new Chart(document.getElementById('rChart'),{type:'bar',data:{labels:sorted.map(t=>t.pair),datasets:[{data:rData,backgroundColor:rData.map(r=>r===null?'transparent':r>=0?'rgba(59,130,246,0.65)':'rgba(244,63,94,0.65)'),borderRadius:3,borderSkipped:false}]},options:chartOpts({suffix:'R'})});
+    charts.r=new Chart(document.getElementById('rChart'),{type:'bar',data:{labels:tradeLabels,datasets:[{data:rData,backgroundColor:rData.map(r=>r===null?'transparent':r>=0?'rgba(59,130,246,0.65)':'rgba(244,63,94,0.65)'),borderRadius:3,borderSkipped:false}]},options:chartOpts({suffix:'R',tooltipTitle})});
   } else {
     document.getElementById('rChart').parentElement.innerHTML+='<div style="color:var(--text3);font-size:13px;text-align:center;padding:12px 0">Add a Risk Amount to trades to see R-multiples</div>';
   }
 }
 
-function chartOpts({prefix='',suffix=''}={}){
+function chartOpts({prefix='',suffix='',tooltipTitle=null}={}){
   function fmtVal(v){
     if(v===null||v===undefined) return '—';
     if(prefix==='$'){
@@ -7680,7 +7694,7 @@ function chartOpts({prefix='',suffix=''}={}){
     }
     return prefix+v+suffix;
   }
-  return{responsive:true,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1f2b',borderColor:'#252f3d',borderWidth:1,titleColor:'#8896a8',bodyColor:'#e8edf3',padding:10,callbacks:{label:ctx=>fmtVal(ctx.parsed.y)}}},scales:{x:{grid:{color:'rgba(30,37,48,0.8)'},ticks:{color:'#4a5a6e',font:{size:10},maxRotation:45}},y:{grid:{color:'rgba(30,37,48,0.8)'},ticks:{color:'#4a5a6e',font:{size:10},callback:v=>fmtTick(v)}}}};
+  return{responsive:true,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1f2b',borderColor:'#252f3d',borderWidth:1,titleColor:'#8896a8',bodyColor:'#e8edf3',padding:10,callbacks:Object.assign({label:ctx=>fmtVal(ctx.parsed.y)},tooltipTitle?{title:items=>tooltipTitle(items[0].dataIndex)}:{})}},scales:{x:{grid:{color:'rgba(30,37,48,0.8)'},ticks:{color:'#4a5a6e',font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:8}},y:{grid:{color:'rgba(30,37,48,0.8)'},ticks:{color:'#4a5a6e',font:{size:10},callback:v=>fmtTick(v)}}}};
 }
 
 function destroyCharts(){
