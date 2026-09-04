@@ -420,6 +420,34 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 /* ── Progress bar ── */
 .progress-bar{height:3px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-top:6px}
 .progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s}
+/* Best Day of Week / Session Performance row — replaces the old thin
+   .progress-bar rows with a thicker win-rate bar plus trade count, so all
+   three numbers (count, P&L, win rate) the app already computes per bucket
+   are visible without a badge-only summary. Shared by dowBreakdown and
+   sessionBreakdown via _perfRowHtml() so the two stay visually identical. */
+.perf-row{padding:10px 0;border-bottom:1px solid var(--border)}
+.perf-row:last-child{border-bottom:none}
+.perf-row-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:7px}
+.perf-row-label{font-size:13px;font-weight:700;color:var(--text)}
+.perf-row-meta{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.perf-row-count{font-size:11px;color:var(--text3);white-space:nowrap}
+.perf-row-pnl{font-size:12px;font-weight:700;font-family:var(--mono);white-space:nowrap}
+.perf-row-wr{font-size:11px;font-family:var(--mono);min-width:30px;text-align:right}
+.perf-bar-track{height:7px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.perf-bar-fill{height:100%;border-radius:4px;transition:width .3s}
+/* R-Multiple Distribution histogram — replaces the old per-trade rChart
+   Chart.js bar chart (whose x-axis was one label per trade). Buckets
+   R-multiples into fixed ranges so the shape of the edge (not a
+   chronological timeline — that's still P&L per Trade above) is visible
+   regardless of trade count. Plain HTML/CSS rather than Chart.js so it's
+   trivially theme-aware via CSS vars, same as the day/session rows above. */
+.rhist-row{display:flex;align-items:flex-end;gap:6px;height:130px;padding:4px 2px 0}
+.rhist-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.rhist-count{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.rhist-bar{width:100%;border-radius:4px 4px 0 0;min-height:2px}
+.rhist-label{font-size:10px;color:var(--text3);white-space:nowrap}
+.rhist-footer{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);border-top:1px solid var(--border);margin-top:14px;padding-top:10px}
+.rhist-footer .v{font-family:var(--mono);font-weight:700}
 /* ── Symbols donut + Pair performance table (Metrics tab redesign) ──
    Shared by both widgets: a small anchored popover (filter list / column
    picker) that floats over the content instead of pushing it down, closed
@@ -1043,7 +1071,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div class="card stats-panel">
     <div class="stats-subsection"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Equity Curve</div><canvas id="equityChart" height="150"></canvas></div>
     <div class="stats-subsection"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>P&L per Trade</div><canvas id="pnlChart" height="130"></canvas></div>
-    <div class="stats-subsection"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="14" width="4" height="7"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="11" width="4" height="10"/></svg>R-Multiple Distribution</div><canvas id="rChart" height="130"></canvas></div>
+    <div class="stats-subsection"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="14" width="4" height="7"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="11" width="4" height="10"/></svg>R-Multiple Distribution</div><div id="rHistogram"></div></div>
   </div>
 
   <!-- Panel 2: breakdowns by setup / day / session -->
@@ -7430,23 +7458,7 @@ function renderStats(){
     else if(parseFloat(t.pnl)<0) dowMap[d].losses++;
   });
   const dowHasData = DOW_ORDER.some(d=>dowMap[d].total>0);
-  document.getElementById('dowBreakdown').innerHTML = dowHasData ? DOW_ORDER.map(d=>{
-    const row = dowMap[d];
-    if(!row.total) return `<div class="info-row"><span class="k" style="color:var(--text3)">${DOW_NAMES[d]}</span><span style="font-size:12px;color:var(--text3)">—</span></div>`;
-    const wr = (row.wins/row.total*100).toFixed(0);
-    const pnlColor = row.pnl>=0?'var(--green)':'var(--red)';
-    return `<div class="info-row" style="flex-direction:column;align-items:flex-start;gap:4px">
-      <div style="display:flex;justify-content:space-between;width:100%">
-        <span class="k">${DOW_NAMES[d]}</span>
-        <div style="display:flex;gap:10px;align-items:center">
-          <span style="font-size:11px;color:var(--text3)">${row.total} trade${row.total!==1?'s':''}</span>
-          <span style="font-size:12px;font-weight:700;font-family:var(--mono);color:${pnlColor}">${fmtPnl(row.pnl)}</span>
-          <span class="v ${parseInt(wr)>=50?'positive':'negative'}">${wr}%</span>
-        </div>
-      </div>
-      <div class="progress-bar" style="width:100%"><div class="progress-fill" style="width:${wr}%;background:${parseInt(wr)>=50?'var(--accent)':'var(--red)'}"></div></div>
-    </div>`;
-  }).join('') : '<div style="color:var(--text3);font-size:14px;padding:8px 0">Log trades with dates to see day breakdown</div>';
+  document.getElementById('dowBreakdown').innerHTML = dowHasData ? DOW_ORDER.map(d=>_perfRowHtml(DOW_NAMES[d],dowMap[d])).join('') : '<div style="color:var(--text3);font-size:14px;padding:8px 0">Log trades with dates to see day breakdown</div>';
 
   // ── Session performance ──
   const SESSION_ORDER = ['🌅 Asian','🇬🇧 London','⚡ Overlap','🗽 New York'];
@@ -7463,22 +7475,7 @@ function renderStats(){
   });
   const allSessKeys = [...SESSION_ORDER, 'Other'];
   const sessHasData = allSessKeys.some(s=>sessMap[s]&&sessMap[s].total>0);
-  document.getElementById('sessionBreakdown').innerHTML = sessHasData ? allSessKeys.filter(s=>sessMap[s]&&sessMap[s].total>0).map(s=>{
-    const row = sessMap[s];
-    const wr = (row.wins/row.total*100).toFixed(0);
-    const pnlColor = row.pnl>=0?'var(--green)':'var(--red)';
-    return `<div class="info-row" style="flex-direction:column;align-items:flex-start;gap:4px">
-      <div style="display:flex;justify-content:space-between;width:100%">
-        <span class="k">${s}</span>
-        <div style="display:flex;gap:10px;align-items:center">
-          <span style="font-size:11px;color:var(--text3)">${row.total} trade${row.total!==1?'s':''}</span>
-          <span style="font-size:12px;font-weight:700;font-family:var(--mono);color:${pnlColor}">${fmtPnl(row.pnl)}</span>
-          <span class="v ${parseInt(wr)>=50?'positive':'negative'}">${wr}%</span>
-        </div>
-      </div>
-      <div class="progress-bar" style="width:100%"><div class="progress-fill" style="width:${wr}%;background:${parseInt(wr)>=50?'var(--accent)':'var(--red)'}"></div></div>
-    </div>`;
-  }).join('') : '<div style="color:var(--text3);font-size:14px;padding:8px 0">Log trades with entry times to see session breakdown</div>';
+  document.getElementById('sessionBreakdown').innerHTML = sessHasData ? allSessKeys.filter(s=>sessMap[s]&&sessMap[s].total>0).map(s=>_perfRowHtml(s,sessMap[s])).join('') : '<div style="color:var(--text3);font-size:14px;padding:8px 0">Log trades with entry times to see session breakdown</div>';
 
   // ── Best & Worst ──
   const sorted2=[...ft].sort((a,b)=>parseFloat(b.pnl)-parseFloat(a.pnl));
@@ -7670,12 +7667,41 @@ async function renderCharts(ft){
   charts.equity=new Chart(document.getElementById('equityChart'),{type:'line',data:{labels:tradeLabels,datasets:[{data:equity,borderColor:'#00e5a0',backgroundColor:'rgba(0,229,160,0.07)',borderWidth:2,fill:true,tension:0.4,pointRadius:sorted.length<20?4:0,pointBackgroundColor:'#00e5a0',pointBorderColor:'#0a0d12',pointBorderWidth:2}]},options:chartOpts({prefix:'$',tooltipTitle})});
   const pnls=sorted.map(t=>parseFloat(t.pnl)||0);
   charts.pnl=new Chart(document.getElementById('pnlChart'),{type:'bar',data:{labels:tradeLabels,datasets:[{data:pnls,backgroundColor:pnls.map(p=>p>=0?'rgba(0,229,160,0.65)':'rgba(244,63,94,0.65)'),borderRadius:4,borderSkipped:false}]},options:chartOpts({prefix:'$',tooltipTitle})});
-  const rData=sorted.map(t=>{const r=calcR(t);return r!==null?parseFloat(r):null;});
-  if(rData.some(r=>r!==null)){
-    charts.r=new Chart(document.getElementById('rChart'),{type:'bar',data:{labels:tradeLabels,datasets:[{data:rData,backgroundColor:rData.map(r=>r===null?'transparent':r>=0?'rgba(59,130,246,0.65)':'rgba(244,63,94,0.65)'),borderRadius:3,borderSkipped:false}]},options:chartOpts({suffix:'R',tooltipTitle})});
-  } else {
-    document.getElementById('rChart').parentElement.innerHTML+='<div style="color:var(--text3);font-size:13px;text-align:center;padding:12px 0">Add a Risk Amount to trades to see R-multiples</div>';
+  const rData=sorted.map(t=>calcR(t)).filter(r=>r!==null).map(r=>parseFloat(r));
+  renderRHistogram(rData);
+}
+
+// R-Multiple Distribution: buckets every closed R-multiple in the current
+// filter into fixed ranges and renders bars sized to each bucket's trade
+// count. Kept out of renderCharts' Chart.js/canvas pipeline entirely —
+// plain HTML bars read var(--accent)/var(--red)/var(--text3) directly, so
+// no separate light/dark color branch is needed the way Chart.js's
+// hardcoded-hex chartOpts() would require.
+const R_BUCKETS=[
+  {lo:-Infinity,hi:-2,label:'<-2R'},
+  {lo:-2,hi:-1,label:'-2/-1'},
+  {lo:-1,hi:0,label:'-1/0'},
+  {lo:0,hi:1,label:'0/1'},
+  {lo:1,hi:2,label:'1/2'},
+  {lo:2,hi:3,label:'2/3'},
+  {lo:3,hi:Infinity,label:'>3R'}
+];
+function renderRHistogram(rData){
+  const el=document.getElementById('rHistogram'); if(!el) return;
+  if(!rData.length){
+    el.innerHTML='<div style="color:var(--text3);font-size:13px;text-align:center;padding:12px 0">Add a Risk Amount to trades to see R-multiples</div>';
+    return;
   }
+  const counts=R_BUCKETS.map(b=>rData.filter(r=>r>=b.lo && r<b.hi).length);
+  const max=Math.max(...counts,1);
+  const avg=rData.reduce((s,r)=>s+r,0)/rData.length;
+  const bars=R_BUCKETS.map((b,i)=>{
+    const h=Math.round((counts[i]/max)*100);
+    const neg=b.hi<=0;
+    const color=neg?'var(--red)':'var(--accent)';
+    return `<div class="rhist-col"><span class="rhist-count">${counts[i]}</span><div class="rhist-bar" style="height:${h}%;background:${color};opacity:${counts[i]?0.75:0}"></div><span class="rhist-label">${b.label}</span></div>`;
+  }).join('');
+  el.innerHTML=`<div class="rhist-row">${bars}</div><div class="rhist-footer"><span>${rData.length} trade${rData.length!==1?'s':''}</span><span>Avg <span class="v ${avg>=0?'positive':'negative'}">${avg>=0?'+':''}${avg.toFixed(2)}R</span></span></div>`;
 }
 
 function chartOpts({prefix='',suffix='',tooltipTitle=null}={}){
@@ -7700,7 +7726,7 @@ function chartOpts({prefix='',suffix='',tooltipTitle=null}={}){
 function destroyCharts(){
   Object.values(charts).forEach(c=>{try{c.destroy();}catch{}});
   charts={};
-  [['equityChart',150],['pnlChart',130],['rChart',130]].forEach(([id,h])=>{
+  [['equityChart',150],['pnlChart',130]].forEach(([id,h])=>{
     const el=document.getElementById(id); if(el){
       const title=el.parentElement.querySelector('.chart-title')?.innerHTML||'';
       el.parentElement.innerHTML=`<div class="chart-title">${title}</div><canvas id="${id}" height="${h}"></canvas>`;
@@ -7711,6 +7737,29 @@ function destroyCharts(){
 // ─── Utils ───
 function irow(k,v){ return `<div class="info-row"><span class="k">${k}</span><span class="v">${v}</span></div>`; }
 function fmtPnl(v){ const n=parseFloat(v)||0; if(n===0)return '$0.00'; return (n>0?'+$':'-$')+Math.abs(n).toFixed(2); }
+// Shared row renderer for Best Day of Week / Session Performance — both
+// blocks compute the same {wins,losses,total,pnl} shape per bucket, so one
+// function keeps them visually identical instead of two near-duplicate
+// template strings drifting apart. Thicker win-rate bar (was a 3px
+// .progress-bar) plus trade count restored alongside it and P&L, so all
+// three numbers the underlying data already has are visible per row.
+function _perfRowHtml(label,row){
+  if(!row || !row.total) return `<div class="perf-row"><div class="perf-row-top"><span class="perf-row-label" style="color:var(--text3)">${label}</span><span class="perf-row-count">—</span></div></div>`;
+  const wr=Math.round(row.wins/row.total*100);
+  const barColor=wr>=50?'var(--accent)':'var(--red)';
+  const pnlColor=row.pnl>=0?'var(--green)':'var(--red)';
+  return `<div class="perf-row">
+    <div class="perf-row-top">
+      <span class="perf-row-label">${label}</span>
+      <div class="perf-row-meta">
+        <span class="perf-row-count">${row.total} trade${row.total!==1?'s':''}</span>
+        <span class="perf-row-pnl" style="color:${pnlColor}">${fmtPnl(row.pnl)}</span>
+        <span class="perf-row-wr" style="color:${barColor}">${wr}%</span>
+      </div>
+    </div>
+    <div class="perf-bar-track"><div class="perf-bar-fill" style="width:${wr}%;background:${barColor}"></div></div>
+  </div>`;
+}
 // Account-status pattern (Batch 4) — "Synced Xs ago" label, shared by any
 // account-style card (Prop Payout Tracker now; the same shape MT5-connected
 // accounts will reuse later, per the roadmap, so this stays generic rather
