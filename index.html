@@ -1069,9 +1069,68 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
   <!-- Panel 1: trade-by-trade performance over time -->
   <div class="card stats-panel">
-    <div class="stats-subsection"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Equity Curve</div><canvas id="equityChart" height="150"></canvas></div>
-    <div class="stats-subsection"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>P&L per Trade</div><canvas id="pnlChart" height="130"></canvas></div>
+    <div class="stats-subsection">
+      <!-- Balance header: real dollar balance (starting balance + trades + ledger),
+           badge is TRADING performance only (excludes deposits/withdrawals) so a
+           deposit never reads as a winning trade — see computeBalanceSeries(). -->
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="chart-title" style="margin-bottom:0">Balance</span>
+            <span id="balanceBadge" class="v" style="font-size:11px;padding:2px 8px;border-radius:10px;font-family:var(--mono)"></span>
+          </div>
+          <div id="balanceAmount" style="font-size:22px;font-weight:700;color:var(--text);margin-top:4px;font-family:var(--mono)"></div>
+        </div>
+        <div style="position:relative">
+          <button class="btn-sm" onclick="event.stopPropagation();toggleMiniPopover('balanceMenuPanel')" style="padding:6px 8px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+          <div class="mini-popover-panel" id="balanceMenuPanel" onclick="event.stopPropagation()">
+            <label style="display:flex;align-items:center;gap:8px;padding:8px 6px;font-size:13px;color:var(--text2);cursor:pointer">
+              <input type="checkbox" id="showLedgerMarkers" checked onchange="renderCharts()"> Show deposits/withdrawals
+            </label>
+            <div style="border-top:1px solid var(--border);margin:2px 0"></div>
+            <div style="padding:8px 6px;font-size:13px;color:var(--accent);cursor:pointer" onclick="toggleMiniPopover('balanceMenuPanel');openLedgerModal()">+ Log deposit/withdrawal</div>
+          </div>
+        </div>
+      </div>
+      <canvas id="equityChart" height="150"></canvas>
+    </div>
+    <div class="stats-subsection"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>P&L per Trade</div><div id="pnlBars"></div></div>
     <div class="stats-subsection"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="14" width="4" height="7"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="11" width="4" height="10"/></svg>R-Multiple Distribution</div><div id="rHistogram"></div></div>
+  </div>
+
+  <!-- Deposit/Withdrawal ledger modal — manual entries only. Prop-firm payouts
+       (propFirms[].payouts[]) show here read-only when the current account is
+       linked, so a funded account's payout never needs logging twice. -->
+  <div class="modal-overlay" id="ledgerModal" onclick="closeOnOverlay(event)">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Deposits &amp; Withdrawals</div>
+      <div id="ledgerAcctNote" style="font-size:12px;color:var(--text3);margin:-8px 0 12px"></div>
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <div style="display:flex;gap:8px">
+          <button class="btn-sm" id="ledgerType-deposit" onclick="setLedgerType('deposit')" style="flex:1">Deposit</button>
+          <button class="btn-sm" id="ledgerType-withdrawal" onclick="setLedgerType('withdrawal')" style="flex:1">Withdrawal</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount ($)</label>
+        <input class="form-input" id="ledgerAmount" type="number" step="any" placeholder="e.g. 2000"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input class="form-input" id="ledgerDate" type="date"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Note (optional)</label>
+        <input class="form-input" id="ledgerNote" placeholder="e.g. Monthly top-up"/>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button class="btn btn-primary" onclick="addLedgerEntry()" style="flex:2">Add Entry</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('ledgerModal').classList.remove('open')" style="flex:1">Close</button>
+      </div>
+      <div id="ledgerEntryList" style="margin-top:16px"></div>
+    </div>
   </div>
 
   <!-- Panel 2: breakdowns by setup / day / session -->
@@ -2376,8 +2435,12 @@ function applyTheme(mode, save = true){
     html.removeAttribute('data-theme');
     if(btn) btn.textContent = '🌙';
   }
-  // Refresh Chart.js charts so their colors pick up the new token values
-  Object.values(charts).forEach(c => { try{ c.update('none'); }catch{} });
+  // Chart.js reads colors into fixed hex at construction time — a live
+  // .update('none') repaints pixels but never re-resolves CSS vars, so the
+  // one remaining Chart.js chart (Balance) would silently stay on its old
+  // theme's colors otherwise. Rebuilding via renderStats() re-fetches fresh
+  // var(...) values through chartOpts()/themeColors() at construction time.
+  if(activeTab==='Stats') renderStats();
   if(save) CS.set('theme', mode);
 }
 
@@ -3964,6 +4027,7 @@ async function loadAll(){
         }
         migrateLegacyImages(); // fire-and-forget; one-time upgrade for pre-externalisation data
         migrateV1PropFirms();  // one-time: carry forward any v1 prop firm schema fields
+        migrateAccountLedgers(); // one-time: ensure every account has a ledger[] array
         return;
       }
       // Drive returned null — signed-in but no data file yet (brand new account).
@@ -4160,6 +4224,89 @@ function migrateV1PropFirms(){
   }
 }
 
+// ─── One-time migration: ensure every account has a manual deposit/withdrawal
+// ledger array. Entries here are ONLY manual (top-ups, personal draws) — a
+// linked funded prop account's payouts stay in propFirms[].payouts[] and are
+// merged in read-only via derivedPropWithdrawals(), never duplicated here.
+// Safe to run repeatedly. ──
+function migrateAccountLedgers(){
+  let changed = false;
+  accounts.forEach(a=>{ if(!Array.isArray(a.ledger)){ a.ledger = []; changed = true; } });
+  if(changed) gdriveScheduleSave();
+}
+
+// ─── Ledger: manual entries + derived (read-only) prop-firm payouts ───
+function derivedPropWithdrawals(accountId){
+  return propFirms
+    .filter(f=>f.linkedAccount===accountId && Array.isArray(f.payouts))
+    .flatMap(f=>f.payouts.map(p=>({
+      id:'prop-'+f.id+'-'+p.id, type:'withdrawal', amount:parseFloat(p.amount)||0,
+      date:p.date||'', note:p.note||('Payout — '+f.name), source:'prop', accountId
+    })));
+}
+function accountLedgerEntries(accountId){
+  const manual=(accounts.find(a=>a.id===accountId)?.ledger||[]).map(e=>({...e,accountId,source:'manual'}));
+  return [...manual, ...derivedPropWithdrawals(accountId)].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+}
+function allAccountsLedgerEntries(){
+  return accounts.flatMap(a=>accountLedgerEntries(a.id)).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+}
+let ledgerType='deposit';
+function setLedgerType(t){
+  ledgerType=t;
+  document.getElementById('ledgerType-deposit').classList.toggle('accent',t==='deposit');
+  document.getElementById('ledgerType-withdrawal').classList.toggle('accent',t==='withdrawal');
+}
+function openLedgerModal(){
+  if(activeAcctFilter==='all' && accounts.length>1){
+    showToast('Select a specific account first to log a deposit/withdrawal','error');
+    return;
+  }
+  const acct = activeAcctFilter==='all' ? accounts[0] : accounts.find(a=>a.id===activeAcctFilter);
+  if(!acct){ showToast('Add an account first','error'); return; }
+  document.getElementById('ledgerAcctNote').textContent = 'For: '+acct.name;
+  document.getElementById('ledgerAmount').value='';
+  document.getElementById('ledgerNote').value='';
+  document.getElementById('ledgerDate').value=new Date().toISOString().slice(0,10);
+  setLedgerType('deposit');
+  renderLedgerEntryList(acct.id);
+  document.getElementById('ledgerModal').classList.add('open');
+}
+function addLedgerEntry(){
+  const acct = activeAcctFilter==='all' ? accounts[0] : accounts.find(a=>a.id===activeAcctFilter);
+  if(!acct) return;
+  const amount=parseFloat(document.getElementById('ledgerAmount').value);
+  const date=document.getElementById('ledgerDate').value;
+  const note=document.getElementById('ledgerNote').value.trim();
+  if(!amount || amount<=0){ showToast('Enter an amount','error'); return; }
+  if(!date){ showToast('Pick a date','error'); return; }
+  if(!Array.isArray(acct.ledger)) acct.ledger=[];
+  acct.ledger.push({id:genId(),type:ledgerType,amount,date,note});
+  saveAccounts();
+  renderLedgerEntryList(acct.id);
+  renderAll();
+  showToast((ledgerType==='deposit'?'Deposit':'Withdrawal')+' logged ✓');
+  document.getElementById('ledgerAmount').value=''; document.getElementById('ledgerNote').value='';
+}
+function deleteLedgerEntry(accountId,entryId){
+  const acct=accounts.find(a=>a.id===accountId); if(!acct) return;
+  acct.ledger=(acct.ledger||[]).filter(e=>e.id!==entryId);
+  saveAccounts(); renderLedgerEntryList(accountId); renderAll();
+}
+function renderLedgerEntryList(accountId){
+  const entries=accountLedgerEntries(accountId).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const el=document.getElementById('ledgerEntryList');
+  if(!entries.length){ el.innerHTML='<div style="color:var(--text3);font-size:13px;text-align:center;padding:8px 0">No entries yet</div>'; return; }
+  el.innerHTML=entries.map(e=>{
+    const sign=e.type==='deposit'?'+':'-';
+    const color=e.type==='deposit'?'var(--green)':'var(--red)';
+    const del = e.source==='prop'
+      ? '<span style="font-size:10px;color:var(--text3)">from Payout Log</span>'
+      : `<span style="color:var(--red);cursor:pointer;font-size:12px" onclick="deleteLedgerEntry('${accountId}','${e.id}')">Delete</span>`;
+    return `<div class="info-row"><span class="k">${escapeHtml(e.date)}${e.note?' · '+escapeHtml(e.note):''}</span><div style="display:flex;align-items:center;gap:10px"><span class="v" style="color:${color}">${sign}$${Math.abs(e.amount).toFixed(2)}</span>${del}</div></div>`;
+  }).join('');
+}
+
 // ─── First launch ───
 
 // Close (dismiss) the first-launch/welcome modal without creating an account.
@@ -4187,7 +4334,7 @@ function createFirstAccount(){
   const name=document.getElementById('firstAcctName').value.trim();
   const bal=parseFloat(document.getElementById('firstAcctBal').value)||0;
   if(!name){showToast('Enter an account name','error');return;}
-  accounts.push({id:genId(),name,balance:bal});
+  accounts.push({id:genId(),name,balance:bal,ledger:[]});
   saveAccounts();
   document.getElementById('firstLaunchModal').classList.remove('open');
   hideSignInScreen();
@@ -6704,7 +6851,7 @@ function saveAccount(){
   const name=document.getElementById('acctName').value.trim(), bal=parseFloat(document.getElementById('acctBal').value)||0;
   if(!name){showToast('Enter account name','error');return;}
   if(editingAcctId){ const idx=accounts.findIndex(a=>a.id===editingAcctId); if(idx!==-1){accounts[idx].name=name;accounts[idx].balance=bal;} }
-  else accounts.push({id:genId(),name,balance:bal});
+  else accounts.push({id:genId(),name,balance:bal,ledger:[]});
   saveAccounts(); document.getElementById('acctModal').classList.remove('open');
   updateNavVisibility();
   renderAll(); renderAcctList(); renderSettings(); showToast(editingAcctId?'Account updated ✓':'Account added ✓');
@@ -7647,28 +7794,90 @@ async function renderCharts(ft){
   // call doesn't construct charts on top of (or get clobbered by) the newer one.
   if(token !== chartsRenderToken) return;
   const sorted=[...(ft||filteredTrades())].sort((a,b)=>new Date(a.date)-new Date(b.date));
-  if(!sorted.length)return;
-  // Bug fix (was: labels: sorted.map(t=>t.pair) below) — that gave Chart.js one
-  // x-axis label PER TRADE, so any account with repeat pairs produced dozens of
-  // duplicate, crowded, overlapping labels. Fixed by ticking on trade sequence
-  // number instead (1, 2, 3…) with Chart.js's own tick-thinning (maxTicksLimit)
-  // keeping the axis readable regardless of trade count, and moving the actual
-  // per-trade identity (pair + date) into the tooltip title, where it's still
-  // one tap/hover away but no longer fighting for axis space.
-  const tradeLabels=sorted.map((t,i)=>String(i+1));
-  const tooltipTitle=i=>{
-    const t=sorted[i]; if(!t) return '';
-    const d=parseLocalDate(t.date);
-    const dateStr=d?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):(t.date||'');
-    return (t.pair||'Trade')+' · '+dateStr;
-  };
-  let running=0;
-  const equity=sorted.map(t=>{running+=(parseFloat(t.pnl)||0);return +running.toFixed(2);});
-  charts.equity=new Chart(document.getElementById('equityChart'),{type:'line',data:{labels:tradeLabels,datasets:[{data:equity,borderColor:'#00e5a0',backgroundColor:'rgba(0,229,160,0.07)',borderWidth:2,fill:true,tension:0.4,pointRadius:sorted.length<20?4:0,pointBackgroundColor:'#00e5a0',pointBorderColor:'#0a0d12',pointBorderWidth:2}]},options:chartOpts({prefix:'$',tooltipTitle})});
-  const pnls=sorted.map(t=>parseFloat(t.pnl)||0);
-  charts.pnl=new Chart(document.getElementById('pnlChart'),{type:'bar',data:{labels:tradeLabels,datasets:[{data:pnls,backgroundColor:pnls.map(p=>p>=0?'rgba(0,229,160,0.65)':'rgba(244,63,94,0.65)'),borderRadius:4,borderSkipped:false}]},options:chartOpts({prefix:'$',tooltipTitle})});
+  renderBalanceCard(sorted);
+  renderPnlBars(sorted);
   const rData=sorted.map(t=>calcR(t)).filter(r=>r!==null).map(r=>parseFloat(r));
   renderRHistogram(rData);
+}
+
+// ─── Balance ───
+// Real dollar balance = starting balance (accounts[].balance) + every trade's
+// P&L + every ledger event (manual deposit/withdrawal, or a derived prop-firm
+// payout), all merged chronologically. Deliberately separate from the header
+// badge below: the badge is TRADING PERFORMANCE ONLY (tradingPnL / starting
+// balance) so a deposit can never inflate it and read as a winning trade —
+// that was the exact failure mode flagged before this got built.
+function computeBalanceSeries(ft){
+  const scope = activeAcctFilter;
+  const startingBalance = scope==='all'
+    ? accounts.reduce((s,a)=>s+(parseFloat(a.balance)||0),0)
+    : (parseFloat(accounts.find(a=>a.id===scope)?.balance)||0);
+  const ledgerEntries = scope==='all' ? allAccountsLedgerEntries() : accountLedgerEntries(scope);
+  const tradeEvents = ft.map(t=>({date:t.date||'',time:t.time||'',delta:parseFloat(t.pnl)||0,kind:'trade',ref:t}));
+  const ledgerEvents = ledgerEntries.map(e=>({date:e.date||'',time:'',delta:e.type==='deposit'?Math.abs(e.amount):-Math.abs(e.amount),kind:e.type,ref:e}));
+  const events=[...tradeEvents,...ledgerEvents].sort((a,b)=>{
+    const da=a.date+(a.time?'T'+a.time:''), db=b.date+(b.time?'T'+b.time:'');
+    return da.localeCompare(db);
+  });
+  let running=startingBalance;
+  const points=[{balance:+running.toFixed(2),kind:'start'}];
+  events.forEach(e=>{ running+=e.delta; points.push({balance:+running.toFixed(2),kind:e.kind,ref:e.ref}); });
+  const tradingPnL = ft.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
+  return {points, startingBalance, tradingPnL};
+}
+function renderBalanceCard(ft){
+  const amountEl=document.getElementById('balanceAmount'), badgeEl=document.getElementById('balanceBadge');
+  if(!document.getElementById('equityChart')) return; // panel not in DOM (e.g. different tab)
+  const {points,startingBalance,tradingPnL} = computeBalanceSeries(ft);
+  const current = points.length ? points[points.length-1].balance : startingBalance;
+  if(amountEl) amountEl.textContent = (current<0?'-$':'$')+Math.abs(current).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if(badgeEl){
+    if(startingBalance>0){
+      const pct=(tradingPnL/startingBalance)*100;
+      badgeEl.textContent=(pct>=0?'+':'')+pct.toFixed(2)+'%';
+      badgeEl.style.color = pct>=0 ? 'var(--green)':'var(--red)';
+      badgeEl.style.background = pct>=0 ? 'var(--green-dim)':'var(--red-dim)';
+    } else {
+      badgeEl.textContent='—'; badgeEl.style.background='transparent'; badgeEl.style.color='var(--text3)';
+    }
+  }
+  if(points.length<2) return; // starting point only — nothing to chart yet
+  const T=themeColors();
+  const showMarkers = document.getElementById('showLedgerMarkers')?.checked !== false;
+  const isEvent = p=>p.kind==='deposit'||p.kind==='withdrawal';
+  const pointColors = points.map(p=> p.kind==='deposit' ? '#3b82f6' : p.kind==='withdrawal' ? T.red : T.accent);
+  const pointRadii = points.map(p=> isEvent(p) ? (showMarkers?6:0) : (points.length<20?4:0));
+  const tooltipTitle = i=>{
+    const p=points[i]; if(!p) return '';
+    if(p.kind==='start') return 'Starting balance';
+    if(p.kind==='trade'){
+      const t=p.ref, d=parseLocalDate(t.date);
+      return (t.pair||'Trade')+' · '+(d?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):(t.date||''));
+    }
+    const e=p.ref;
+    return (p.kind==='deposit'?'Deposit':'Withdrawal')+(e.note?' · '+e.note:'')+' · '+(e.date||'');
+  };
+  charts.equity=new Chart(document.getElementById('equityChart'),{type:'line',data:{labels:points.map((_,i)=>String(i)),datasets:[{data:points.map(p=>p.balance),borderColor:T.accent,backgroundColor:T.accentDim,borderWidth:2,fill:true,tension:0.35,pointRadius:pointRadii,pointBackgroundColor:pointColors,pointBorderColor:T.bg,pointBorderWidth:2}]},options:chartOpts({prefix:'$',tooltipTitle})});
+}
+
+// ─── P&L per Trade ───
+// Plain HTML/CSS bars centered on a zero baseline, matching the R histogram's
+// visual language (and, like it, theme-aware for free via CSS vars — Chart.js
+// isn't needed here since it's the same per-category bar rendering the
+// histogram already does, just chronological instead of bucketed).
+function renderPnlBars(sorted){
+  const el=document.getElementById('pnlBars'); if(!el) return;
+  if(!sorted.length){ el.innerHTML='<div style="color:var(--text3);font-size:13px;text-align:center;padding:12px 0">No trades in this period</div>'; return; }
+  const pnls=sorted.map(t=>parseFloat(t.pnl)||0);
+  const max=Math.max(...pnls.map(v=>Math.abs(v)),1);
+  const wins=pnls.filter(v=>v>0).length, losses=pnls.filter(v=>v<0).length;
+  const avg=pnls.reduce((s,v)=>s+v,0)/pnls.length;
+  const bars=pnls.map(v=>{
+    const h=Math.round((Math.abs(v)/max)*60); // 60px = half of a 120px-tall row
+    const pos=v>=0, color=pos?'var(--accent)':'var(--red)';
+    return `<div style="flex:1;height:100%;position:relative;min-width:2px"><div style="position:absolute;left:1px;right:1px;${pos?'bottom':'top'}:50%;height:${h}px;background:${color};opacity:0.75;border-radius:2px"></div></div>`;
+  }).join('');
+  el.innerHTML=`<div style="position:relative;height:120px"><div style="position:absolute;left:0;right:0;top:50%;height:1px;background:var(--border2)"></div><div style="display:flex;align-items:center;height:100%;gap:2px">${bars}</div></div><div class="rhist-footer"><span>${sorted.length} trade${sorted.length!==1?'s':''} · <span class="positive">${wins}W</span>/<span class="negative">${losses}L</span></span><span>Avg <span class="v ${avg>=0?'positive':'negative'}">${avg>=0?'+':'-'}$${Math.abs(avg).toFixed(2)}</span></span></div>`;
 }
 
 // R-Multiple Distribution: buckets every closed R-multiple in the current
@@ -7704,7 +7913,24 @@ function renderRHistogram(rData){
   el.innerHTML=`<div class="rhist-row">${bars}</div><div class="rhist-footer"><span>${rData.length} trade${rData.length!==1?'s':''}</span><span>Avg <span class="v ${avg>=0?'positive':'negative'}">${avg>=0?'+':''}${avg.toFixed(2)}R</span></span></div>`;
 }
 
+// Live-resolves current CSS custom property values so Chart.js — which
+// needs literal color strings at construction time, not var(...) refs —
+// stays in sync with the active theme. Previously chartOpts() hardcoded hex
+// values (dark-theme only); applyTheme() rebuilds via renderStats() so this
+// always re-resolves fresh values rather than repainting stale ones.
+function themeColors(){
+  const cs=getComputedStyle(document.documentElement);
+  const g=(name,fb)=>{ const v=cs.getPropertyValue(name).trim(); return v||fb; };
+  return {
+    text:g('--text','#e8edf3'), text2:g('--text2','#8896a8'), text3:g('--text3','#4a5a6e'),
+    accent:g('--accent','#00e5a0'), accentDim:g('--accent-dim','rgba(0,229,160,0.10)'),
+    red:g('--red','#f43f5e'), redDim:g('--red-dim','rgba(244,63,94,0.10)'),
+    border2:g('--border2','#252f3d'), surface2:g('--surface2','#181d24'), bg:g('--bg','#0a0d12')
+  };
+}
+
 function chartOpts({prefix='',suffix='',tooltipTitle=null}={}){
+  const T=themeColors();
   function fmtVal(v){
     if(v===null||v===undefined) return '—';
     if(prefix==='$'){
@@ -7720,18 +7946,23 @@ function chartOpts({prefix='',suffix='',tooltipTitle=null}={}){
     }
     return prefix+v+suffix;
   }
-  return{responsive:true,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1f2b',borderColor:'#252f3d',borderWidth:1,titleColor:'#8896a8',bodyColor:'#e8edf3',padding:10,callbacks:Object.assign({label:ctx=>fmtVal(ctx.parsed.y)},tooltipTitle?{title:items=>tooltipTitle(items[0].dataIndex)}:{})}},scales:{x:{grid:{color:'rgba(30,37,48,0.8)'},ticks:{color:'#4a5a6e',font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:8}},y:{grid:{color:'rgba(30,37,48,0.8)'},ticks:{color:'#4a5a6e',font:{size:10},callback:v=>fmtTick(v)}}}};
+  return{responsive:true,plugins:{legend:{display:false},tooltip:{backgroundColor:T.surface2,borderColor:T.border2,borderWidth:1,titleColor:T.text2,bodyColor:T.text,padding:10,callbacks:Object.assign({label:ctx=>fmtVal(ctx.parsed.y)},tooltipTitle?{title:items=>tooltipTitle(items[0].dataIndex)}:{})}},scales:{x:{grid:{color:T.border2},ticks:{color:T.text3,font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:8}},y:{grid:{color:T.border2},ticks:{color:T.text3,font:{size:10},callback:v=>fmtTick(v)}}}};
 }
 
 function destroyCharts(){
   Object.values(charts).forEach(c=>{try{c.destroy();}catch{}});
   charts={};
-  [['equityChart',150],['pnlChart',130]].forEach(([id,h])=>{
-    const el=document.getElementById(id); if(el){
-      const title=el.parentElement.querySelector('.chart-title')?.innerHTML||'';
-      el.parentElement.innerHTML=`<div class="chart-title">${title}</div><canvas id="${id}" height="${h}"></canvas>`;
-    }
-  });
+  // Only equityChart (Balance) is still a real <canvas> — pnlChart was
+  // replaced by the plain-HTML #pnlBars div, which renderPnlBars() overwrites
+  // wholesale each call and needs no pre-destroy step. Swap in a fresh canvas
+  // node (not the whole parent's innerHTML) so the Balance header above it
+  // (amount, badge, ⋮ menu) survives every re-render untouched.
+  const oldCanvas=document.getElementById('equityChart');
+  if(oldCanvas){
+    const fresh=document.createElement('canvas');
+    fresh.id='equityChart'; fresh.height=150;
+    oldCanvas.replaceWith(fresh);
+  }
 }
 
 // ─── Utils ───
@@ -8227,6 +8458,8 @@ function importJSON(input){
           showToast(`Restored ${trades.length} trades ✓`);
           await rehydrateBackupImages();   // turn embedded image data (v2) into fresh Drive files for this account
           migrateLegacyImages();           // in case this backup predates image externalisation entirely (no fileId, no data)
+          migrateV1PropFirms();
+          migrateAccountLedgers();
         }
       );
     } catch(err){
