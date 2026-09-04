@@ -281,6 +281,38 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .stats-panel{margin-bottom:24px}
 .stats-subsection{margin-bottom:22px}
 .stats-subsection:last-child{margin-bottom:0}
+.balance-chart-scroll{overflow:hidden;margin:8px -4px 0;padding:0 4px 4px}
+.balance-chart-inner{position:relative;min-width:100%;height:210px}
+.balance-chart-inner canvas{width:100%!important;height:210px!important;touch-action:none;cursor:grab}
+.balance-chart-inner canvas.is-panning{cursor:grabbing}
+.balance-chart-inner canvas.is-scrubbing{cursor:crosshair}
+.chart-zoom-controls{display:flex;align-items:center;gap:2px;border:1px solid var(--border);border-radius:var(--radius-xs);overflow:hidden}
+.chart-zoom-btn{background:transparent;border:0;color:var(--text2);font-size:12px;font-family:var(--font);line-height:1;padding:6px 9px;cursor:pointer}
+.chart-zoom-btn:hover{background:var(--surface2);color:var(--text)}
+.chart-zoom-reset{font-size:11px;border-left:1px solid var(--border)}
+.chart-zoom-reset[disabled]{opacity:.4;cursor:default}
+.balance-range-note{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:6px}
+.chart-hint{font-size:10.5px;color:var(--text3);margin-top:2px;text-align:right}
+.setup-chip-row{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 12px}
+.setup-chip{border:1px solid var(--border);background:transparent;color:var(--text2);font-family:var(--font);font-size:11.5px;padding:5px 10px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.setup-chip:hover{border-color:var(--border2);color:var(--text)}
+.setup-chip.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.setup-focus-note{font-size:11px;color:var(--text3);margin:-4px 0 6px}
+.perf-row.dimmed{opacity:.38}
+.pnl-chart{position:relative;height:152px;margin-top:4px}
+.pnl-bars-row{display:flex;align-items:center;height:120px;gap:3px}
+.pnl-bar-hit{flex:1;height:100%;position:relative;min-width:8px;cursor:pointer;outline:none;border-radius:3px}
+.pnl-bar-hit:focus-visible{box-shadow:0 0 0 2px var(--accent)}
+.pnl-bar-fill{position:absolute;left:1px;right:1px;opacity:.78;border-radius:3px;transition:opacity .15s,filter .15s}
+.pnl-bar-hit:hover .pnl-bar-fill,.pnl-bar-hit:focus .pnl-bar-fill{opacity:1;filter:brightness(1.15)}
+.pnl-bar-hit.pinned .pnl-bar-fill{opacity:1;filter:brightness(1.25);box-shadow:0 0 0 1.5px var(--text2)}
+.pnl-tooltip{position:absolute;z-index:5;display:none;transform:translate(-50%,-100%);min-width:150px;max-width:230px;padding:9px 11px;border:1px solid var(--border2);border-radius:var(--radius-xs);background:var(--surface2);box-shadow:var(--shadow);font-size:11px;color:var(--text2);white-space:nowrap;pointer-events:none}
+.pnl-tooltip.show{display:block}
+.pnl-tooltip.pinned{pointer-events:auto}
+.pnl-tooltip strong{display:block;color:var(--text);font-size:12px;margin-bottom:3px}
+.pnl-tip-row{display:flex;justify-content:space-between;gap:14px;line-height:1.55}
+.pnl-tip-row span:last-child{color:var(--text);font-family:var(--mono)}
+.pnl-tip-pin{margin-top:6px;padding-top:5px;border-top:1px solid var(--border);font-size:10px;color:var(--text3)}
 
 /* ── Strategy / edge ── */
 .edge-tag{display:inline-flex;align-items:center;gap:6px;background:var(--accent-dim);border:1px solid rgba(0,229,160,0.3);border-radius:var(--radius-xs);padding:5px 10px;font-size:12px;font-weight:700;color:var(--accent);margin:4px 4px 4px 0}
@@ -1067,9 +1099,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <!-- Streak + Drawdown row -->
   <div class="stat-grid" id="streakDrawdownGrid" style="margin-top:-4px;margin-bottom:24px"></div>
 
-  <!-- Panel 1: trade-by-trade performance over time -->
+  <!-- Trade-by-trade performance cards -->
   <div class="card stats-panel">
-    <div class="stats-subsection">
+    <div>
       <!-- Balance header: real dollar balance (starting balance + trades + ledger),
            badge is TRADING performance only (excludes deposits/withdrawals) so a
            deposit never reads as a winning trade — see computeBalanceSeries(). -->
@@ -1081,22 +1113,33 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
           </div>
           <div id="balanceAmount" style="font-size:22px;font-weight:700;color:var(--text);margin-top:4px;font-family:var(--mono)"></div>
         </div>
-        <div style="position:relative">
-          <button class="btn-sm" onclick="event.stopPropagation();toggleMiniPopover('balanceMenuPanel')" style="padding:6px 8px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
-          <div class="mini-popover-panel" id="balanceMenuPanel" onclick="event.stopPropagation()">
-            <label style="display:flex;align-items:center;gap:8px;padding:8px 6px;font-size:13px;color:var(--text2);cursor:pointer">
-              <input type="checkbox" id="showLedgerMarkers" checked onchange="renderCharts()"> Show deposits/withdrawals
-            </label>
-            <div style="border-top:1px solid var(--border);margin:2px 0"></div>
-            <div style="padding:8px 6px;font-size:13px;color:var(--accent);cursor:pointer" onclick="toggleMiniPopover('balanceMenuPanel');openLedgerModal()">+ Log deposit/withdrawal</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="chart-zoom-controls">
+            <button class="chart-zoom-btn" type="button" aria-label="Zoom out balance chart" onclick="balanceZoomBy(1.6)">−</button>
+            <button class="chart-zoom-btn" type="button" aria-label="Zoom in balance chart" onclick="balanceZoomBy(1/1.6)">+</button>
+            <button class="chart-zoom-btn chart-zoom-reset" type="button" id="balanceResetBtn" onclick="balanceResetView()">Reset</button>
+          </div>
+          <div style="position:relative">
+            <button class="btn-sm" onclick="event.stopPropagation();toggleMiniPopover('balanceMenuPanel')" style="padding:6px 8px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+            <div class="mini-popover-panel" id="balanceMenuPanel" onclick="event.stopPropagation()">
+              <label style="display:flex;align-items:center;gap:8px;padding:8px 6px;font-size:13px;color:var(--text2);cursor:pointer">
+                <input type="checkbox" id="showLedgerMarkers" checked onchange="renderCharts()"> Show deposits/withdrawals
+              </label>
+              <div style="border-top:1px solid var(--border);margin:2px 0"></div>
+              <div style="padding:8px 6px;font-size:13px;color:var(--accent);cursor:pointer" onclick="toggleMiniPopover('balanceMenuPanel');openLedgerModal()">+ Log deposit/withdrawal</div>
+            </div>
           </div>
         </div>
       </div>
-      <canvas id="equityChart" height="150"></canvas>
+      <div class="balance-range-note" id="balanceRangeNote"></div>
+      <div class="balance-chart-scroll" id="balanceChartScroll"><div class="balance-chart-inner" id="balanceChartInner"><canvas id="equityChart" height="210"></canvas></div></div>
+      <div class="chart-hint">Scroll or pinch to zoom · drag to pan · press &amp; hold to scrub</div>
     </div>
-    <div class="stats-subsection"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>P&L per Trade</div><div id="pnlBars"></div></div>
-    <div class="stats-subsection"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="14" width="4" height="7"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="11" width="4" height="10"/></svg>R-Multiple Distribution</div><div id="rHistogram"></div></div>
   </div>
+
+  <div class="card stats-panel"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>P&amp;L per Trade</div><div id="pnlSetupNote" class="setup-focus-note"></div><div id="pnlBars"></div></div>
+
+  <div class="card stats-panel"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="14" width="4" height="7"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="11" width="4" height="10"/></svg>R-Multiple Distribution</div><div id="rHistogram"></div></div>
 
   <!-- Deposit/Withdrawal ledger modal — manual entries only. Prop-firm payouts
        (propFirms[].payouts[]) show here read-only when the current account is
@@ -1133,9 +1176,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     </div>
   </div>
 
-  <!-- Panel 2: breakdowns by setup / day / session -->
   <div class="card stats-panel">
-    <div class="stats-subsection"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg>Win Rate by Setup</div><div id="winBySetup"></div></div>
+    <div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg>Win Rate by Setup</div><div class="setup-chip-row" id="setupChipRow"></div><div id="winBySetup"></div>
+  </div>
+
+  <!-- Day and session breakdowns -->
+  <div class="card stats-panel">
     <div class="stats-subsection"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Best Day of Week</div><div id="dowBreakdown"></div></div>
     <div class="stats-subsection" style="margin-bottom:0"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>Session Performance</div><div id="sessionBreakdown"></div></div>
   </div>
@@ -7562,14 +7608,24 @@ function renderStats(){
   `;
 
   // ── Win Rate by Setup ──
+  // A setup chip row doubles as the focus filter: picking one narrows the
+  // Win Rate rows and the P&L per Trade chart to that setup only, while the
+  // rest of the dashboard keeps showing the full period (the filter is a
+  // reading lens for these two panels, not a global period filter).
   const setups={};
-  ft.forEach(t=>{ const s=t.setup||'Untagged'; if(!setups[s])setups[s]={wins:0,total:0}; setups[s].total++; if(parseFloat(t.pnl)>0)setups[s].wins++; });
+  ft.forEach(t=>{ const s=t.setup||'Untagged'; if(!setups[s])setups[s]={wins:0,losses:0,total:0,pnl:0}; const p=parseFloat(t.pnl)||0; setups[s].total++; setups[s].pnl+=p; if(p>0)setups[s].wins++; else if(p<0)setups[s].losses++; });
+  const setupNames=Object.keys(setups);
+  if(setupFocus && !setupNames.includes(setupFocus)) setupFocus=null; // setup vanished from this period
+  const chipRow=document.getElementById('setupChipRow');
+  if(chipRow){
+    chipRow.innerHTML = setupNames.length>1 ? [
+      `<button type="button" class="setup-chip${setupFocus===null?' active':''}" onclick="setSetupFocus(null)">All setups</button>`,
+      ...setupNames.map(n=>`<button type="button" class="setup-chip${setupFocus===n?' active':''}" onclick="setSetupFocus('${escapeForInlineHandler(n)}')">${escapeHtml(n)} <span style="opacity:.6">${setups[n].total}</span></button>`)
+    ].join('') : '';
+  }
   document.getElementById('winBySetup').innerHTML=Object.entries(setups).map(([name,d])=>{
-    const wr=(d.wins/d.total*100).toFixed(0), fp=parseInt(wr);
-    return `<div class="info-row" style="flex-direction:column;align-items:flex-start;gap:5px">
-      <div style="display:flex;justify-content:space-between;width:100%"><span class="k">${escapeHtml(name)}</span><div style="display:flex;gap:8px;align-items:center"><span style="font-size:11px;color:var(--text2)">${d.wins}/${d.total}</span><span class="v ${fp>=50?'positive':'negative'}">${wr}%</span></div></div>
-      <div class="progress-bar" style="width:100%"><div class="progress-fill" style="width:${fp}%;background:${fp>=50?'var(--accent)':'var(--red)'}"></div></div>
-    </div>`;
+    const row=_perfRowHtml(escapeHtml(name),d);
+    return (setupFocus && name!==setupFocus) ? row.replace('class="perf-row"','class="perf-row dimmed"') : row;
   }).join('')||'<div style="color:var(--text3);font-size:14px;padding:8px 0">Log trades with setups to see breakdown</div>';
 
   // ── Pair breakdown data (feeds both the Symbols donut and the Pair
@@ -7795,9 +7851,17 @@ async function renderCharts(ft){
   if(token !== chartsRenderToken) return;
   const sorted=[...(ft||filteredTrades())].sort((a,b)=>new Date(a.date)-new Date(b.date));
   renderBalanceCard(sorted);
-  renderPnlBars(sorted);
+  renderPnlBars(setupFocus ? sorted.filter(t=>(t.setup||'Untagged')===setupFocus) : sorted);
   const rData=sorted.map(t=>calcR(t)).filter(r=>r!==null).map(r=>parseFloat(r));
   renderRHistogram(rData);
+}
+
+// ─── Setup focus (Win Rate by Setup ⇄ P&L per Trade) ───
+let setupFocus=null;
+function setSetupFocus(name){
+  setupFocus = (name && name!==setupFocus) ? name : null;
+  hidePnlTooltip(true);
+  renderStats();
 }
 
 // ─── Balance ───
@@ -7820,8 +7884,9 @@ function computeBalanceSeries(ft){
     return da.localeCompare(db);
   });
   let running=startingBalance;
-  const points=[{balance:+running.toFixed(2),kind:'start'}];
-  events.forEach(e=>{ running+=e.delta; points.push({balance:+running.toFixed(2),kind:e.kind,ref:e.ref}); });
+  const firstDate=events[0]?.date||new Date().toISOString().slice(0,10);
+  const points=[{balance:+running.toFixed(2),kind:'start',date:firstDate,time:''}];
+  events.forEach(e=>{ running+=e.delta; points.push({balance:+running.toFixed(2),kind:e.kind,ref:e.ref,date:e.date,time:e.time}); });
   const tradingPnL = ft.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
   return {points, startingBalance, tradingPnL};
 }
@@ -7845,10 +7910,32 @@ function renderBalanceCard(ft){
   const T=themeColors();
   const showMarkers = document.getElementById('showLedgerMarkers')?.checked !== false;
   const isEvent = p=>p.kind==='deposit'||p.kind==='withdrawal';
-  const pointColors = points.map(p=> p.kind==='deposit' ? '#3b82f6' : p.kind==='withdrawal' ? T.red : T.accent);
-  const pointRadii = points.map(p=> isEvent(p) ? (showMarkers?6:0) : (points.length<20?4:0));
+
+  // ── Zoom/pan window ──
+  // The chart always fills the card width; zooming narrows the slice of the
+  // series that's drawn (index window) rather than widening a scroll container.
+  // That keeps the right-hand y-axis pinned in view at every zoom level, which
+  // a horizontally scrolling canvas could not do.
+  const N=points.length;
+  if(balanceView.total!==N){ balanceView={total:N,start:0,end:N-1}; } // series changed → full range
+  const MIN_SPAN=Math.min(4,N-1);
+  let vs=Math.max(0,Math.min(balanceView.start,N-1-MIN_SPAN));
+  let ve=Math.min(N-1,Math.max(balanceView.end,vs+MIN_SPAN));
+  balanceView.start=vs; balanceView.end=ve;
+  const view=points.slice(vs,ve+1);
+  const zoomed = !(vs===0 && ve===N-1);
+  const resetBtn=document.getElementById('balanceResetBtn');
+  if(resetBtn) resetBtn.disabled=!zoomed;
+  const noteEl=document.getElementById('balanceRangeNote');
+  if(noteEl){
+    const fmtD=s=>{const d=s?parseLocalDate(s):null;return d?d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—';};
+    noteEl.textContent=`${fmtD(view[0]?.date)} → ${fmtD(view[view.length-1]?.date)}${zoomed?`  ·  ${view.length}/${N} points`:''}`;
+  }
+
+  const pointColors = view.map(p=> p.kind==='deposit' ? T.accent2 : p.kind==='withdrawal' ? T.red : T.accent);
+  const pointRadii = view.map(p=> isEvent(p) && showMarkers ? 5 : 0);
   const tooltipTitle = i=>{
-    const p=points[i]; if(!p) return '';
+    const p=view[i]; if(!p) return '';
     if(p.kind==='start') return 'Starting balance';
     if(p.kind==='trade'){
       const t=p.ref, d=parseLocalDate(t.date);
@@ -7857,7 +7944,158 @@ function renderBalanceCard(ft){
     const e=p.ref;
     return (p.kind==='deposit'?'Deposit':'Withdrawal')+(e.note?' · '+e.note:'')+' · '+(e.date||'');
   };
-  charts.equity=new Chart(document.getElementById('equityChart'),{type:'line',data:{labels:points.map((_,i)=>String(i)),datasets:[{data:points.map(p=>p.balance),borderColor:T.accent,backgroundColor:T.accentDim,borderWidth:2,fill:true,tension:0.35,pointRadius:pointRadii,pointBackgroundColor:pointColors,pointBorderColor:T.bg,pointBorderWidth:2}]},options:chartOpts({prefix:'$',tooltipTitle})});
+  const chartInner=document.getElementById('balanceChartInner');
+  if(chartInner) chartInner.style.width='100%';
+  const labels=view.map(p=>p.date||'');
+  // Dotted vertical guide + travelling point: drawn for whichever index is
+  // active, whether that came from a hover or from a press-and-hold scrub.
+  const balanceGuide={id:'balanceGuide',afterDatasetsDraw(chart){
+    let x=null,y=null;
+    if(balanceScrubIndex!==null){
+      const meta=chart.getDatasetMeta(0).data[balanceScrubIndex];
+      if(meta){ x=meta.x; y=meta.y; }
+    } else {
+      const active=chart.tooltip?.getActiveElements?.()||[];
+      if(active.length){ x=active[0].element.x; y=active[0].element.y; }
+    }
+    if(x===null) return;
+    const ctx=chart.ctx, area=chart.chartArea;
+    ctx.save(); ctx.setLineDash([5,5]); ctx.strokeStyle=T.text2; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(x,area.top); ctx.lineTo(x,area.bottom); ctx.stroke(); ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.fillStyle=T.accent; ctx.fill(); ctx.strokeStyle=T.bg; ctx.lineWidth=2; ctx.stroke(); ctx.restore();
+  }};
+  const canvas=document.getElementById('equityChart');
+  charts.equity=new Chart(canvas,{type:'line',plugins:[balanceGuide],data:{labels,datasets:[{data:view.map(p=>p.balance),borderColor:T.accent,backgroundColor:T.accentDim,borderWidth:2.5,fill:true,tension:0.28,pointRadius:pointRadii,pointHoverRadius:0,pointBackgroundColor:pointColors,pointBorderColor:T.bg,pointBorderWidth:2}]},options:chartOpts({prefix:'$',tooltipTitle,rightAxis:true,hideGrid:true,dateAxis:true})});
+  attachBalanceInteractions(canvas);
+}
+
+// ─── Balance chart: zoom / pan / press-and-hold scrub ───
+// balanceView is an index window into the full series; balanceScrubIndex is the
+// index the guide line is parked on while the finger/mouse is held down.
+let balanceView={total:0,start:0,end:0};
+let balanceScrubIndex=null;
+const BALANCE_HOLD_MS=260;
+
+function balanceRerender(){ renderCharts(); }
+function balanceZoomBy(factor,anchorRatio=0.5){
+  const N=balanceView.total; if(N<3) return;
+  const span=balanceView.end-balanceView.start;
+  const minSpan=Math.min(4,N-1);
+  let next=Math.round(span*factor);
+  next=Math.max(minSpan,Math.min(N-1,next));
+  if(next===span) return;
+  const anchor=balanceView.start+span*anchorRatio;
+  let start=Math.round(anchor-next*anchorRatio);
+  start=Math.max(0,Math.min(N-1-next,start));
+  balanceView.start=start; balanceView.end=start+next;
+  balanceRerender();
+}
+function balanceResetView(){
+  balanceView.start=0; balanceView.end=Math.max(0,balanceView.total-1);
+  balanceScrubIndex=null;
+  balanceRerender();
+}
+function balancePanBy(deltaIndex){
+  const N=balanceView.total, span=balanceView.end-balanceView.start;
+  let start=Math.max(0,Math.min(N-1-span,balanceView.start+deltaIndex));
+  if(start===balanceView.start) return false;
+  balanceView.start=start; balanceView.end=start+span;
+  balanceRerender();
+  return true;
+}
+function attachBalanceInteractions(canvas){
+  if(!canvas || canvas._balanceBound) return;
+  canvas._balanceBound=true;
+  const chart=()=>charts.equity;
+  const spanPx=()=>{ const c=chart(); return c ? Math.max(1,c.chartArea.right-c.chartArea.left) : 1; };
+  const indexAtX=clientX=>{
+    const c=chart(); if(!c) return null;
+    const r=canvas.getBoundingClientRect();
+    const x=clientX-r.left;
+    const n=c.data.labels.length;
+    const ratio=(x-c.chartArea.left)/spanPx();
+    return Math.max(0,Math.min(n-1,Math.round(ratio*(n-1))));
+  };
+  const showScrub=clientX=>{
+    const c=chart(); if(!c) return;
+    const i=indexAtX(clientX); if(i===null) return;
+    balanceScrubIndex=i;
+    const el=c.getDatasetMeta(0).data[i];
+    if(el){ c.tooltip.setActiveElements([{datasetIndex:0,index:i}],{x:el.x,y:el.y}); }
+    c.draw();
+  };
+  const endScrub=()=>{
+    if(balanceScrubIndex===null) return;
+    balanceScrubIndex=null;
+    const c=chart(); if(c){ c.tooltip.setActiveElements([],{x:0,y:0}); c.draw(); }
+  };
+
+  // Wheel + trackpad pinch (ctrlKey) — zoom anchored on the cursor. Delta is
+  // scaled by magnitude, not a fixed step, so one flick doesn't slam to max.
+  canvas.addEventListener('wheel',e=>{
+    if(balanceView.total<3) return;
+    const dy=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?100:1);
+    const dx=e.deltaX*(e.deltaMode===1?16:e.deltaMode===2?100:1);
+    if(!e.ctrlKey && Math.abs(dx)>Math.abs(dy)){ // horizontal trackpad swipe = pan
+      e.preventDefault();
+      const span=balanceView.end-balanceView.start;
+      balancePanBy(Math.round(dx/spanPx()*span));
+      return;
+    }
+    e.preventDefault();
+    const c=chart(); if(!c) return;
+    const r=canvas.getBoundingClientRect();
+    const ratio=Math.max(0,Math.min(1,(e.clientX-r.left-c.chartArea.left)/spanPx()));
+    balanceZoomBy(Math.exp(dy*0.0015),ratio);
+  },{passive:false});
+
+  // Pointer: hold ⇒ scrub guide, otherwise drag ⇒ pan. Two pointers ⇒ pinch.
+  const pointers=new Map();
+  let holdTimer=null, mode=null, startX=0, startIdx=0, pinchDist=0, pinchRatio=0.5;
+  canvas.addEventListener('pointerdown',e=>{
+    pointers.set(e.pointerId,e.clientX);
+    if(pointers.size===2){
+      clearTimeout(holdTimer); endScrub(); mode='pinch';
+      const xs=[...pointers.values()]; pinchDist=Math.abs(xs[0]-xs[1]);
+      const c=chart(), r=canvas.getBoundingClientRect();
+      if(c) pinchRatio=Math.max(0,Math.min(1,((xs[0]+xs[1])/2-r.left-c.chartArea.left)/spanPx()));
+      return;
+    }
+    canvas.setPointerCapture?.(e.pointerId);
+    startX=e.clientX; startIdx=balanceView.start; mode=null;
+    holdTimer=setTimeout(()=>{ mode='scrub'; canvas.classList.add('is-scrubbing'); showScrub(startX); },BALANCE_HOLD_MS);
+  });
+  canvas.addEventListener('pointermove',e=>{
+    if(pointers.has(e.pointerId)) pointers.set(e.pointerId,e.clientX);
+    if(mode==='pinch' && pointers.size===2){
+      const xs=[...pointers.values()], d=Math.abs(xs[0]-xs[1]);
+      if(pinchDist>4 && Math.abs(d-pinchDist)>6){ balanceZoomBy(pinchDist/Math.max(d,1),pinchRatio); pinchDist=d; }
+      return;
+    }
+    if(!pointers.has(e.pointerId)) return; // plain hover — Chart.js handles it
+    const dx=e.clientX-startX;
+    if(mode==='scrub'){ e.preventDefault(); showScrub(e.clientX); return; }
+    if(mode===null && Math.abs(dx)>6){ clearTimeout(holdTimer); mode='pan'; canvas.classList.add('is-panning'); }
+    if(mode==='pan'){
+      e.preventDefault();
+      const span=balanceView.end-balanceView.start;
+      const target=Math.round(startIdx-dx/spanPx()*span);
+      if(target!==balanceView.start){ balanceView.end=balanceView.start+span; balancePanBy(target-balanceView.start); }
+    }
+  });
+  const finish=e=>{
+    pointers.delete(e.pointerId);
+    clearTimeout(holdTimer);
+    if(mode==='scrub') endScrub();
+    if(pointers.size<2 && mode==='pinch') mode=null;
+    if(pointers.size===0) mode=null;
+    canvas.classList.remove('is-panning','is-scrubbing');
+  };
+  canvas.addEventListener('pointerup',finish);
+  canvas.addEventListener('pointercancel',finish);
+  canvas.addEventListener('pointerleave',finish);
+  canvas.addEventListener('contextmenu',e=>{ if(mode==='scrub') e.preventDefault(); });
+  canvas.addEventListener('dblclick',()=>balanceResetView());
 }
 
 // ─── P&L per Trade ───
@@ -7867,18 +8105,79 @@ function renderBalanceCard(ft){
 // histogram already does, just chronological instead of bucketed).
 function renderPnlBars(sorted){
   const el=document.getElementById('pnlBars'); if(!el) return;
-  if(!sorted.length){ el.innerHTML='<div style="color:var(--text3);font-size:13px;text-align:center;padding:12px 0">No trades in this period</div>'; return; }
+  const noteEl=document.getElementById('pnlSetupNote');
+  if(noteEl) noteEl.innerHTML = setupFocus ? `Focused on <strong style="color:var(--accent)">${escapeHtml(setupFocus)}</strong> · <span style="color:var(--accent);cursor:pointer" onclick="setSetupFocus(null)">show all</span>` : '';
+  pnlPinnedIndex=null;
+  if(!sorted.length){ el.innerHTML=`<div style="color:var(--text3);font-size:13px;text-align:center;padding:12px 0">No trades ${setupFocus?'for this setup':'in this period'}</div>`; return; }
   const pnls=sorted.map(t=>parseFloat(t.pnl)||0);
   const max=Math.max(...pnls.map(v=>Math.abs(v)),1);
   const wins=pnls.filter(v=>v>0).length, losses=pnls.filter(v=>v<0).length;
   const avg=pnls.reduce((s,v)=>s+v,0)/pnls.length;
-  const bars=pnls.map(v=>{
+  const bars=pnls.map((v,i)=>{
     const h=Math.round((Math.abs(v)/max)*60); // 60px = half of a 120px-tall row
     const pos=v>=0, color=pos?'var(--accent)':'var(--red)';
-    return `<div style="flex:1;height:100%;position:relative;min-width:2px"><div style="position:absolute;left:1px;right:1px;${pos?'bottom':'top'}:50%;height:${h}px;background:${color};opacity:0.75;border-radius:2px"></div></div>`;
+    const t=sorted[i], d=t.date?parseLocalDate(t.date):null, dateText=d?d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
+    return `<div class="pnl-bar-hit" tabindex="0" role="button" aria-label="${escapeHtml((t.pair||'Trade')+' '+fmtPnl(v))}" onclick="togglePnlPin(event,${i})" onmouseenter="showPnlTooltip(event,${i})" onmousemove="movePnlTooltip(event)" onmouseleave="hidePnlTooltip()" onfocus="showPnlTooltip(event,${i})" onblur="hidePnlTooltip()"><div class="pnl-bar-fill" style="${pos?'bottom':'top'}:50%;height:${h}px;background:${color}"></div><span hidden>${escapeHtml(dateText)}</span></div>`;
   }).join('');
-  el.innerHTML=`<div style="position:relative;height:120px"><div style="position:absolute;left:0;right:0;top:50%;height:1px;background:var(--border2)"></div><div style="display:flex;align-items:center;height:100%;gap:2px">${bars}</div></div><div class="rhist-footer"><span>${sorted.length} trade${sorted.length!==1?'s':''} · <span class="positive">${wins}W</span>/<span class="negative">${losses}L</span></span><span>Avg <span class="v ${avg>=0?'positive':'negative'}">${avg>=0?'+':'-'}$${Math.abs(avg).toFixed(2)}</span></span></div>`;
+  window._pnlChartTrades=sorted;
+  el.innerHTML=`<div class="pnl-chart"><div class="pnl-tooltip" id="pnlTooltip"></div><div style="position:absolute;left:0;right:0;top:50%;height:1px;background:var(--border2)"></div><div class="pnl-bars-row">${bars}</div></div><div class="rhist-footer"><span>${sorted.length} trade${sorted.length!==1?'s':''} · <span class="positive">${wins}W</span>/<span class="negative">${losses}L</span></span><span>Avg <span class="v ${avg>=0?'positive':'negative'}">${avg>=0?'+':'-'}$${Math.abs(avg).toFixed(2)}</span></span></div>`;
 }
+
+// Hover previews the bar's trade; clicking pins that tooltip so the numbers can
+// be read without keeping the cursor on the bar. Deliberately no longer opens
+// the trade-log peek dialog — this chart answers "what was this bar", in place.
+let pnlPinnedIndex=null;
+function _pnlTipRow(k,v){ return `<div class="pnl-tip-row"><span>${k}</span><span>${v}</span></div>`; }
+function pnlTooltipHtml(t,index){
+  const pnl=parseFloat(t.pnl)||0, d=t.date?parseLocalDate(t.date):null;
+  const r=typeof calcR==='function'?calcR(t):null;
+  const rows=[];
+  rows.push(_pnlTipRow('Date',d?d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—'));
+  if(t.direction||t.side) rows.push(_pnlTipRow('Direction',escapeHtml(String(t.direction||t.side))));
+  rows.push(_pnlTipRow('Setup',escapeHtml(t.setup||'Untagged')));
+  if(t.session) rows.push(_pnlTipRow('Session',escapeHtml(t.session)));
+  if(r!==null&&r!==undefined) rows.push(_pnlTipRow('R multiple',(parseFloat(r)>=0?'+':'')+r+'R'));
+  if(t.riskAmount) rows.push(_pnlTipRow('Risk','$'+(parseFloat(t.riskAmount)||0).toFixed(2)));
+  if(t.entry) rows.push(_pnlTipRow('Entry',escapeHtml(String(t.entry))));
+  if(t.exit) rows.push(_pnlTipRow('Exit',escapeHtml(String(t.exit))));
+  rows.push(_pnlTipRow('Trade #',(index+1)+' of '+(window._pnlChartTrades?.length||0)));
+  return `<strong>${escapeHtml(t.pair||'Trade')} · <span class="${pnl>=0?'positive':'negative'}">${fmtPnl(pnl)}</span></strong>${rows.join('')}<div class="pnl-tip-pin">${pnlPinnedIndex===index?'Pinned · click the bar again to unpin':'Click the bar to pin these details'}</div>`;
+}
+function showPnlTooltip(event,index){
+  if(pnlPinnedIndex!==null && pnlPinnedIndex!==index) return; // pinned tooltip wins
+  const tip=document.getElementById('pnlTooltip'), t=window._pnlChartTrades?.[index]; if(!tip||!t)return;
+  tip.innerHTML=pnlTooltipHtml(t,index);
+  tip.classList.add('show'); movePnlTooltip(event);
+}
+function togglePnlPin(event,index){
+  event.stopPropagation();
+  const wasPinned = pnlPinnedIndex===index;
+  document.querySelectorAll('.pnl-bar-hit.pinned').forEach(n=>n.classList.remove('pinned'));
+  pnlPinnedIndex = wasPinned ? null : index;
+  const tip=document.getElementById('pnlTooltip');
+  if(!tip) return;
+  if(wasPinned){ tip.classList.remove('pinned'); showPnlTooltip(event,index); return; }
+  event.currentTarget?.classList.add('pinned');
+  tip.classList.add('pinned');
+  showPnlTooltip(event,index);
+}
+function movePnlTooltip(event){
+  const tip=document.getElementById('pnlTooltip'), wrap=tip?.parentElement; if(!tip||!wrap)return;
+  if(pnlPinnedIndex!==null && !event?.currentTarget?.classList?.contains('pinned')) return;
+  const r=wrap.getBoundingClientRect(), source=event.touches?.[0]||event;
+  tip.style.left=Math.max(84,Math.min(r.width-84,(source.clientX||event.currentTarget?.getBoundingClientRect().left||0)-r.left))+'px';
+  tip.style.top=Math.max(tip.offsetHeight+8,(event.currentTarget?.getBoundingClientRect().top||r.top)-r.top+56)+'px';
+}
+function hidePnlTooltip(force){
+  if(pnlPinnedIndex!==null && force!==true) return; // keep pinned tooltip open
+  if(force===true){
+    pnlPinnedIndex=null;
+    document.querySelectorAll('.pnl-bar-hit.pinned').forEach(n=>n.classList.remove('pinned'));
+    document.getElementById('pnlTooltip')?.classList.remove('pinned');
+  }
+  document.getElementById('pnlTooltip')?.classList.remove('show');
+}
+document.addEventListener('click',e=>{ if(pnlPinnedIndex!==null && !e.target.closest('.pnl-chart')) hidePnlTooltip(true); });
 
 // R-Multiple Distribution: buckets every closed R-multiple in the current
 // filter into fixed ranges and renders bars sized to each bucket's trade
@@ -7923,13 +8222,13 @@ function themeColors(){
   const g=(name,fb)=>{ const v=cs.getPropertyValue(name).trim(); return v||fb; };
   return {
     text:g('--text','#e8edf3'), text2:g('--text2','#8896a8'), text3:g('--text3','#4a5a6e'),
-    accent:g('--accent','#00e5a0'), accentDim:g('--accent-dim','rgba(0,229,160,0.10)'),
+    accent:g('--accent','#00e5a0'), accentDim:g('--accent-dim','rgba(0,229,160,0.10)'), accent2:g('--accent2','#3b82f6'),
     red:g('--red','#f43f5e'), redDim:g('--red-dim','rgba(244,63,94,0.10)'),
     border2:g('--border2','#252f3d'), surface2:g('--surface2','#181d24'), bg:g('--bg','#0a0d12')
   };
 }
 
-function chartOpts({prefix='',suffix='',tooltipTitle=null}={}){
+function chartOpts({prefix='',suffix='',tooltipTitle=null,rightAxis=false,hideGrid=false,dateAxis=false}={}){
   const T=themeColors();
   function fmtVal(v){
     if(v===null||v===undefined) return '—';
@@ -7946,7 +8245,7 @@ function chartOpts({prefix='',suffix='',tooltipTitle=null}={}){
     }
     return prefix+v+suffix;
   }
-  return{responsive:true,plugins:{legend:{display:false},tooltip:{backgroundColor:T.surface2,borderColor:T.border2,borderWidth:1,titleColor:T.text2,bodyColor:T.text,padding:10,callbacks:Object.assign({label:ctx=>fmtVal(ctx.parsed.y)},tooltipTitle?{title:items=>tooltipTitle(items[0].dataIndex)}:{})}},scales:{x:{grid:{color:T.border2},ticks:{color:T.text3,font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:8}},y:{grid:{color:T.border2},ticks:{color:T.text3,font:{size:10},callback:v=>fmtTick(v)}}}};
+  return{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},events:['mousemove','mouseout','click','touchstart','touchmove'],plugins:{legend:{display:false},tooltip:{enabled:true,position:'nearest',backgroundColor:T.surface2,borderColor:T.border2,borderWidth:1,titleColor:T.text2,bodyColor:T.text,padding:10,displayColors:true,callbacks:Object.assign({label:ctx=>'Balance  '+fmtVal(ctx.parsed.y)},tooltipTitle?{title:items=>tooltipTitle(items[0].dataIndex)}:{})}},scales:{x:{grid:{display:!hideGrid,color:T.border2},ticks:{color:T.text3,font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:6,callback:function(value){if(!dateAxis)return this.getLabelForValue(value);const raw=this.getLabelForValue(value),d=raw?parseLocalDate(raw):null;return d?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';}}},y:{position:rightAxis?'right':'left',grid:{display:!hideGrid,color:T.border2},border:{display:false},ticks:{color:T.text2,font:{size:10},callback:v=>fmtTick(v)}}}};
 }
 
 function destroyCharts(){
@@ -7960,7 +8259,7 @@ function destroyCharts(){
   const oldCanvas=document.getElementById('equityChart');
   if(oldCanvas){
     const fresh=document.createElement('canvas');
-    fresh.id='equityChart'; fresh.height=150;
+    fresh.id='equityChart'; fresh.height=210;
     oldCanvas.replaceWith(fresh);
   }
 }
