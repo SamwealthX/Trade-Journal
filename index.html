@@ -291,6 +291,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .chart-zoom-btn:hover{background:var(--surface2);color:var(--text)}
 .chart-zoom-reset{font-size:11px;border-left:1px solid var(--border)}
 .chart-zoom-reset[disabled]{opacity:.4;cursor:default}
+.chart-zoom-btn.active{background:var(--accent-dim);color:var(--accent);font-weight:700}
+#balancePeriodPicker .chart-zoom-btn+.chart-zoom-btn{border-left:1px solid var(--border)}
 .balance-range-note{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:6px}
 .chart-hint{font-size:10.5px;color:var(--text3);margin-top:2px;text-align:right}
 .setup-chip-row{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 12px}
@@ -1114,17 +1116,31 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
           <div id="balanceAmount" style="font-size:22px;font-weight:700;color:var(--text);margin-top:4px;font-family:var(--mono)"></div>
         </div>
         <div style="display:flex;align-items:center;gap:6px">
-          <div class="chart-zoom-controls">
-            <button class="chart-zoom-btn" type="button" aria-label="Zoom out balance chart" onclick="balanceZoomBy(1.6)">−</button>
-            <button class="chart-zoom-btn" type="button" aria-label="Zoom in balance chart" onclick="balanceZoomBy(1/1.6)">+</button>
-            <button class="chart-zoom-btn chart-zoom-reset" type="button" id="balanceResetBtn" onclick="balanceResetView()">Reset</button>
+          <!-- Same Week/Month/Year/All labels and calendar math as the
+               tab-wide filter above (see _calendarBounds()) — this picker
+               can be browsed independently, but setStatFilter() overwrites
+               it the moment the tab-wide filter changes to something else. -->
+          <div class="chart-zoom-controls" id="balancePeriodPicker">
+            <button class="chart-zoom-btn" type="button" id="balancePeriod-week" onclick="setBalancePeriod('week')">W</button>
+            <button class="chart-zoom-btn" type="button" id="balancePeriod-month" onclick="setBalancePeriod('month')">M</button>
+            <button class="chart-zoom-btn" type="button" id="balancePeriod-year" onclick="setBalancePeriod('year')">Y</button>
+            <button class="chart-zoom-btn active" type="button" id="balancePeriod-all" onclick="setBalancePeriod('all')">All</button>
           </div>
           <div style="position:relative">
             <button class="btn-sm" onclick="event.stopPropagation();toggleMiniPopover('balanceMenuPanel')" style="padding:6px 8px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
             <div class="mini-popover-panel" id="balanceMenuPanel" onclick="event.stopPropagation()">
               <label style="display:flex;align-items:center;gap:8px;padding:8px 6px;font-size:13px;color:var(--text2);cursor:pointer">
-                <input type="checkbox" id="showLedgerMarkers" checked onchange="renderCharts()"> Show deposits/withdrawals
+                <input type="checkbox" id="showLedgerMarkers" checked onchange="renderBalanceCard()"> Show deposits/withdrawals
               </label>
+              <div style="border-top:1px solid var(--border);margin:2px 0"></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 6px;font-size:13px;color:var(--text2)">
+                <span>Zoom</span>
+                <div class="chart-zoom-controls">
+                  <button class="chart-zoom-btn" type="button" aria-label="Zoom out balance chart" onclick="balanceZoomBy(1.6)">−</button>
+                  <button class="chart-zoom-btn" type="button" aria-label="Zoom in balance chart" onclick="balanceZoomBy(1/1.6)">+</button>
+                  <button class="chart-zoom-btn chart-zoom-reset" type="button" id="balanceResetBtn" onclick="balanceResetView()">Reset</button>
+                </div>
+              </div>
               <div style="border-top:1px solid var(--border);margin:2px 0"></div>
               <div style="padding:8px 6px;font-size:13px;color:var(--accent);cursor:pointer" onclick="toggleMiniPopover('balanceMenuPanel');openLedgerModal()">+ Log deposit/withdrawal</div>
             </div>
@@ -7447,6 +7463,12 @@ function saveGoal(){
 
 // ─── Stats period filter ───
 let statPeriod = 'all';
+// Balance chart's own period picker — independent of statPeriod day-to-day
+// (browsing the Balance chart to "Month" doesn't change what the stat cards
+// or P&L per Trade show), but the tab-wide filter is the higher-level control:
+// changing it to a different value overwrites whatever's selected locally on
+// the Balance chart, so the two never sit on two silently-different periods.
+let balancePeriod = 'all';
 // Dirty flag: set whenever trade data, account filter, or stat period changes
 // while the Stats tab is not visible. renderStats() checks this on entry and
 // bails early when the tab is hidden — the render is deferred until switchTab
@@ -7463,35 +7485,67 @@ function setStatFilter(f){
     const btn = document.getElementById('statFilter-'+k);
     if(btn) btn.className = k===f ? 'btn-sm accent' : 'btn-sm';
   });
+  // Tab-wide filter wins over the Balance chart's own picker when they differ —
+  // one source of truth for "current period" rather than two silently drifting.
+  if(balancePeriod !== f) setBalancePeriod(f, true);
   // markStatsDirty() immediately re-renders because Stats tab is visible here.
   markStatsDirty();
+}
+// balancePeriod change from the Balance card's own picker. `fromStatFilter`
+// is true only when setStatFilter() above is the one driving this (so it
+// doesn't loop back and reset balanceView / re-render twice for one click).
+function setBalancePeriod(f, fromStatFilter){
+  balancePeriod = f;
+  ['week','month','year','all'].forEach(k=>{
+    const btn = document.getElementById('balancePeriod-'+k);
+    if(btn) btn.className = k===f ? 'chart-zoom-btn active' : 'chart-zoom-btn';
+  });
+  balanceView = {total:0,start:0,end:0}; // period changed → forget any pinch/drag zoom, start full
+  if(!fromStatFilter) renderBalanceCard();
 }
 // Memo cache for statsFilteredTrades(). Keys off the *reference* returned by
 // filteredTrades() — that reference only changes when tradesVersion or
 // activeAcctFilter actually changed (see filteredTrades' own memo above), so
 // comparing it here transitively covers both of those plus statPeriod.
 let _statsFilteredTradesCache = { base: null, period: undefined, result: null };
+// Single source of truth for what "this week / this month / this year" means
+// — used by statsFilteredTrades() (the tab-wide filter) AND computeBalanceSeries()
+// (the Balance chart's own period picker) so the two controls can never drift
+// apart on what a given period actually spans. Returns null for 'all'.
+function _calendarBounds(period){
+  if(period==='all') return null;
+  const now=new Date();
+  if(period==='week'){
+    const dow=(now.getDay()+6)%7;
+    const ws=new Date(now); ws.setDate(now.getDate()-dow); ws.setHours(0,0,0,0);
+    const we=new Date(ws); we.setDate(ws.getDate()+6); we.setHours(23,59,59,999);
+    return {start:ws,end:we};
+  }
+  if(period==='month'){
+    const ws=new Date(now.getFullYear(),now.getMonth(),1,0,0,0,0);
+    const we=new Date(now.getFullYear(),now.getMonth()+1,0,23,59,59,999);
+    return {start:ws,end:we};
+  }
+  if(period==='year'){
+    const ws=new Date(now.getFullYear(),0,1,0,0,0,0);
+    const we=new Date(now.getFullYear(),11,31,23,59,59,999);
+    return {start:ws,end:we};
+  }
+  return null;
+}
 function statsFilteredTrades(){
   const base = filteredTrades();
   const c = _statsFilteredTradesCache;
   if(c.base === base && c.period === statPeriod) return c.result;
   let result;
-  if(statPeriod === 'all'){
+  const bounds = _calendarBounds(statPeriod);
+  if(!bounds){
     result = base;
   } else {
-    const now = new Date();
     result = base.filter(t=>{
       if(!t.date) return false;
       const d = parseLocalDate(t.date);
-      if(statPeriod === 'week'){
-        const dow = (now.getDay()+6)%7;
-        const ws = new Date(now); ws.setDate(now.getDate()-dow); ws.setHours(0,0,0,0);
-        const we = new Date(ws); we.setDate(ws.getDate()+6); we.setHours(23,59,59,999);
-        return d>=ws && d<=we;
-      }
-      if(statPeriod === 'month') return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
-      if(statPeriod === 'year')  return d.getFullYear()===now.getFullYear();
-      return true;
+      return d && d>=bounds.start && d<=bounds.end;
     });
   }
   _statsFilteredTradesCache = { base, period: statPeriod, result };
@@ -7836,21 +7890,16 @@ function renderPairTable(pairMap){
 }
 
 async function renderCharts(ft){
-  destroyCharts();
-  // Yield a microtask before rebuilding: destroyCharts() tears down canvases via
-  // innerHTML while Chart.js may still have an in-flight rAF callback from the
-  // chart(s) just destroyed. Constructing new Chart instances synchronously in the
-  // same tick can race that teardown — Chart.js throws inside the stale callback
-  // and/or grabs a canvas/context that hasn't finished settling. Awaiting here lets
-  // .destroy()'s pending animation-frame cleanup resolve first.
+  // Balance manages its own destroy/rebuild cycle now (it can re-render on
+  // its own, from the period picker, independent of this function) — this
+  // token guard only covers P&L per Trade / R-Multiple below, which are
+  // plain HTML and don't have Chart.js's destroy/recreate race to worry
+  // about, but still want to bail if a newer call supersedes a stale one.
   const token = ++chartsRenderToken;
   await Promise.resolve();
-  // If another renderCharts() call started after this one (e.g. rapid tab/period
-  // switching), it already destroyed+rebuilt the canvases — bail so this stale
-  // call doesn't construct charts on top of (or get clobbered by) the newer one.
   if(token !== chartsRenderToken) return;
   const sorted=[...(ft||filteredTrades())].sort((a,b)=>new Date(a.date)-new Date(b.date));
-  renderBalanceCard(sorted);
+  renderBalanceCard();
   renderPnlBars(setupFocus ? sorted.filter(t=>(t.setup||'Untagged')===setupFocus) : sorted);
   const rData=sorted.map(t=>calcR(t)).filter(r=>r!==null).map(r=>parseFloat(r));
   renderRHistogram(rData);
@@ -7871,13 +7920,22 @@ function setSetupFocus(name){
 // badge below: the badge is TRADING PERFORMANCE ONLY (tradingPnL / starting
 // balance) so a deposit can never inflate it and read as a winning trade —
 // that was the exact failure mode flagged before this got built.
-function computeBalanceSeries(ft){
+// Walks the ENTIRE account history — every trade, every ledger event, from
+// the account's real starting balance — regardless of balancePeriod. That's
+// deliberate: a period filter should only decide what's *displayed*, never
+// what's *computed*. Feeding it a period-filtered trade list (the old
+// behavior) silently dropped every trade before the window while still
+// starting from the account's original balance, which understated the true
+// balance the further back the account's history went. Windowing happens
+// only at the end, via _windowSeries(), on an already-correct series.
+function computeBalanceSeries(){
   const scope = activeAcctFilter;
   const startingBalance = scope==='all'
     ? accounts.reduce((s,a)=>s+(parseFloat(a.balance)||0),0)
     : (parseFloat(accounts.find(a=>a.id===scope)?.balance)||0);
   const ledgerEntries = scope==='all' ? allAccountsLedgerEntries() : accountLedgerEntries(scope);
-  const tradeEvents = ft.map(t=>({date:t.date||'',time:t.time||'',delta:parseFloat(t.pnl)||0,kind:'trade',ref:t}));
+  const allTrades = filteredTrades(); // account-scoped only — NOT period-filtered
+  const tradeEvents = allTrades.map(t=>({date:t.date||'',time:t.time||'',delta:parseFloat(t.pnl)||0,kind:'trade',ref:t}));
   const ledgerEvents = ledgerEntries.map(e=>({date:e.date||'',time:'',delta:e.type==='deposit'?Math.abs(e.amount):-Math.abs(e.amount),kind:e.type,ref:e}));
   const events=[...tradeEvents,...ledgerEvents].sort((a,b)=>{
     const da=a.date+(a.time?'T'+a.time:''), db=b.date+(b.time?'T'+b.time:'');
@@ -7887,15 +7945,50 @@ function computeBalanceSeries(ft){
   const firstDate=events[0]?.date||new Date().toISOString().slice(0,10);
   const points=[{balance:+running.toFixed(2),kind:'start',date:firstDate,time:''}];
   events.forEach(e=>{ running+=e.delta; points.push({balance:+running.toFixed(2),kind:e.kind,ref:e.ref,date:e.date,time:e.time}); });
-  const tradingPnL = ft.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
-  return {points, startingBalance, tradingPnL};
+  // Always the true, real-right-now balance — independent of whatever period
+  // is selected, so the headline dollar figure never looks stale while
+  // someone's browsing an older window (only the % badge does that).
+  const currentBalance = points.length ? points[points.length-1].balance : startingBalance;
+
+  const bounds = _calendarBounds(balancePeriod);
+  const {view, windowStartBalance} = _windowSeries(points, bounds);
+  const windowTrades = bounds
+    ? allTrades.filter(t=>{ if(!t.date) return false; const d=parseLocalDate(t.date); return d && d>=bounds.start && d<=bounds.end; })
+    : allTrades;
+  const tradingPnL = windowTrades.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
+  return {points:view, startingBalance:windowStartBalance, tradingPnL, currentBalance};
 }
-function renderBalanceCard(ft){
+// Slices an already-correct, chronologically-complete points series down to
+// one calendar window, anchored on the last known balance just before the
+// window starts (so the line has a real starting value instead of jumping
+// in from nowhere). Returns the full series unchanged when bounds is null
+// (period === 'all').
+function _windowSeries(points, bounds){
+  if(!bounds || points.length<2) return {view:points, windowStartBalance:points[0]?.balance ?? 0};
+  const dateOf = p => p.date ? parseLocalDate(p.date) : null;
+  let startIdx = points.findIndex(p=>{ const d=dateOf(p); return d && d>=bounds.start; });
+  if(startIdx===-1){
+    // Nothing happened in this window yet — flat line at the last known balance.
+    const last=points[points.length-1];
+    return {view:[last], windowStartBalance:last.balance};
+  }
+  const anchor = startIdx>0 ? points[startIdx-1] : points[startIdx];
+  const rest = points.slice(startIdx===0?1:startIdx).filter(p=>{ const d=dateOf(p); return !d || d<=bounds.end; });
+  return {view:[anchor,...rest], windowStartBalance:anchor.balance};
+}
+let balanceRenderToken=0;
+async function renderBalanceCard(){
   const amountEl=document.getElementById('balanceAmount'), badgeEl=document.getElementById('balanceBadge');
   if(!document.getElementById('equityChart')) return; // panel not in DOM (e.g. different tab)
-  const {points,startingBalance,tradingPnL} = computeBalanceSeries(ft);
-  const current = points.length ? points[points.length-1].balance : startingBalance;
-  if(amountEl) amountEl.textContent = (current<0?'-$':'$')+Math.abs(current).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  ['week','month','year','all'].forEach(k=>{
+    const btn=document.getElementById('balancePeriod-'+k);
+    if(btn) btn.className = k===balancePeriod ? 'chart-zoom-btn active' : 'chart-zoom-btn';
+  });
+  const {points,startingBalance,tradingPnL,currentBalance} = computeBalanceSeries();
+  // Headline dollar figure is always the true, right-now balance — it never
+  // reflects whatever window is selected, so it can't look stale/wrong while
+  // someone's browsing an older period. Only the % badge is window-scoped.
+  if(amountEl) amountEl.textContent = (currentBalance<0?'-$':'$')+Math.abs(currentBalance).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   if(badgeEl){
     if(startingBalance>0){
       const pct=(tradingPnL/startingBalance)*100;
@@ -7906,7 +7999,16 @@ function renderBalanceCard(ft){
       badgeEl.textContent='—'; badgeEl.style.background='transparent'; badgeEl.style.color='var(--text3)';
     }
   }
-  if(points.length<2) return; // starting point only — nothing to chart yet
+  if(points.length<2){ destroyCharts(); return; } // nothing to chart in this window yet
+  const token = ++balanceRenderToken;
+  destroyCharts();
+  // Yield a microtask before rebuilding — see renderCharts()'s identical
+  // comment; same Chart.js teardown/rebuild race applies here now that this
+  // function can run on its own (triggered by the period picker), not just
+  // as part of renderCharts()'s pipeline.
+  await Promise.resolve();
+  if(token !== balanceRenderToken) return; // a newer render started meanwhile
+  if(!document.getElementById('equityChart')) return; // tab changed while awaiting
   const T=themeColors();
   const showMarkers = document.getElementById('showLedgerMarkers')?.checked !== false;
   const isEvent = p=>p.kind==='deposit'||p.kind==='withdrawal';
@@ -7976,7 +8078,7 @@ let balanceView={total:0,start:0,end:0};
 let balanceScrubIndex=null;
 const BALANCE_HOLD_MS=260;
 
-function balanceRerender(){ renderCharts(); }
+function balanceRerender(){ renderBalanceCard(); }
 function balanceZoomBy(factor,anchorRatio=0.5){
   const N=balanceView.total; if(N<3) return;
   const span=balanceView.end-balanceView.start;
