@@ -178,13 +178,18 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
 /* ── Stat grid ── */
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 12px;position:relative;overflow:hidden;transition:border-color .2s}
-.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);opacity:.45;border-radius:2px 2px 0 0;box-shadow:0 0 6px var(--accent-glow)}
-.stat-card.red-accent::before{background:var(--red);box-shadow:0 0 6px rgba(244,63,94,0.3)}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 13px;position:relative;overflow:hidden;transition:border-color .2s;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent);opacity:.8;border-radius:3px 3px 0 0;box-shadow:0 0 8px var(--accent-glow)}
+.stat-card.red-accent::before{background:var(--red);box-shadow:0 0 8px rgba(244,63,94,0.35)}
 .stat-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;font-weight:600}
-.stat-value{font-size:22px;font-weight:800;font-family:var(--mono);color:var(--text);letter-spacing:-.5px}
+.stat-value{font-size:22px;font-weight:800;font-family:var(--mono);color:var(--text);letter-spacing:-.5px;font-variant-numeric:tabular-nums}
 .stat-value.accent{color:var(--accent)}.stat-value.red{color:var(--red)}
 .stat-sub{font-size:11px;color:var(--text2);margin-top:3px}
+/* Footer divider only for the simple "value → caption" card shape (Win Rate,
+   Total P&L, Max Drawdown, etc.) — deliberately NOT a bare .stat-sub rule,
+   since Streaks nests two value/caption pairs side by side plus a trailing
+   caption of its own, where a divider under each would look like clutter. */
+.stat-card>.stat-value+.stat-sub{border-top:1px solid var(--border);padding-top:7px;margin-top:7px}
 
 /* ── Forms ── */
 .form-group{margin-bottom:12px}
@@ -292,7 +297,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .chart-zoom-reset{font-size:11px;border-left:1px solid var(--border)}
 .chart-zoom-reset[disabled]{opacity:.4;cursor:default}
 .chart-zoom-btn.active{background:var(--accent-dim);color:var(--accent);font-weight:700}
-#balancePeriodPicker .chart-zoom-btn+.chart-zoom-btn{border-left:1px solid var(--border)}
+.balance-period-panel{min-width:130px}
+.balance-period-row{padding:8px 10px;font-size:13px;color:var(--text2);cursor:pointer;border-radius:6px}
+.balance-period-row:hover{background:var(--surface3)}
+.balance-period-row.active{color:var(--accent);font-weight:700;background:var(--accent-dim)}
 .balance-range-note{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:6px}
 .chart-hint{font-size:10.5px;color:var(--text3);margin-top:2px;text-align:right}
 .setup-chip-row{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 12px}
@@ -301,7 +309,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .setup-chip.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
 .setup-focus-note{font-size:11px;color:var(--text3);margin:-4px 0 6px}
 .perf-row.dimmed{opacity:.38}
-.pnl-chart{position:relative;height:152px;margin-top:4px}
+.pnl-chart{position:relative;height:120px;margin-top:4px}
 .pnl-bars-row{display:flex;align-items:center;height:120px;gap:3px}
 .pnl-bar-hit{flex:1;height:100%;position:relative;min-width:8px;cursor:pointer;outline:none;border-radius:3px}
 .pnl-bar-hit:focus-visible{box-shadow:0 0 0 2px var(--accent)}
@@ -445,6 +453,21 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .info-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px}
 .info-row:last-child{border-bottom:none}
 .info-row .k{color:var(--text2)}.info-row .v{font-weight:700;font-family:var(--mono)}
+
+/* Best & Worst Trades — lists individual trades, so it borrows the win/loss
+   left-accent-bar language from the main Trade list (.trade-item) rather
+   than the perf-row bucket style used for Win Rate by Setup/Day/Session,
+   condensed to a hairline-divided two-line row instead of a full bordered card. */
+.bw-item{position:relative;padding:10px 0 10px 12px;border-bottom:1px solid var(--border)}
+.bw-item:last-child{border-bottom:none}
+.bw-item::before{content:'';position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:3px}
+.bw-item.win::before{background:var(--green);box-shadow:2px 0 8px rgba(0,229,160,0.2)}
+.bw-item.loss::before{background:var(--red);box-shadow:2px 0 8px rgba(244,63,94,0.2)}
+.bw-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.bw-pair{font-size:14px;font-weight:800;color:var(--text)}
+.bw-pnl{font-size:14px;font-weight:800;font-family:var(--mono)}
+.bw-meta{display:flex;gap:8px;margin-top:3px;font-size:11px;color:var(--text3);font-family:var(--mono)}
+.bw-meta .r-pos{color:#60a5fa}.bw-meta .r-neg{color:var(--red)}
 
 /* ── Account manager ── */
 .acct-manage-item{display:flex;align-items:center;justify-content:space-between;padding:13px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px}
@@ -1088,7 +1111,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 <div id="tabStats" class="tab">
   <div class="section-header">
     <span class="section-title">Performance</span>
-    <span id="statsAcctLabel" style="font-size:12px;color:var(--accent);font-weight:700"></span>
   </div>
   <!-- Time period filter -->
   <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px">
@@ -1119,12 +1141,25 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
           <!-- Same Week/Month/Year/All labels and calendar math as the
                tab-wide filter above (see _calendarBounds()) — this picker
                can be browsed independently, but setStatFilter() overwrites
-               it the moment the tab-wide filter changes to something else. -->
-          <div class="chart-zoom-controls" id="balancePeriodPicker">
-            <button class="chart-zoom-btn" type="button" id="balancePeriod-week" onclick="setBalancePeriod('week')">W</button>
-            <button class="chart-zoom-btn" type="button" id="balancePeriod-month" onclick="setBalancePeriod('month')">M</button>
-            <button class="chart-zoom-btn" type="button" id="balancePeriod-year" onclick="setBalancePeriod('year')">Y</button>
-            <button class="chart-zoom-btn active" type="button" id="balancePeriod-all" onclick="setBalancePeriod('all')">All</button>
+               it the moment the tab-wide filter changes to something else.
+               A dropdown rather than inline segmented buttons, so the zoom
+               controls can stay directly visible next to it. -->
+          <div style="position:relative">
+            <button class="btn-sm" id="balancePeriodTrigger" onclick="event.stopPropagation();toggleMiniPopover('balancePeriodPanel')" style="display:flex;align-items:center;gap:5px;padding:6px 10px">
+              <span id="balancePeriodTriggerLabel">All</span>
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="mini-popover-panel balance-period-panel" id="balancePeriodPanel" onclick="event.stopPropagation()">
+              <div class="balance-period-row" id="balancePeriodRow-week" onclick="setBalancePeriod('week');toggleMiniPopover('balancePeriodPanel')">Week</div>
+              <div class="balance-period-row" id="balancePeriodRow-month" onclick="setBalancePeriod('month');toggleMiniPopover('balancePeriodPanel')">Month</div>
+              <div class="balance-period-row" id="balancePeriodRow-year" onclick="setBalancePeriod('year');toggleMiniPopover('balancePeriodPanel')">Year</div>
+              <div class="balance-period-row active" id="balancePeriodRow-all" onclick="setBalancePeriod('all');toggleMiniPopover('balancePeriodPanel')">All Time</div>
+            </div>
+          </div>
+          <div class="chart-zoom-controls">
+            <button class="chart-zoom-btn" type="button" aria-label="Zoom out balance chart" onclick="balanceZoomBy(1.6)">−</button>
+            <button class="chart-zoom-btn" type="button" aria-label="Zoom in balance chart" onclick="balanceZoomBy(1/1.6)">+</button>
+            <button class="chart-zoom-btn chart-zoom-reset" type="button" id="balanceResetBtn" onclick="balanceResetView()">Reset</button>
           </div>
           <div style="position:relative">
             <button class="btn-sm" onclick="event.stopPropagation();toggleMiniPopover('balanceMenuPanel')" style="padding:6px 8px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
@@ -1132,15 +1167,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
               <label style="display:flex;align-items:center;gap:8px;padding:8px 6px;font-size:13px;color:var(--text2);cursor:pointer">
                 <input type="checkbox" id="showLedgerMarkers" checked onchange="renderBalanceCard()"> Show deposits/withdrawals
               </label>
-              <div style="border-top:1px solid var(--border);margin:2px 0"></div>
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 6px;font-size:13px;color:var(--text2)">
-                <span>Zoom</span>
-                <div class="chart-zoom-controls">
-                  <button class="chart-zoom-btn" type="button" aria-label="Zoom out balance chart" onclick="balanceZoomBy(1.6)">−</button>
-                  <button class="chart-zoom-btn" type="button" aria-label="Zoom in balance chart" onclick="balanceZoomBy(1/1.6)">+</button>
-                  <button class="chart-zoom-btn chart-zoom-reset" type="button" id="balanceResetBtn" onclick="balanceResetView()">Reset</button>
-                </div>
-              </div>
               <div style="border-top:1px solid var(--border);margin:2px 0"></div>
               <div style="padding:8px 6px;font-size:13px;color:var(--accent);cursor:pointer" onclick="toggleMiniPopover('balanceMenuPanel');openLedgerModal()">+ Log deposit/withdrawal</div>
             </div>
@@ -1151,6 +1177,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <div class="balance-chart-scroll" id="balanceChartScroll"><div class="balance-chart-inner" id="balanceChartInner"><canvas id="equityChart" height="210"></canvas></div></div>
       <div class="chart-hint">Scroll or pinch to zoom · drag to pan · press &amp; hold to scrub</div>
     </div>
+  </div>
+
+  <div class="card stats-panel">
+    <div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg>Win Rate by Setup</div><div class="setup-chip-row" id="setupChipRow"></div><div id="winBySetup"></div>
   </div>
 
   <div class="card stats-panel"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>P&amp;L per Trade</div><div id="pnlSetupNote" class="setup-focus-note"></div><div id="pnlBars"></div></div>
@@ -1190,10 +1220,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       </div>
       <div id="ledgerEntryList" style="margin-top:16px"></div>
     </div>
-  </div>
-
-  <div class="card stats-panel">
-    <div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg>Win Rate by Setup</div><div class="setup-chip-row" id="setupChipRow"></div><div id="winBySetup"></div>
   </div>
 
   <!-- Day and session breakdowns -->
@@ -7479,6 +7505,19 @@ function markStatsDirty(){
   // If Stats tab is already visible, render immediately so the user sees fresh data.
   if(activeTab === 'Stats') renderStats();
 }
+// Updates the period dropdown's trigger label + active row — shared between
+// setBalancePeriod() (user picks a period) and renderBalanceCard() (so the
+// dropdown always reflects reality even when balancePeriod was set some
+// other way, e.g. via setStatFilter()'s overwrite).
+const BALANCE_PERIOD_LABELS = {week:'Week',month:'Month',year:'Year',all:'All'};
+function _syncBalancePeriodUI(){
+  const trigger=document.getElementById('balancePeriodTriggerLabel');
+  if(trigger) trigger.textContent = BALANCE_PERIOD_LABELS[balancePeriod]||'All';
+  ['week','month','year','all'].forEach(k=>{
+    const row=document.getElementById('balancePeriodRow-'+k);
+    if(row) row.classList.toggle('active', k===balancePeriod);
+  });
+}
 function setStatFilter(f){
   statPeriod = f;
   ['week','month','year','all'].forEach(k=>{
@@ -7496,10 +7535,7 @@ function setStatFilter(f){
 // doesn't loop back and reset balanceView / re-render twice for one click).
 function setBalancePeriod(f, fromStatFilter){
   balancePeriod = f;
-  ['week','month','year','all'].forEach(k=>{
-    const btn = document.getElementById('balancePeriod-'+k);
-    if(btn) btn.className = k===f ? 'chart-zoom-btn active' : 'chart-zoom-btn';
-  });
+  _syncBalancePeriodUI();
   balanceView = {total:0,start:0,end:0}; // period changed → forget any pinch/drag zoom, start full
   if(!fromStatFilter) renderBalanceCard();
 }
@@ -7559,7 +7595,6 @@ function renderStats(){
   if(activeTab !== 'Stats'){ statsDirty = true; return; }
   statsDirty = false;
   const ft = statsFilteredTrades();
-  document.getElementById('statsAcctLabel').textContent = activeAcctFilter==='all' ? 'All Accounts' : (accounts.find(a=>a.id===activeAcctFilter)?.name||'');
 
   const wins   = ft.filter(t=>parseFloat(t.pnl)>0);
   const losses = ft.filter(t=>parseFloat(t.pnl)<0);
@@ -7738,8 +7773,11 @@ function renderStats(){
   const sorted2=[...ft].sort((a,b)=>parseFloat(b.pnl)-parseFloat(a.pnl));
   const display=[...sorted2.slice(0,3),...sorted2.slice(-3)].filter((t,i,a)=>a.indexOf(t)===i);
   document.getElementById('bestWorst').innerHTML=display.map(t=>{
-    const pnl=parseFloat(t.pnl), r=calcR(t);
-    return `<div class="info-row"><span class="k">${escapeHtml(t.pair)} <span style="font-size:11px;color:var(--text3)">${t.date||''}</span></span><div style="display:flex;gap:8px;align-items:center">${r!==null?`<span style="font-size:12px;color:${parseFloat(r)>=0?'#60a5fa':'var(--red)'};font-family:var(--mono)">${parseFloat(r)>=0?'+':''}${r}R</span>`:''}<span class="v ${pnl>=0?'positive':'negative'}">${fmtPnl(pnl)}</span></div></div>`;
+    const pnl=parseFloat(t.pnl), r=calcR(t), win=pnl>=0;
+    return `<div class="bw-item ${win?'win':'loss'}">
+      <div class="bw-top"><span class="bw-pair">${escapeHtml(t.pair)}</span><span class="bw-pnl ${win?'positive':'negative'}">${fmtPnl(pnl)}</span></div>
+      <div class="bw-meta"><span>${escapeHtml(t.date||'')}</span>${r!==null?`<span class="${parseFloat(r)>=0?'r-pos':'r-neg'}">${parseFloat(r)>=0?'+':''}${r}R</span>`:''}</div>
+    </div>`;
   }).join('')||'<div style="color:var(--text3);font-size:14px;padding:8px 0">No trades yet</div>';
 
   renderCharts(ft);
@@ -7980,10 +8018,7 @@ let balanceRenderToken=0;
 async function renderBalanceCard(){
   const amountEl=document.getElementById('balanceAmount'), badgeEl=document.getElementById('balanceBadge');
   if(!document.getElementById('equityChart')) return; // panel not in DOM (e.g. different tab)
-  ['week','month','year','all'].forEach(k=>{
-    const btn=document.getElementById('balancePeriod-'+k);
-    if(btn) btn.className = k===balancePeriod ? 'chart-zoom-btn active' : 'chart-zoom-btn';
-  });
+  _syncBalancePeriodUI();
   const {points,startingBalance,tradingPnL,currentBalance} = computeBalanceSeries();
   // Headline dollar figure is always the true, right-now balance — it never
   // reflects whatever window is selected, so it can't look stale/wrong while
@@ -8188,7 +8223,11 @@ function attachBalanceInteractions(canvas){
   const finish=e=>{
     pointers.delete(e.pointerId);
     clearTimeout(holdTimer);
-    if(mode==='scrub') endScrub();
+    // Always clear the guide on release — a quick tap never set mode to
+    // 'scrub' (the hold timer never fired), but defensively clearing here
+    // regardless of mode guarantees nothing is ever left showing after a
+    // tap or a scroll-past attempt, not just after a deliberate hold.
+    if(mode!=='pinch') endScrub();
     if(pointers.size<2 && mode==='pinch') mode=null;
     if(pointers.size===0) mode=null;
     canvas.classList.remove('is-panning','is-scrubbing');
@@ -8347,7 +8386,7 @@ function chartOpts({prefix='',suffix='',tooltipTitle=null,rightAxis=false,hideGr
     }
     return prefix+v+suffix;
   }
-  return{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},events:['mousemove','mouseout','click','touchstart','touchmove'],plugins:{legend:{display:false},tooltip:{enabled:true,position:'nearest',backgroundColor:T.surface2,borderColor:T.border2,borderWidth:1,titleColor:T.text2,bodyColor:T.text,padding:10,displayColors:true,callbacks:Object.assign({label:ctx=>'Balance  '+fmtVal(ctx.parsed.y)},tooltipTitle?{title:items=>tooltipTitle(items[0].dataIndex)}:{})}},scales:{x:{grid:{display:!hideGrid,color:T.border2},ticks:{color:T.text3,font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:6,callback:function(value){if(!dateAxis)return this.getLabelForValue(value);const raw=this.getLabelForValue(value),d=raw?parseLocalDate(raw):null;return d?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';}}},y:{position:rightAxis?'right':'left',grid:{display:!hideGrid,color:T.border2},border:{display:false},ticks:{color:T.text2,font:{size:10},callback:v=>fmtTick(v)}}}};
+  return{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},events:['mousemove','mouseout'],plugins:{legend:{display:false},tooltip:{enabled:true,position:'nearest',backgroundColor:T.surface2,borderColor:T.border2,borderWidth:1,titleColor:T.text2,bodyColor:T.text,padding:10,displayColors:true,callbacks:Object.assign({label:ctx=>'Balance  '+fmtVal(ctx.parsed.y)},tooltipTitle?{title:items=>tooltipTitle(items[0].dataIndex)}:{})}},scales:{x:{grid:{display:!hideGrid,color:T.border2},ticks:{color:T.text3,font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:6,callback:function(value){if(!dateAxis)return this.getLabelForValue(value);const raw=this.getLabelForValue(value),d=raw?parseLocalDate(raw):null;return d?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';}}},y:{position:rightAxis?'right':'left',grid:{display:!hideGrid,color:T.border2},border:{display:false},ticks:{color:T.text2,font:{size:10},callback:v=>fmtTick(v)}}}};
 }
 
 function destroyCharts(){
