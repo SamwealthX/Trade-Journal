@@ -470,7 +470,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .bw-meta .r-pos{color:#60a5fa}.bw-meta .r-neg{color:var(--red)}
 
 /* ── Account manager ── */
-.acct-manage-item{display:flex;align-items:center;justify-content:space-between;padding:13px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px}
+.acct-manage-item{display:flex;align-items:center;justify-content:space-between;padding:13px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);margin-bottom:8px}
 .acct-manage-name{font-weight:700;font-size:14px}
 .acct-manage-bal{font-size:13px;color:var(--text2);font-family:var(--mono);margin-top:2px}
 
@@ -8071,15 +8071,46 @@ async function renderBalanceCard(){
 
   const pointColors = view.map(p=> p.kind==='deposit' ? T.accent2 : p.kind==='withdrawal' ? T.red : T.accent);
   const pointRadii = view.map(p=> isEvent(p) && showMarkers ? 5 : 0);
+  // Full date + time (when the point has one) instead of the old short
+  // "MMM d" — a bare short date left same-day points indistinguishable and
+  // gave no way to tell a 2am point from a 2pm one. parseLocalDate (not
+  // `new Date(str)`) avoids the timezone-shift trap already flagged elsewhere
+  // in this file for the exact same reason.
+  const fmtTipDateTime = (dateStr,timeStr)=>{
+    const d=dateStr?parseLocalDate(dateStr):null; if(!d) return dateStr||'';
+    const dateText=d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    if(!timeStr) return dateText;
+    const [hh,mm]=timeStr.split(':').map(Number);
+    const dt=new Date(d); dt.setHours(hh||0,mm||0);
+    return dateText+', '+dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  };
   const tooltipTitle = i=>{
     const p=view[i]; if(!p) return '';
-    if(p.kind==='start') return 'Starting balance';
+    const full=fmtTipDateTime(p.date,p.time);
+    if(p.kind==='start') return 'Starting balance · '+full;
     if(p.kind==='trade'){
-      const t=p.ref, d=parseLocalDate(t.date);
-      return (t.pair||'Trade')+' · '+(d?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):(t.date||''));
+      const t=p.ref;
+      return (t.pair||'Trade')+' · '+full;
     }
     const e=p.ref;
-    return (p.kind==='deposit'?'Deposit':'Withdrawal')+(e.note?' · '+e.note:'')+' · '+(e.date||'');
+    return (p.kind==='deposit'?'Deposit':'Withdrawal')+(e.note?' · '+e.note:'')+' · '+full;
+  };
+  // Same-day ledger note: a deposit/withdrawal point already announces itself
+  // via the title above, so this only fires for a *different* point (a trade,
+  // or the starting-balance anchor) that shares a calendar date with a
+  // deposit/withdrawal elsewhere in the current view — the exact ambiguity
+  // the mockup called out ("big win" vs. "I deposited") for any balance jump.
+  const sameDayLedgerNote = i=>{
+    const p=view[i]; if(!p || !p.date || p.kind==='deposit' || p.kind==='withdrawal') return null;
+    const hit=view.find((q,qi)=> qi!==i && q.date===p.date && (q.kind==='deposit'||q.kind==='withdrawal'));
+    if(!hit) return null;
+    const e=hit.ref, amt=Math.abs(parseFloat(e.amount)||0).toFixed(2);
+    return (hit.kind==='deposit'?'Deposit +$':'Withdrawal -$')+amt+(e.note?' · '+e.note:'');
+  };
+  const afterBody = items=>{
+    if(!items.length) return [];
+    const note=sameDayLedgerNote(items[0].dataIndex);
+    return note ? [note] : [];
   };
   const chartInner=document.getElementById('balanceChartInner');
   if(chartInner) chartInner.style.width='100%';
@@ -8102,7 +8133,7 @@ async function renderBalanceCard(){
     ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.fillStyle=T.accent; ctx.fill(); ctx.strokeStyle=T.bg; ctx.lineWidth=2; ctx.stroke(); ctx.restore();
   }};
   const canvas=document.getElementById('equityChart');
-  charts.equity=new Chart(canvas,{type:'line',plugins:[balanceGuide],data:{labels,datasets:[{data:view.map(p=>p.balance),borderColor:T.accent,backgroundColor:T.accentDim,borderWidth:2.5,fill:true,tension:0.28,pointRadius:pointRadii,pointHoverRadius:0,pointBackgroundColor:pointColors,pointBorderColor:T.bg,pointBorderWidth:2}]},options:chartOpts({prefix:'$',tooltipTitle,rightAxis:true,hideGrid:true,dateAxis:true})});
+  charts.equity=new Chart(canvas,{type:'line',plugins:[balanceGuide],data:{labels,datasets:[{data:view.map(p=>p.balance),borderColor:T.accent,backgroundColor:T.accentDim,borderWidth:2.5,fill:true,tension:0.28,pointRadius:pointRadii,pointHoverRadius:0,pointBackgroundColor:pointColors,pointBorderColor:T.bg,pointBorderWidth:2}]},options:chartOpts({prefix:'$',tooltipTitle,afterBody,rightAxis:true,hideGrid:true,dateAxis:true,exclusiveTooltipControl:true})});
   attachBalanceInteractions(canvas);
 }
 
@@ -8209,7 +8240,16 @@ function attachBalanceInteractions(canvas){
       if(pinchDist>4 && Math.abs(d-pinchDist)>6){ balanceZoomBy(pinchDist/Math.max(d,1),pinchRatio); pinchDist=d; }
       return;
     }
-    if(!pointers.has(e.pointerId)) return; // plain hover — Chart.js handles it
+    if(!pointers.has(e.pointerId)){
+      // Plain hover: no button/finger down for this pointer. Chart.js's own
+      // native mousemove listener used to cover this case, but it's now
+      // switched off for this chart (exclusiveTooltipControl, see chartOpts)
+      // so nothing else races our scrub state — so mouse hover has to be
+      // driven from here instead. Touch/pen never reach this branch while
+      // "hovering" (no such thing without a press), so this is mouse-only.
+      if(e.pointerType==='mouse') showScrub(e.clientX);
+      return;
+    }
     const dx=e.clientX-startX;
     if(mode==='scrub'){ e.preventDefault(); showScrub(e.clientX); return; }
     if(mode===null && Math.abs(dx)>6){ clearTimeout(holdTimer); mode='pan'; canvas.classList.add('is-panning'); }
@@ -8369,7 +8409,7 @@ function themeColors(){
   };
 }
 
-function chartOpts({prefix='',suffix='',tooltipTitle=null,rightAxis=false,hideGrid=false,dateAxis=false}={}){
+function chartOpts({prefix='',suffix='',tooltipTitle=null,afterBody=null,rightAxis=false,hideGrid=false,dateAxis=false,exclusiveTooltipControl=false}={}){
   const T=themeColors();
   function fmtVal(v){
     if(v===null||v===undefined) return '—';
@@ -8386,7 +8426,27 @@ function chartOpts({prefix='',suffix='',tooltipTitle=null,rightAxis=false,hideGr
     }
     return prefix+v+suffix;
   }
-  return{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},events:['mousemove','mouseout'],plugins:{legend:{display:false},tooltip:{enabled:true,position:'nearest',backgroundColor:T.surface2,borderColor:T.border2,borderWidth:1,titleColor:T.text2,bodyColor:T.text,padding:10,displayColors:true,callbacks:Object.assign({label:ctx=>'Balance  '+fmtVal(ctx.parsed.y)},tooltipTitle?{title:items=>tooltipTitle(items[0].dataIndex)}:{})}},scales:{x:{grid:{display:!hideGrid,color:T.border2},ticks:{color:T.text3,font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:6,callback:function(value){if(!dateAxis)return this.getLabelForValue(value);const raw=this.getLabelForValue(value),d=raw?parseLocalDate(raw):null;return d?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';}}},y:{position:rightAxis?'right':'left',grid:{display:!hideGrid,color:T.border2},border:{display:false},ticks:{color:T.text2,font:{size:10},callback:v=>fmtTick(v)}}}};
+  // exclusiveTooltipControl: when true, Chart.js's own native hover listeners
+  // are switched off entirely (events:[]) so the ONLY thing that can ever
+  // activate/clear this chart's tooltip is our own pointer code in
+  // attachBalanceInteractions(). This closes a race the plain events:
+  // ['mousemove','mouseout'] setup still left open: mobile WebViews (this
+  // app's actual runtime, per the Telegram Mini App shell) fire synthetic
+  // "ghost" mousemove/mouseout compatibility events a beat after a real touch
+  // gesture ends, since nothing here ever calls preventDefault() on the raw
+  // touchstart/touchmove events themselves (only on the Pointer Events we do
+  // handle). Those ghost events land squarely in Chart's native hover pipeline
+  // and fight our manual showScrub()/endScrub() calls for control of
+  // chart.tooltip._active — Chart's own `_ignoreReplayEvents` guard swallows
+  // exactly one such stray event, so the effect isn't "broken forever," it's
+  // "the guide silently loses the race the *next* time it happens in the same
+  // session," which matches an intermittent "works once, then stops" report
+  // far better than a one-time cosmetic glitch would. Same fix family as the
+  // earlier touchstart/touchmove/click removal (see cleanup-pass notes) —
+  // this just finishes the job for mousemove/mouseout too, so every pixel of
+  // tooltip control funnels through one code path instead of two.
+  const nativeEvents = exclusiveTooltipControl ? [] : ['mousemove','mouseout'];
+  return{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},events:nativeEvents,plugins:{legend:{display:false},tooltip:{enabled:true,position:'nearest',backgroundColor:T.surface2,borderColor:T.border2,borderWidth:1,titleColor:T.text2,bodyColor:T.text,padding:10,displayColors:true,callbacks:Object.assign({label:ctx=>'Balance  '+fmtVal(ctx.parsed.y)},tooltipTitle?{title:items=>tooltipTitle(items[0].dataIndex)}:{},afterBody?{afterBody}:{})}},scales:{x:{grid:{display:!hideGrid,color:T.border2},ticks:{color:T.text3,font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:6,callback:function(value){if(!dateAxis)return this.getLabelForValue(value);const raw=this.getLabelForValue(value),d=raw?parseLocalDate(raw):null;return d?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';}}},y:{position:rightAxis?'right':'left',grid:{display:!hideGrid,color:T.border2},border:{display:false},ticks:{color:T.text2,font:{size:10},callback:v=>fmtTick(v)}}}};
 }
 
 function destroyCharts(){
