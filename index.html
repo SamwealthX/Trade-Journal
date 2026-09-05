@@ -470,7 +470,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .bw-meta .r-pos{color:#60a5fa}.bw-meta .r-neg{color:var(--red)}
 
 /* ── Account manager ── */
-.acct-manage-item{display:flex;align-items:center;justify-content:space-between;padding:13px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);margin-bottom:8px}
+.acct-manage-item{display:flex;align-items:center;justify-content:space-between;padding:13px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px}
 .acct-manage-name{font-weight:700;font-size:14px}
 .acct-manage-bal{font-size:13px;color:var(--text2);font-family:var(--mono);margin-top:2px}
 
@@ -1175,17 +1175,52 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       </div>
       <div class="balance-range-note" id="balanceRangeNote"></div>
       <div class="balance-chart-scroll" id="balanceChartScroll"><div class="balance-chart-inner" id="balanceChartInner"><canvas id="equityChart" height="210"></canvas></div></div>
-      <div class="chart-hint">Scroll or pinch to zoom · drag to pan · press &amp; hold to scrub</div>
     </div>
   </div>
+  <!-- Panel: Symbols traded donut — replaces the old Pair Performance
+       progress-bar block. Trade-distribution only (no P&L) since the table
+       right below carries the profitability numbers; keeping them separate
+       is what let the donut stay clean like the reference instead of
+       cramming everything into one widget. -->
+  <div class="card stats-panel">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+      <div>
+        <div class="chart-title" style="margin-bottom:2px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 9 9"/></svg>Symbols Traded</div>
+        <div style="font-size:22px;font-weight:800;color:var(--text)" id="symbolsCount">0</div>
+      </div>
+      <div class="mini-popover-trigger-wrap">
+        <button class="btn-sm" onclick="event.stopPropagation();toggleMiniPopover('symbolsFilterPanel')" style="display:flex;align-items:center;gap:6px" id="symbolsFilterBtn">All</button>
+        <div class="mini-popover-panel" id="symbolsFilterPanel" onclick="event.stopPropagation()"></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:104px auto 104px;align-items:center;margin:14px 0 10px">
+      <div id="symbolsLeftDetail"></div>
+      <div id="symbolsDonutWrap" style="justify-self:center"></div>
+      <div id="symbolsRightDetail"></div>
+    </div>
+    <div id="symbolsLegend" style="display:flex;flex-wrap:wrap;gap:6px 14px"></div>
+  </div>
+
+  <!-- Panel: Pair performance table — replaces the old progress-bar rows -->
+  <div class="card stats-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div class="chart-title" style="margin-bottom:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>Pair Performance Table</div>
+      <div class="mini-popover-trigger-wrap">
+        <button class="btn-sm" onclick="event.stopPropagation();toggleMiniPopover('pairColPanel')" aria-label="Choose columns" style="width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="5" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.2" fill="currentColor" stroke="none"/></svg></button>
+        <div class="mini-popover-panel" id="pairColPanel" onclick="event.stopPropagation()"></div>
+      </div>
+    </div>
+    <div class="symtable-scroll"><table class="symtable" id="pairTable"></table></div>
+  </div>
+
+  <div class="card stats-panel"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="14" width="4" height="7"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="11" width="4" height="10"/></svg>R-Multiple Distribution</div><div id="rHistogram"></div></div>
+
 
   <div class="card stats-panel">
     <div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg>Win Rate by Setup</div><div class="setup-chip-row" id="setupChipRow"></div><div id="winBySetup"></div>
   </div>
 
   <div class="card stats-panel"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>P&amp;L per Trade</div><div id="pnlSetupNote" class="setup-focus-note"></div><div id="pnlBars"></div></div>
-
-  <div class="card stats-panel"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="14" width="4" height="7"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="11" width="4" height="10"/></svg>R-Multiple Distribution</div><div id="rHistogram"></div></div>
 
   <!-- Deposit/Withdrawal ledger modal — manual entries only. Prop-firm payouts
        (propFirms[].payouts[]) show here read-only when the current account is
@@ -1226,42 +1261,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div class="card stats-panel">
     <div class="stats-subsection"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Best Day of Week</div><div id="dowBreakdown"></div></div>
     <div class="stats-subsection" style="margin-bottom:0"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>Session Performance</div><div id="sessionBreakdown"></div></div>
-  </div>
-
-  <!-- Panel: Symbols traded donut — replaces the old Pair Performance
-       progress-bar block. Trade-distribution only (no P&L) since the table
-       right below carries the profitability numbers; keeping them separate
-       is what let the donut stay clean like the reference instead of
-       cramming everything into one widget. -->
-  <div class="card stats-panel">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
-      <div>
-        <div class="chart-title" style="margin-bottom:2px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 9 9"/></svg>Symbols Traded</div>
-        <div style="font-size:22px;font-weight:800;color:var(--text)" id="symbolsCount">0</div>
-      </div>
-      <div class="mini-popover-trigger-wrap">
-        <button class="btn-sm" onclick="event.stopPropagation();toggleMiniPopover('symbolsFilterPanel')" style="display:flex;align-items:center;gap:6px" id="symbolsFilterBtn">All</button>
-        <div class="mini-popover-panel" id="symbolsFilterPanel" onclick="event.stopPropagation()"></div>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:104px auto 104px;align-items:center;margin:14px 0 10px">
-      <div id="symbolsLeftDetail"></div>
-      <div id="symbolsDonutWrap" style="justify-self:center"></div>
-      <div id="symbolsRightDetail"></div>
-    </div>
-    <div id="symbolsLegend" style="display:flex;flex-wrap:wrap;gap:6px 14px"></div>
-  </div>
-
-  <!-- Panel: Pair performance table — replaces the old progress-bar rows -->
-  <div class="card stats-panel">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div class="chart-title" style="margin-bottom:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>Pair Performance Table</div>
-      <div class="mini-popover-trigger-wrap">
-        <button class="btn-sm" onclick="event.stopPropagation();toggleMiniPopover('pairColPanel')" aria-label="Choose columns" style="width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="5" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.2" fill="currentColor" stroke="none"/></svg></button>
-        <div class="mini-popover-panel" id="pairColPanel" onclick="event.stopPropagation()"></div>
-      </div>
-    </div>
-    <div class="symtable-scroll"><table class="symtable" id="pairTable"></table></div>
   </div>
 
   <!-- Panel 3: individual trade highlights — kept separate since it's a
@@ -8071,46 +8070,35 @@ async function renderBalanceCard(){
 
   const pointColors = view.map(p=> p.kind==='deposit' ? T.accent2 : p.kind==='withdrawal' ? T.red : T.accent);
   const pointRadii = view.map(p=> isEvent(p) && showMarkers ? 5 : 0);
-  // Full date + time (when the point has one) instead of the old short
-  // "MMM d" — a bare short date left same-day points indistinguishable and
-  // gave no way to tell a 2am point from a 2pm one. parseLocalDate (not
-  // `new Date(str)`) avoids the timezone-shift trap already flagged elsewhere
-  // in this file for the exact same reason.
-  const fmtTipDateTime = (dateStr,timeStr)=>{
-    const d=dateStr?parseLocalDate(dateStr):null; if(!d) return dateStr||'';
-    const dateText=d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-    if(!timeStr) return dateText;
-    const [hh,mm]=timeStr.split(':').map(Number);
-    const dt=new Date(d); dt.setHours(hh||0,mm||0);
-    return dateText+', '+dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  // Tooltip content (see consistency mockup — "richer" option): full date +
+  // entry time in the title, and a footer line for any deposit/withdrawal that
+  // landed the same day, so a jump in the line is never ambiguous between a
+  // big win and money moving in or out of the account.
+  const fmtFullDate=str=>{ const d=str?parseLocalDate(str):null; return d?d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):(str||''); };
+  const fmtClock=str=>{
+    if(!str) return '';
+    const m=/^(\d{1,2}):(\d{2})/.exec(str); if(!m) return '';
+    let h=parseInt(m[1],10); const mm=m[2], ap=h>=12?'PM':'AM';
+    h=h%12; if(h===0) h=12;
+    return h+':'+mm+' '+ap;
   };
+  // Same-day ledger activity, keyed by date, for the tooltip footer.
+  const dayLedger={};
+  view.forEach(p=>{ if(isEvent(p) && p.date){ (dayLedger[p.date]=dayLedger[p.date]||[]).push(p); } });
   const tooltipTitle = i=>{
     const p=view[i]; if(!p) return '';
-    const full=fmtTipDateTime(p.date,p.time);
-    if(p.kind==='start') return 'Starting balance · '+full;
-    if(p.kind==='trade'){
-      const t=p.ref;
-      return (t.pair||'Trade')+' · '+full;
-    }
-    const e=p.ref;
-    return (p.kind==='deposit'?'Deposit':'Withdrawal')+(e.note?' · '+e.note:'')+' · '+full;
+    if(p.kind==='start') return 'Starting balance';
+    const clock=fmtClock(p.time);
+    return fmtFullDate(p.date)+(clock?', '+clock:'');
   };
-  // Same-day ledger note: a deposit/withdrawal point already announces itself
-  // via the title above, so this only fires for a *different* point (a trade,
-  // or the starting-balance anchor) that shares a calendar date with a
-  // deposit/withdrawal elsewhere in the current view — the exact ambiguity
-  // the mockup called out ("big win" vs. "I deposited") for any balance jump.
-  const sameDayLedgerNote = i=>{
-    const p=view[i]; if(!p || !p.date || p.kind==='deposit' || p.kind==='withdrawal') return null;
-    const hit=view.find((q,qi)=> qi!==i && q.date===p.date && (q.kind==='deposit'||q.kind==='withdrawal'));
-    if(!hit) return null;
-    const e=hit.ref, amt=Math.abs(parseFloat(e.amount)||0).toFixed(2);
-    return (hit.kind==='deposit'?'Deposit +$':'Withdrawal -$')+amt+(e.note?' · '+e.note:'');
-  };
-  const afterBody = items=>{
-    if(!items.length) return [];
-    const note=sameDayLedgerNote(items[0].dataIndex);
-    return note ? [note] : [];
+  const tooltipFooter = i=>{
+    const p=view[i]; if(!p || !p.date) return [];
+    const evs=dayLedger[p.date]||[];
+    return evs.map(e=>{
+      const amt=Math.abs(parseFloat(e.ref?.amount)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+      const label=e.kind==='deposit'?'Deposit':'Withdrawal';
+      return label+'  '+(e.kind==='deposit'?'+$':'-$')+amt;
+    });
   };
   const chartInner=document.getElementById('balanceChartInner');
   if(chartInner) chartInner.style.width='100%';
@@ -8133,7 +8121,7 @@ async function renderBalanceCard(){
     ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.fillStyle=T.accent; ctx.fill(); ctx.strokeStyle=T.bg; ctx.lineWidth=2; ctx.stroke(); ctx.restore();
   }};
   const canvas=document.getElementById('equityChart');
-  charts.equity=new Chart(canvas,{type:'line',plugins:[balanceGuide],data:{labels,datasets:[{data:view.map(p=>p.balance),borderColor:T.accent,backgroundColor:T.accentDim,borderWidth:2.5,fill:true,tension:0.28,pointRadius:pointRadii,pointHoverRadius:0,pointBackgroundColor:pointColors,pointBorderColor:T.bg,pointBorderWidth:2}]},options:chartOpts({prefix:'$',tooltipTitle,afterBody,rightAxis:true,hideGrid:true,dateAxis:true,exclusiveTooltipControl:true})});
+  charts.equity=new Chart(canvas,{type:'line',plugins:[balanceGuide],data:{labels,datasets:[{data:view.map(p=>p.balance),borderColor:T.accent,backgroundColor:T.accentDim,borderWidth:2.5,fill:true,tension:0.28,pointRadius:pointRadii,pointHoverRadius:0,pointBackgroundColor:pointColors,pointBorderColor:T.bg,pointBorderWidth:2}]},options:chartOpts({prefix:'$',tooltipTitle,tooltipFooter,rightAxis:true,hideGrid:true,dateAxis:true})});
   attachBalanceInteractions(canvas);
 }
 
@@ -8189,13 +8177,21 @@ function attachBalanceInteractions(canvas){
     const i=indexAtX(clientX); if(i===null) return;
     balanceScrubIndex=i;
     const el=c.getDatasetMeta(0).data[i];
-    if(el){ c.tooltip.setActiveElements([{datasetIndex:0,index:i}],{x:el.x,y:el.y}); }
-    c.draw();
+    if(el){
+      // setActiveElements alone only flags the tooltip as active; it's
+      // chart.render() (not chart.draw()) that runs the tooltip's own
+      // update/animation pass. Using draw() worked the first time but left
+      // the tooltip's opacity stuck at 0 after the first release, which is
+      // why press-and-hold showed nothing on every subsequent hold.
+      c.setActiveElements([{datasetIndex:0,index:i}]);
+      c.tooltip.setActiveElements([{datasetIndex:0,index:i}],{x:el.x,y:el.y});
+    }
+    c.render();
   };
   const endScrub=()=>{
     if(balanceScrubIndex===null) return;
     balanceScrubIndex=null;
-    const c=chart(); if(c){ c.tooltip.setActiveElements([],{x:0,y:0}); c.draw(); }
+    const c=chart(); if(c){ c.setActiveElements([]); c.tooltip.setActiveElements([],{x:0,y:0}); c.render(); }
   };
 
   // Wheel + trackpad pinch (ctrlKey) — zoom anchored on the cursor. Delta is
@@ -8240,16 +8236,7 @@ function attachBalanceInteractions(canvas){
       if(pinchDist>4 && Math.abs(d-pinchDist)>6){ balanceZoomBy(pinchDist/Math.max(d,1),pinchRatio); pinchDist=d; }
       return;
     }
-    if(!pointers.has(e.pointerId)){
-      // Plain hover: no button/finger down for this pointer. Chart.js's own
-      // native mousemove listener used to cover this case, but it's now
-      // switched off for this chart (exclusiveTooltipControl, see chartOpts)
-      // so nothing else races our scrub state — so mouse hover has to be
-      // driven from here instead. Touch/pen never reach this branch while
-      // "hovering" (no such thing without a press), so this is mouse-only.
-      if(e.pointerType==='mouse') showScrub(e.clientX);
-      return;
-    }
+    if(!pointers.has(e.pointerId)) return; // plain hover — Chart.js handles it
     const dx=e.clientX-startX;
     if(mode==='scrub'){ e.preventDefault(); showScrub(e.clientX); return; }
     if(mode===null && Math.abs(dx)>6){ clearTimeout(holdTimer); mode='pan'; canvas.classList.add('is-panning'); }
@@ -8409,7 +8396,7 @@ function themeColors(){
   };
 }
 
-function chartOpts({prefix='',suffix='',tooltipTitle=null,afterBody=null,rightAxis=false,hideGrid=false,dateAxis=false,exclusiveTooltipControl=false}={}){
+function chartOpts({prefix='',suffix='',tooltipTitle=null,tooltipFooter=null,rightAxis=false,hideGrid=false,dateAxis=false}={}){
   const T=themeColors();
   function fmtVal(v){
     if(v===null||v===undefined) return '—';
@@ -8426,27 +8413,7 @@ function chartOpts({prefix='',suffix='',tooltipTitle=null,afterBody=null,rightAx
     }
     return prefix+v+suffix;
   }
-  // exclusiveTooltipControl: when true, Chart.js's own native hover listeners
-  // are switched off entirely (events:[]) so the ONLY thing that can ever
-  // activate/clear this chart's tooltip is our own pointer code in
-  // attachBalanceInteractions(). This closes a race the plain events:
-  // ['mousemove','mouseout'] setup still left open: mobile WebViews (this
-  // app's actual runtime, per the Telegram Mini App shell) fire synthetic
-  // "ghost" mousemove/mouseout compatibility events a beat after a real touch
-  // gesture ends, since nothing here ever calls preventDefault() on the raw
-  // touchstart/touchmove events themselves (only on the Pointer Events we do
-  // handle). Those ghost events land squarely in Chart's native hover pipeline
-  // and fight our manual showScrub()/endScrub() calls for control of
-  // chart.tooltip._active — Chart's own `_ignoreReplayEvents` guard swallows
-  // exactly one such stray event, so the effect isn't "broken forever," it's
-  // "the guide silently loses the race the *next* time it happens in the same
-  // session," which matches an intermittent "works once, then stops" report
-  // far better than a one-time cosmetic glitch would. Same fix family as the
-  // earlier touchstart/touchmove/click removal (see cleanup-pass notes) —
-  // this just finishes the job for mousemove/mouseout too, so every pixel of
-  // tooltip control funnels through one code path instead of two.
-  const nativeEvents = exclusiveTooltipControl ? [] : ['mousemove','mouseout'];
-  return{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},events:nativeEvents,plugins:{legend:{display:false},tooltip:{enabled:true,position:'nearest',backgroundColor:T.surface2,borderColor:T.border2,borderWidth:1,titleColor:T.text2,bodyColor:T.text,padding:10,displayColors:true,callbacks:Object.assign({label:ctx=>'Balance  '+fmtVal(ctx.parsed.y)},tooltipTitle?{title:items=>tooltipTitle(items[0].dataIndex)}:{},afterBody?{afterBody}:{})}},scales:{x:{grid:{display:!hideGrid,color:T.border2},ticks:{color:T.text3,font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:6,callback:function(value){if(!dateAxis)return this.getLabelForValue(value);const raw=this.getLabelForValue(value),d=raw?parseLocalDate(raw):null;return d?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';}}},y:{position:rightAxis?'right':'left',grid:{display:!hideGrid,color:T.border2},border:{display:false},ticks:{color:T.text2,font:{size:10},callback:v=>fmtTick(v)}}}};
+  return{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},events:['mousemove','mouseout'],plugins:{legend:{display:false},tooltip:{enabled:true,position:'nearest',animation:{duration:0},animations:{opacity:{duration:0}},backgroundColor:T.surface2,borderColor:T.border2,borderWidth:1,titleColor:T.text2,bodyColor:T.text,footerColor:T.text2,footerFont:{size:10,weight:'600'},footerMarginTop:6,padding:10,displayColors:true,callbacks:Object.assign({label:ctx=>'Balance  '+fmtVal(ctx.parsed.y)},tooltipTitle?{title:items=>tooltipTitle(items[0].dataIndex)}:{},tooltipFooter?{footer:items=>tooltipFooter(items[0].dataIndex)}:{})}},scales:{x:{grid:{display:!hideGrid,color:T.border2},ticks:{color:T.text3,font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:6,callback:function(value){if(!dateAxis)return this.getLabelForValue(value);const raw=this.getLabelForValue(value),d=raw?parseLocalDate(raw):null;return d?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';}}},y:{position:rightAxis?'right':'left',grid:{display:!hideGrid,color:T.border2},border:{display:false},ticks:{color:T.text2,font:{size:10},callback:v=>fmtTick(v)}}}};
 }
 
 function destroyCharts(){
