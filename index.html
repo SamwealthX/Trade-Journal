@@ -122,7 +122,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
    every other bottom sheet) rather than mirroring a specific reference
    app's chrome pixel-for-pixel. ── */
 .acct-header-name{font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:5px}
-.acct-header-chevron{font-size:10px;color:var(--text3)}
+/* Chevron, not a solid ▾ triangle — the same stroked chevron the balance
+   period dropdown and the rest of the app's "opens a picker" affordances
+   use, so one glyph family means one thing everywhere. */
+.acct-header-chevron{color:var(--text3);display:inline-flex;align-items:center}
+.acct-header-chevron svg{display:block}
+
 .acct-header-pnl{font-size:11px;font-weight:700;margin-top:2px}
 .switch-acct-row{display:flex;align-items:center;gap:12px;padding:12px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);margin-bottom:8px;cursor:pointer;touch-action:pan-y}
 .switch-acct-row.active{border-color:var(--accent)}
@@ -302,6 +307,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .balance-period-row:hover{background:var(--surface3)}
 .balance-period-row.active{color:var(--accent);font-weight:700;background:var(--accent-dim)}
 .balance-range-note{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:6px}
+/* Custom date range: the note under the tab filter that spells out the active
+   range in words, and the quick-preset row inside the range modal. */
+.range-note{font-size:11px;color:var(--text2);font-family:var(--mono);margin:-8px 0 14px;display:flex;align-items:center;gap:8px}
+.range-note .range-clear{color:var(--accent);font-family:var(--font);font-weight:700;cursor:pointer}
+.range-preset-row{display:flex;gap:6px;margin:-2px 0 14px;flex-wrap:wrap}
+/* Balance card's calendar button — reuses the tab-wide custom range. */
+.balance-cal-btn.active{color:var(--accent);border-color:var(--accent);background:var(--accent-dim)}
+
 .chart-hint{font-size:10.5px;color:var(--text3);margin-top:2px;text-align:right}
 .setup-chip-row{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 12px}
 .setup-chip{border:1px solid var(--border);background:transparent;color:var(--text2);font-family:var(--font);font-size:11.5px;padding:5px 10px;border-radius:999px;cursor:pointer;white-space:nowrap}
@@ -524,8 +537,18 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .symtable th{text-align:right;color:var(--text3);font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;border-bottom:1px solid var(--border2)}
 .symtable td{text-align:right;padding:10px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:12px}
 .symtable th:first-child,.symtable td:first-child{text-align:left;position:sticky;left:0;background:var(--surface);font-family:var(--font);font-weight:700}
-.donut-seg{cursor:pointer}
-.donut-detail-box{background:var(--bg,var(--surface2));border:1px solid var(--border2);border-radius:10px;padding:8px}
+/* Donut segments: the coloured arc is only 18px thick, which is a small
+   target for a thumb, so each segment also gets an invisible 34px-wide hit
+   arc sitting on top. The visible arc itself ignores pointer events and just
+   animates its opacity/width, which is what makes the selection feel
+   instant instead of laggy. */
+.donut-seg{transition:stroke-opacity .14s ease,stroke-width .14s ease;pointer-events:none}
+.donut-hit{cursor:pointer;stroke:transparent;fill:none}
+@media (hover:hover){.donut-hit:hover + .donut-seg,.donut-seg.hovered{stroke-opacity:1}}
+.donut-detail-box{background:var(--bg,var(--surface2));border:1px solid var(--border2);border-radius:10px;padding:9px 10px;animation:donut-detail-in .14s ease}
+@keyframes donut-detail-in{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+.donut-detail-box .ddb-val{font-family:var(--mono);font-weight:700;color:var(--text)}
+
 
 /* ══ P&L CALENDAR ══ */
 .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
@@ -1112,13 +1135,49 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div class="section-header">
     <span class="section-title">Performance</span>
   </div>
-  <!-- Time period filter -->
+  <!-- Time period filter. "Custom" is the same kind of control as the other
+       four — it just gets its bounds from customRange (set in the date-range
+       modal) instead of from the calendar math in _calendarBounds(). -->
   <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px">
     <button class="btn-sm" id="statFilter-week"  onclick="setStatFilter('week')"  style="flex-shrink:0">Week</button>
     <button class="btn-sm" id="statFilter-month" onclick="setStatFilter('month')" style="flex-shrink:0">Month</button>
     <button class="btn-sm" id="statFilter-year"  onclick="setStatFilter('year')"  style="flex-shrink:0">Year</button>
     <button class="btn-sm accent" id="statFilter-all" onclick="setStatFilter('all')" style="flex-shrink:0">All Time</button>
+    <button class="btn-sm" id="statFilter-custom" onclick="openRangeModal()" style="flex-shrink:0;display:flex;align-items:center;gap:6px" aria-label="Custom date range"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg><span id="statFilterCustomLabel">Custom</span></button>
   </div>
+  <div class="range-note" id="statRangeNote" style="display:none"></div>
+
+  <!-- Custom date range modal. One shared range object (customRange) backs
+       both the tab-wide filter and the Balance card's calendar button, so
+       "custom" always means the same two dates everywhere in the tab. -->
+  <div class="modal-overlay centered" id="rangeModal" onclick="closeOnOverlay(event)">
+    <div class="modal">
+      <div class="modal-title">Custom date range</div>
+      <div style="display:flex;gap:10px">
+        <div class="form-group" style="flex:1">
+          <label class="form-label">From</label>
+          <input type="date" class="form-input" id="rangeStart">
+        </div>
+        <div class="form-group" style="flex:1">
+          <label class="form-label">To</label>
+          <input type="date" class="form-input" id="rangeEnd">
+        </div>
+      </div>
+      <div class="range-preset-row">
+        <button class="btn-sm" onclick="setRangePreset(7)">Last 7 days</button>
+        <button class="btn-sm" onclick="setRangePreset(30)">Last 30 days</button>
+        <button class="btn-sm" onclick="setRangePreset(90)">Last 90 days</button>
+      </div>
+      <div id="rangeError" style="display:none;color:var(--red);font-size:12px;margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-sm" style="flex:1" onclick="clearCustomRange()">Clear</button>
+        <button class="btn btn-primary" style="flex:2;margin:0" onclick="applyCustomRange()">Apply range</button>
+      </div>
+    </div>
+  </div>
+
+
+
   <div class="stat-grid" id="statGrid"></div>
   <!-- Streak + Drawdown row -->
   <div class="stat-grid" id="streakDrawdownGrid" style="margin-top:-4px;margin-bottom:24px"></div>
@@ -1154,8 +1213,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
               <div class="balance-period-row" id="balancePeriodRow-month" onclick="setBalancePeriod('month');toggleMiniPopover('balancePeriodPanel')">Month</div>
               <div class="balance-period-row" id="balancePeriodRow-year" onclick="setBalancePeriod('year');toggleMiniPopover('balancePeriodPanel')">Year</div>
               <div class="balance-period-row active" id="balancePeriodRow-all" onclick="setBalancePeriod('all');toggleMiniPopover('balancePeriodPanel')">All Time</div>
+              <div class="balance-period-row" id="balancePeriodRow-custom" onclick="toggleMiniPopover('balancePeriodPanel');useCustomRangeOnBalance()">Custom range</div>
+
             </div>
           </div>
+          <!-- Calendar button: one tap puts the Balance chart on the tab-wide
+               custom range. With no range set yet it opens the picker first. -->
+          <button class="btn-sm balance-cal-btn" id="balanceCalBtn" type="button" aria-label="Use custom date range" onclick="useCustomRangeOnBalance()" style="padding:6px 8px;display:flex;align-items:center"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/><circle cx="12" cy="15" r="1.4" fill="currentColor" stroke="none"/></svg></button>
+
           <div class="chart-zoom-controls">
             <button class="chart-zoom-btn" type="button" aria-label="Zoom out balance chart" onclick="balanceZoomBy(1.6)">−</button>
             <button class="chart-zoom-btn" type="button" aria-label="Zoom in balance chart" onclick="balanceZoomBy(1/1.6)">+</button>
@@ -4580,7 +4645,7 @@ function renderAcctBar(){
     ? `<div class="acct-header-balance" id="acctHeaderBalance"><div class="lbl">Balance</div><div class="val" id="acctHeaderBalanceVal">$0.00</div><div class="acct-header-pnl" id="acctHeaderPnl">$0.00</div></div>`
     : '';
   bar.innerHTML = `<div class="acct-header-icon">${escapeHtml(initials)}</div>`
-    + `<div class="acct-header-mid"><div class="acct-header-name">${escapeHtml(current?current.name:'All Accounts')} <span class="acct-header-chevron">▾</span></div>${statusHtml}</div>`
+    + `<div class="acct-header-mid"><div class="acct-header-name">${escapeHtml(current?current.name:'All Accounts')} <span class="acct-header-chevron"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span></div>${statusHtml}</div>`
     + balanceHtml;
 }
 
@@ -7504,18 +7569,79 @@ function markStatsDirty(){
   // If Stats tab is already visible, render immediately so the user sees fresh data.
   if(activeTab === 'Stats') renderStats();
 }
+// ─── Custom date range ───
+// One shared range for the whole Metrics tab: the tab-wide "Custom" filter and
+// the Balance card's calendar button both read this, so they can never end up
+// on two different custom windows. Persisted so it survives a reload.
+let customRange = (()=>{ try{ return JSON.parse(localStorage.getItem('tj_customRange')||'null')||{start:null,end:null}; }catch(e){ return {start:null,end:null}; } })();
+function _saveCustomRange(){ try{ localStorage.setItem('tj_customRange', JSON.stringify(customRange)); }catch(e){} }
+function hasCustomRange(){ return !!(customRange.start && customRange.end); }
+function _fmtRangeDate(s){ const d=s?parseLocalDate(s):null; return d?d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—'; }
+function customRangeLabel(){ return hasCustomRange() ? _fmtRangeDate(customRange.start)+' → '+_fmtRangeDate(customRange.end) : 'Custom'; }
+function openRangeModal(){
+  const s=document.getElementById('rangeStart'), e=document.getElementById('rangeEnd');
+  if(s) s.value=customRange.start||''; if(e) e.value=customRange.end||'';
+  const err=document.getElementById('rangeError'); if(err) err.style.display='none';
+  document.getElementById('rangeModal').classList.add('open');
+}
+function closeRangeModal(){ document.getElementById('rangeModal').classList.remove('open'); }
+function _isoDay(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function setRangePreset(days){
+  const end=new Date(); const start=new Date(); start.setDate(end.getDate()-(days-1));
+  document.getElementById('rangeStart').value=_isoDay(start);
+  document.getElementById('rangeEnd').value=_isoDay(end);
+}
+function applyCustomRange(){
+  const s=document.getElementById('rangeStart').value, e=document.getElementById('rangeEnd').value;
+  const err=document.getElementById('rangeError');
+  const fail=msg=>{ if(err){ err.textContent=msg; err.style.display='block'; } };
+  if(!s || !e) return fail('Pick both a start and an end date.');
+  if(parseLocalDate(s) > parseLocalDate(e)) return fail('The start date has to come before the end date.');
+  customRange={start:s,end:e}; _saveCustomRange();
+  if(err) err.style.display='none';
+  closeRangeModal();
+  setStatFilter('custom');
+  if(typeof showToast==='function') showToast('Date range applied ✓');
+}
+function clearCustomRange(){
+  customRange={start:null,end:null}; _saveCustomRange();
+  closeRangeModal();
+  if(statPeriod==='custom') setStatFilter('all'); else { _syncCustomRangeUI(); _syncBalancePeriodUI(); }
+}
+// Balance card's calendar button / "Custom range" dropdown row. With no range
+// saved yet it opens the picker instead of silently doing nothing.
+function useCustomRangeOnBalance(){
+  if(!hasCustomRange()) return openRangeModal();
+  setBalancePeriod('custom');
+}
+function _syncCustomRangeUI(){
+  const label=document.getElementById('statFilterCustomLabel');
+  if(label) label.textContent = hasCustomRange() ? customRangeLabel() : 'Custom';
+  const btn=document.getElementById('statFilter-custom');
+  if(btn) btn.className = statPeriod==='custom' ? 'btn-sm accent' : 'btn-sm';
+  const note=document.getElementById('statRangeNote');
+  if(note){
+    if(statPeriod==='custom' && hasCustomRange()){
+      note.style.display='flex';
+      note.innerHTML = 'Showing '+escapeHtml(customRangeLabel())+' <span class="range-clear" onclick="openRangeModal()">Edit</span><span class="range-clear" onclick="clearCustomRange()">Clear</span>';
+    } else note.style.display='none';
+  }
+  const calBtn=document.getElementById('balanceCalBtn');
+  if(calBtn) calBtn.classList.toggle('active', balancePeriod==='custom' && hasCustomRange());
+}
 // Updates the period dropdown's trigger label + active row — shared between
 // setBalancePeriod() (user picks a period) and renderBalanceCard() (so the
 // dropdown always reflects reality even when balancePeriod was set some
 // other way, e.g. via setStatFilter()'s overwrite).
-const BALANCE_PERIOD_LABELS = {week:'Week',month:'Month',year:'Year',all:'All'};
+const BALANCE_PERIOD_LABELS = {week:'Week',month:'Month',year:'Year',all:'All',custom:'Custom'};
 function _syncBalancePeriodUI(){
   const trigger=document.getElementById('balancePeriodTriggerLabel');
   if(trigger) trigger.textContent = BALANCE_PERIOD_LABELS[balancePeriod]||'All';
-  ['week','month','year','all'].forEach(k=>{
+  ['week','month','year','all','custom'].forEach(k=>{
     const row=document.getElementById('balancePeriodRow-'+k);
     if(row) row.classList.toggle('active', k===balancePeriod);
   });
+  _syncCustomRangeUI();
 }
 function setStatFilter(f){
   statPeriod = f;
@@ -7526,6 +7652,7 @@ function setStatFilter(f){
   // Tab-wide filter wins over the Balance chart's own picker when they differ —
   // one source of truth for "current period" rather than two silently drifting.
   if(balancePeriod !== f) setBalancePeriod(f, true);
+  _syncCustomRangeUI();
   // markStatsDirty() immediately re-renders because Stats tab is visible here.
   markStatsDirty();
 }
@@ -7538,6 +7665,7 @@ function setBalancePeriod(f, fromStatFilter){
   balanceView = {total:0,start:0,end:0}; // period changed → forget any pinch/drag zoom, start full
   if(!fromStatFilter) renderBalanceCard();
 }
+
 // Memo cache for statsFilteredTrades(). Keys off the *reference* returned by
 // filteredTrades() — that reference only changes when tradesVersion or
 // activeAcctFilter actually changed (see filteredTrades' own memo above), so
@@ -7549,7 +7677,16 @@ let _statsFilteredTradesCache = { base: null, period: undefined, result: null };
 // apart on what a given period actually spans. Returns null for 'all'.
 function _calendarBounds(period){
   if(period==='all') return null;
+  if(period==='custom'){
+    if(!hasCustomRange()) return null;
+    const s=parseLocalDate(customRange.start), e=parseLocalDate(customRange.end);
+    if(!s||!e) return null;
+    const ws=new Date(s); ws.setHours(0,0,0,0);
+    const we=new Date(e); we.setHours(23,59,59,999);
+    return {start:ws,end:we};
+  }
   const now=new Date();
+
   if(period==='week'){
     const dow=(now.getDay()+6)%7;
     const ws=new Date(now); ws.setDate(now.getDate()-dow); ws.setHours(0,0,0,0);
@@ -7571,7 +7708,10 @@ function _calendarBounds(period){
 function statsFilteredTrades(){
   const base = filteredTrades();
   const c = _statsFilteredTradesCache;
-  if(c.base === base && c.period === statPeriod) return c.result;
+  // The custom range's two dates are part of the cache key too — the period
+  // string stays 'custom' while the dates behind it change.
+  const rangeKey = statPeriod==='custom' ? (customRange.start||'')+'|'+(customRange.end||'') : '';
+  if(c.base === base && c.period === statPeriod && c.rangeKey === rangeKey) return c.result;
   let result;
   const bounds = _calendarBounds(statPeriod);
   if(!bounds){
@@ -7583,7 +7723,8 @@ function statsFilteredTrades(){
       return d && d>=bounds.start && d<=bounds.end;
     });
   }
-  _statsFilteredTradesCache = { base, period: statPeriod, result };
+  _statsFilteredTradesCache = { base, period: statPeriod, rangeKey, result };
+
   return result;
 }
 
@@ -7791,6 +7932,8 @@ function renderStats(){
 const PAIR_COLORS = ['#3b82f6','#00e5a0','#f59e0b','#f43f5e','#a78bfa','#22d3ee','#fb7185','#84cc16'];
 let symbolsSelectedPairs = null; // null = not yet initialized for this render pass
 let symbolsActiveSeg = null;
+// Hover preview (mouse only) — selection still wins, see focusSeg in draw().
+let symbolsHoverSeg = null;
 const PAIR_COLS = {wins:'Wins',losses:'Losses',total:'Total',winrate:'Winrate',pnl:'Total P&L',pf:'Profit Factor',dur:'Avg Duration',rr:'Risk Reward',avgwl:'Avg Win/Loss',maxdd:'Max Symbol Drawdown'};
 let pairColVisible = {wins:true,losses:true,total:true,winrate:true,pnl:true,pf:false,dur:false,rr:false,avgwl:false,maxdd:false};
 
@@ -7848,6 +7991,13 @@ function renderSymbolsCard(pairMap){
   };
   window.symSelectSeg = function(pair){
     symbolsActiveSeg = (symbolsActiveSeg===pair) ? null : pair;
+    symbolsHoverSeg = null;
+    draw();
+  };
+  // Hover just previews a segment; it never changes the selection.
+  window.symHoverSeg = function(pair){
+    if(symbolsHoverSeg === pair) return;
+    symbolsHoverSeg = pair;
     draw();
   };
 
@@ -7858,35 +8008,46 @@ function renderSymbolsCard(pairMap){
     document.getElementById('symbolsCount').textContent = shown.length;
     document.getElementById('symbolsFilterBtn').textContent = symbolsSelectedPairs.size===entries.length ? `All ${entries.length}` : `Selected ${symbolsSelectedPairs.size}/${entries.length}`;
 
-    const r=52,c=2*Math.PI*r; let offset=0, arcs=''; const segSide={};
+    const r=52,c=2*Math.PI*r; let offset=0, arcs='', hits=''; const segSide={};
+    // Selected wins over hovered, so a tap sticks and a mouse just previews.
+    const focusSeg = symbolsActiveSeg || symbolsHoverSeg;
     shown.forEach(e=>{
       const frac = totalTrades? e.total/totalTrades : 0;
       const len = frac*c-2;
       const mid = offset+len/2, ang=(mid/c)*2*Math.PI-Math.PI/2;
       segSide[e.pair] = Math.cos(ang)<0 ? 'left' : 'right';
-      const isActive = symbolsActiveSeg===e.pair;
-      const op = symbolsActiveSeg ? (isActive?1:0.35) : 1;
-      arcs += `<circle class="donut-seg" cx="70" cy="70" r="${r}" fill="none" stroke="${e.color}" stroke-width="18" stroke-opacity="${op}" stroke-dasharray="${Math.max(len,0)} ${c}" stroke-dashoffset="${-offset}" transform="rotate(-90 70 70)" onclick="symSelectSeg('${escapeHtml(e.pair)}')"/>`;
-      if(isActive) arcs += `<circle cx="70" cy="70" r="${r}" fill="none" stroke="#ffffff" stroke-width="18" stroke-opacity="0.35" stroke-dasharray="${Math.max(len,0)} ${c}" stroke-dashoffset="${-offset}" transform="rotate(-90 70 70)" style="pointer-events:none"/>`;
+      const isActive = focusSeg===e.pair;
+      const op = focusSeg ? (isActive?1:0.3) : 1;
+      const w = isActive ? 22 : 18;
+      const pq = escapeHtml(e.pair);
+      arcs += `<circle class="donut-seg" cx="70" cy="70" r="${r}" fill="none" stroke="${e.color}" stroke-width="${w}" stroke-opacity="${op}" stroke-dasharray="${Math.max(len,0)} ${c}" stroke-dashoffset="${-offset}" transform="rotate(-90 70 70)"/>`;
+      // Invisible fat arc on top: 34px of tappable width instead of 18px.
+      hits += `<circle class="donut-hit" cx="70" cy="70" r="${r}" stroke-width="34" stroke-dasharray="${Math.max(len,0)} ${c}" stroke-dashoffset="${-offset}" transform="rotate(-90 70 70)" onclick="symSelectSeg('${pq}')" onmouseenter="symHoverSeg('${pq}')" onmouseleave="symHoverSeg(null)"><title>${pq} — ${e.total} trades</title></circle>`;
       offset += frac*c;
     });
+    // Centre label follows the focused segment, so the donut itself answers
+    // "which one am I looking at" without the eye leaving the graphic.
+    const focusEntry = focusSeg ? shown.find(x=>x.pair===focusSeg) : null;
+    const centreTop = focusEntry ? focusEntry.total : totalTrades;
+    const centreBot = focusEntry ? focusEntry.pair : 'trades';
     document.getElementById('symbolsDonutWrap').innerHTML = shown.length
-      ? `<svg width="140" height="140" viewBox="0 0 140 140" role="img"><title>Symbols traded</title><circle cx="70" cy="70" r="${r}" fill="none" stroke="var(--surface2)" stroke-width="18"/>${arcs}<text x="70" y="66" text-anchor="middle" fill="var(--text)" font-size="18" font-weight="700">${totalTrades}</text><text x="70" y="82" text-anchor="middle" fill="var(--text3)" font-size="9">trades</text></svg>`
+      ? `<svg width="140" height="140" viewBox="0 0 140 140" role="img"><title>Symbols traded</title><circle cx="70" cy="70" r="${r}" fill="none" stroke="var(--surface2)" stroke-width="18"/>${arcs}${hits}<text x="70" y="66" text-anchor="middle" fill="var(--text)" font-size="18" font-weight="700" style="pointer-events:none">${centreTop}</text><text x="70" y="82" text-anchor="middle" fill="var(--text3)" font-size="9" style="pointer-events:none">${escapeHtml(String(centreBot))}</text></svg>`
       : `<svg width="140" height="140" viewBox="0 0 140 140"><circle cx="70" cy="70" r="${r}" fill="none" stroke="var(--surface2)" stroke-width="18"/></svg>`;
 
     document.getElementById('symbolsLegend').innerHTML = shown.length ? shown.map(e=>{
       const pct = totalTrades? (e.total/totalTrades*100).toFixed(1) : 0;
-      return `<span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text);cursor:pointer" onclick="symSelectSeg('${escapeHtml(e.pair)}')"><span style="width:8px;height:8px;border-radius:2px;background:${e.color};display:inline-block"></span>${escapeHtml(e.pair)} ${e.total} <span style="color:var(--text3)">${pct}%</span></span>`;
+      return `<span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text);cursor:pointer;opacity:${focusSeg&&focusSeg!==e.pair?0.5:1}" onclick="symSelectSeg('${escapeHtml(e.pair)}')"><span style="width:8px;height:8px;border-radius:2px;background:${e.color};display:inline-block"></span>${escapeHtml(e.pair)} ${e.total} <span style="color:var(--text3)">${pct}%</span></span>`;
     }).join('') : '<div style="color:var(--text3);font-size:13px">No symbols selected</div>';
 
     document.getElementById('symbolsLeftDetail').innerHTML='';
     document.getElementById('symbolsRightDetail').innerHTML='';
-    if(symbolsActiveSeg && shown.some(e=>e.pair===symbolsActiveSeg)){
-      const e = shown.find(x=>x.pair===symbolsActiveSeg);
+    if(focusSeg && shown.some(e=>e.pair===focusSeg)){
+      const e = shown.find(x=>x.pair===focusSeg);
       const pct = totalTrades? (e.total/totalTrades*100).toFixed(1) : 0;
-      const box = `<div class="donut-detail-box"><div style="display:flex;align-items:center;gap:5px;margin-bottom:3px"><span style="width:8px;height:8px;border-radius:2px;background:${e.color};display:inline-block"></span><span style="font-size:12px;font-weight:700;color:var(--text)">${escapeHtml(e.pair)}</span></div><div style="font-size:11px;color:var(--text2)">${e.total} trades</div><div style="font-size:11px;color:var(--text2)">${pct}%</div></div>`;
-      document.getElementById(segSide[symbolsActiveSeg]==='left'?'symbolsLeftDetail':'symbolsRightDetail').innerHTML = box;
+      const box = `<div class="donut-detail-box"><div style="display:flex;align-items:center;gap:5px;margin-bottom:4px"><span style="width:8px;height:8px;border-radius:2px;background:${e.color};display:inline-block;flex-shrink:0"></span><span style="font-size:12px;font-weight:700;color:var(--text)">${escapeHtml(e.pair)}</span></div><div style="font-size:11px;color:var(--text2)">Trades <span class="ddb-val">${e.total}</span></div><div style="font-size:11px;color:var(--text2)">Share <span class="ddb-val">${pct}%</span></div></div>`;
+      document.getElementById(segSide[focusSeg]==='left'?'symbolsLeftDetail':'symbolsRightDetail').innerHTML = box;
     }
+
   }
   draw();
 }
