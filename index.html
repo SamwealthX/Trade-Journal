@@ -196,6 +196,41 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
    caption of its own, where a divider under each would look like clutter. */
 .stat-card>.stat-value+.stat-sub{border-top:1px solid var(--border);padding-top:7px;margin-top:7px}
 
+/* ── Stat view toggle (grid ⇄ list) ──
+   The same 11 KPIs can be shown either as the scoreboard grid of cards
+   (default) or as Option B from the consistency mockups: borderless
+   label/value rows sharing one card, in the same hairline-divider language
+   as Best Day of Week / Win Rate by Setup. Choice is remembered locally. */
+.stat-view-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+.stat-view-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.9px}
+.stat-view-seg{display:flex;align-items:center;border:1px solid var(--border);border-radius:var(--radius-xs);overflow:hidden;flex-shrink:0}
+.stat-view-seg button{background:var(--surface);border:none;color:var(--text3);font:inherit;font-size:11px;font-weight:700;padding:5px 9px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:background .15s,color .15s}
+.stat-view-seg button+button{border-left:1px solid var(--border)}
+.stat-view-seg button.active{background:var(--accent-dim);color:var(--accent)}
+.stat-view-seg svg{width:13px;height:13px}
+.metric-list{padding-top:2px}
+.metric-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.metric-row:last-child{border-bottom:none}
+.metric-row-label{font-size:13px;font-weight:700;color:var(--text)}
+.metric-row-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.metric-row-val{font-size:16px;font-weight:800;font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--text);white-space:nowrap;text-align:right}
+.metric-row-val.accent{color:var(--accent)}.metric-row-val.red{color:var(--red)}
+.metric-row-val .accent{color:var(--accent)}.metric-row-val .red{color:var(--red)}
+.metric-row-key{min-width:0}
+
+/* ── Balance card header ──
+   Period picker + calendar + zoom controls + overflow menu are a wide row;
+   on a 375px screen (iPhone 8/SE) they used to push past the card edge and
+   widen the whole page. They now wrap onto their own line below the title
+   instead of overflowing. */
+.balance-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:2px;flex-wrap:wrap}
+.balance-head>.balance-head-main{min-width:0;flex:1 1 auto}
+.balance-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;min-width:0;max-width:100%}
+@media (max-width:400px){
+  .balance-controls{width:100%;justify-content:flex-start;margin-top:8px}
+  .balance-controls>div:first-child{order:-1}
+}
+
 /* ── Forms ── */
 .form-group{margin-bottom:12px}
 .form-label{display:block;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
@@ -660,10 +695,22 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .prop-modal-section:last-of-type{border-bottom:none;padding-bottom:0}
 .prop-modal-section-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.9px;margin-bottom:10px}
 
-/* ── Scrollbar ── */
-::-webkit-scrollbar{width:3px}
+/* ── Scrollbar ──
+   Theme aware in three ways: color-scheme tells the OS/browser to paint its
+   own native scrollbars (and overlay scrollbars on macOS/iOS) light or dark,
+   scrollbar-color handles Firefox, and the -webkit rules cover Chrome/Safari.
+   Horizontal bars get a height too — previously only width was set, so the
+   horizontal scrollers (pair table, chip rows, day strip) fell back to the
+   browser default chrome, which stayed dark in light mode. */
+:root{color-scheme:dark}
+[data-theme="light"]{color-scheme:light}
+html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+*{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+::-webkit-scrollbar{width:3px;height:3px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:var(--text3)}
+::-webkit-scrollbar-corner{background:transparent}
 
 /* ── Nav badge ── */
 .nav-badge{position:absolute;top:6px;right:calc(50% - 18px);min-width:16px;height:16px;background:var(--accent);color:#000;font-size:9px;font-weight:800;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 4px;line-height:1;pointer-events:none;border:1.5px solid var(--surface)}
@@ -1178,6 +1225,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
 
 
+  <!-- Grid ⇄ list toggle for the 11 KPIs (see setStatCardView) -->
+  <div class="stat-view-bar">
+    <span class="stat-view-title">Performance</span>
+    <div class="stat-view-seg" id="statViewSeg">
+      <button type="button" id="statViewBtn-grid" onclick="setStatCardView('grid')" aria-label="Scoreboard grid view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Grid</button>
+      <button type="button" id="statViewBtn-list" onclick="setStatCardView('list')" aria-label="Metric rows view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>Rows</button>
+    </div>
+  </div>
   <div class="stat-grid" id="statGrid"></div>
   <!-- Streak + Drawdown row -->
   <div class="stat-grid" id="streakDrawdownGrid" style="margin-top:-4px;margin-bottom:24px"></div>
@@ -1188,15 +1243,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <!-- Balance header: real dollar balance (starting balance + trades + ledger),
            badge is TRADING performance only (excludes deposits/withdrawals) so a
            deposit never reads as a winning trade — see computeBalanceSeries(). -->
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px">
-        <div>
+      <div class="balance-head">
+        <div class="balance-head-main">
           <div style="display:flex;align-items:center;gap:8px">
             <span class="chart-title" style="margin-bottom:0">Balance</span>
             <span id="balanceBadge" class="v" style="font-size:11px;padding:2px 8px;border-radius:10px;font-family:var(--mono)"></span>
           </div>
           <div id="balanceAmount" style="font-size:22px;font-weight:700;color:var(--text);margin-top:4px;font-family:var(--mono)"></div>
         </div>
-        <div style="display:flex;align-items:center;gap:6px">
+        <div class="balance-controls">
+          <!-- Same Week/Month/Year/All labels and calendar math as the
           <!-- Same Week/Month/Year/All labels and calendar math as the
                tab-wide filter above (see _calendarBounds()) — this picker
                can be browsed independently, but setStatFilter() overwrites
@@ -1258,7 +1314,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
         <div class="mini-popover-panel" id="symbolsFilterPanel" onclick="event.stopPropagation()"></div>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:104px auto 104px;align-items:center;margin:14px 0 10px">
+    <!-- minmax(0,104px) rather than a fixed 104px: on a 375px screen the two
+         side columns + the 140px donut exceed the card's inner width and used
+         to push the detail box past the card edge. -->
+    <div style="display:grid;grid-template-columns:minmax(0,104px) auto minmax(0,104px);align-items:center;margin:14px 0 10px">
       <div id="symbolsLeftDetail"></div>
       <div id="symbolsDonutWrap" style="justify-self:center"></div>
       <div id="symbolsRightDetail"></div>
@@ -7729,6 +7788,67 @@ function statsFilteredTrades(){
 }
 
 // ─── Stats ───
+// ── Stat card view: 'grid' (scoreboard, default) | 'list' (Option B rows) ──
+// Both views are fed by the same item descriptors built in renderStats(), so
+// the numbers can never drift between them. The choice is a display-only
+// preference, kept in localStorage rather than CloudStorage.
+let statCardView = (()=>{ try{ return localStorage.getItem('tj_statCardView')==='list' ? 'list' : 'grid'; }catch(e){ return 'grid'; } })();
+
+function _syncStatViewButtons(){
+  ['grid','list'].forEach(v=>{
+    const b=document.getElementById('statViewBtn-'+v);
+    if(b) b.classList.toggle('active', statCardView===v);
+  });
+}
+
+function setStatCardView(view){
+  statCardView = view==='list' ? 'list' : 'grid';
+  try{ localStorage.setItem('tj_statCardView', statCardView); }catch(e){}
+  _syncStatViewButtons();
+  renderStats();
+}
+
+function _statCardHtml(it){
+  if(it.cardHtml) return `<div class="stat-card${it.red?' red-accent':''}">${it.cardHtml}</div>`;
+  return `<div class="stat-card${it.red?' red-accent':''}">`
+    + `<div class="stat-label">${it.label}</div>`
+    + `<div class="stat-value${it.tone?' '+it.tone:''}">${it.value}</div>`
+    + `<div class="stat-sub">${it.sub||''}</div></div>`;
+}
+
+function _statRowHtml(it){
+  const val = it.listValue || it.value;
+  return `<div class="metric-row"><div class="metric-row-key">`
+    + `<div class="metric-row-label">${it.label}</div>`
+    + `<div class="metric-row-sub">${it.sub||''}</div></div>`
+    + `<div class="metric-row-val${it.tone?' '+it.tone:''}">${val}</div></div>`;
+}
+
+// Paints the 9 core KPIs + the Drawdown/Streaks pair into their two hosts.
+// In list mode everything collapses into one shared card in the first host
+// and the second host is emptied, so the section keeps a single margin.
+function paintStatCards(coreItems, streakItems){
+  const grid = document.getElementById('statGrid');
+  const streakGrid = document.getElementById('streakDrawdownGrid');
+  if(!grid || !streakGrid) return;
+  _syncStatViewButtons();
+  if(statCardView==='list'){
+    grid.className = 'card metric-list';
+    grid.style.marginBottom = '24px';
+    grid.innerHTML = [...coreItems, ...streakItems].map(_statRowHtml).join('');
+    streakGrid.className = '';
+    streakGrid.innerHTML = '';
+    streakGrid.style.display = 'none';
+  } else {
+    grid.className = 'stat-grid';
+    grid.style.marginBottom = '';
+    grid.innerHTML = coreItems.map(_statCardHtml).join('');
+    streakGrid.className = 'stat-grid';
+    streakGrid.style.display = '';
+    streakGrid.innerHTML = streakItems.map(_statCardHtml).join('');
+  }
+}
+
 function renderStats(){
   // Defer render if Stats tab is not currently visible — caller should have
   // used markStatsDirty() so we know to re-render when the tab opens.
@@ -7765,17 +7885,24 @@ function renderStats(){
     if(acct&&acct.balance>0){ const pct=(totalPnl/acct.balance*100); pctHtml=`<span style="font-size:12px;font-weight:700;color:${pct>=0?'var(--green)':'var(--red)'}">(${pct>=0?'+':''}${pct.toFixed(2)}%)</span>`; }
   }
 
-  document.getElementById('statGrid').innerHTML=`
-    <div class="stat-card"><div class="stat-label">Win Rate</div><div class="stat-value accent">${winRate}%</div><div class="stat-sub">${wins.length}W / ${losses.length}L</div></div>
-    <div class="stat-card ${totalPnl<0?'red-accent':''}"><div class="stat-label">Total P&L</div><div class="stat-value ${totalPnl>=0?'accent':'red'}">${fmtPnl(totalPnl)}</div><div class="stat-sub" style="display:flex;align-items:center;gap:6px"><span>${ft.length} trades</span>${pctHtml}</div></div>
-    <div class="stat-card"><div class="stat-label">Avg Win</div><div class="stat-value accent">${fmtPnl(avgWin)}</div><div class="stat-sub">per winning trade</div></div>
-    <div class="stat-card red-accent"><div class="stat-label">Avg Loss</div><div class="stat-value red">${fmtPnl(-avgLoss)}</div><div class="stat-sub">per losing trade</div></div>
-    <div class="stat-card ${pf!=='—'&&pf!=='∞'&&parseFloat(pf)<1?'red-accent':''}"><div class="stat-label">Profit Factor</div><div class="stat-value ${pf==='∞'||(pf!=='—'&&parseFloat(pf)>=1)?'accent':pf==='—'?'':'red'}">${pf}</div><div class="stat-sub">gross P / gross L</div></div>
-    <div class="stat-card ${parseFloat(exp)<0?'red-accent':''}"><div class="stat-label">Expectancy</div><div class="stat-value ${parseFloat(exp)>=0?'accent':'red'}">${fmtPnl(exp)}</div><div class="stat-sub">avg per trade</div></div>
-    <div class="stat-card ${parseFloat(avgR)<0?'red-accent':''}"><div class="stat-label">Avg R</div><div class="stat-value ${parseFloat(avgR)>=0?'accent':'red'}">${avgR==='—'?'—':avgR+'R'}</div><div class="stat-sub">average R multiple</div></div>
-    <div class="stat-card"><div class="stat-label">Best R</div><div class="stat-value accent">${bestR==='—'?'—':'+'+bestR+'R'}</div><div class="stat-sub">best single trade</div></div>
-    <div class="stat-card"><div class="stat-label">Avg Trade Duration</div><div class="stat-value accent">${avgDurMins===null?'—':minutesToDuration(avgDurMins)}</div><div class="stat-sub">${durMinsList.length} trade${durMinsList.length===1?'':'s'} with entry & close time</div></div>
-  `;
+  // The nine KPIs are described once as data, then painted either as the
+  // scoreboard grid of cards or as Option B's borderless metric rows —
+  // see paintStatCards()/statCardView.
+  const coreStatItems = [
+    {label:'Win Rate', value:`${winRate}%`, tone:'accent', sub:`${wins.length}W / ${losses.length}L`},
+    {label:'Total P&L', value:fmtPnl(totalPnl), tone:totalPnl>=0?'accent':'red', red:totalPnl<0,
+     sub:`<span style="display:inline-flex;align-items:center;gap:6px"><span>${ft.length} trades</span>${pctHtml}</span>`},
+    {label:'Avg Win', value:fmtPnl(avgWin), tone:'accent', sub:'per winning trade'},
+    {label:'Avg Loss', value:fmtPnl(-avgLoss), tone:'red', red:true, sub:'per losing trade'},
+    {label:'Profit Factor', value:pf, tone:(pf==='∞'||(pf!=='—'&&parseFloat(pf)>=1))?'accent':(pf==='—'?'':'red'),
+     red:(pf!=='—'&&pf!=='∞'&&parseFloat(pf)<1), sub:'gross P / gross L'},
+    {label:'Expectancy', value:fmtPnl(exp), tone:parseFloat(exp)>=0?'accent':'red', red:parseFloat(exp)<0, sub:'avg per trade'},
+    {label:'Avg R', value:avgR==='—'?'—':avgR+'R', tone:parseFloat(avgR)>=0?'accent':'red', red:parseFloat(avgR)<0, sub:'average R multiple'},
+    {label:'Best R', value:bestR==='—'?'—':'+'+bestR+'R', tone:'accent', sub:'best single trade'},
+    {label:'Avg Trade Duration', value:avgDurMins===null?'—':minutesToDuration(avgDurMins), tone:'accent',
+     sub:`${durMinsList.length} trade${durMinsList.length===1?'':'s'} with entry &amp; close time`}
+  ];
+
 
   // ── Max Drawdown ──
   const chronological = [...ft].sort((a,b)=>{
@@ -7819,22 +7946,22 @@ function renderStats(){
     if(p < 0){ curLoss++; } else break;
   }
 
-  document.getElementById('streakDrawdownGrid').innerHTML=`
-    <div class="stat-card red-accent">
-      <div class="stat-label">Max Drawdown</div>
-      <div class="stat-value red">${maxDD>0?fmtPnl(-maxDD):'—'}</div>
-      <div class="stat-sub">${maxDDPct>0?maxDDPct.toFixed(1)+'% from peak':'no drawdown'}</div>
-    </div>
-    <div class="stat-card">
+  const streakStatItems = [
+    {label:'Max Drawdown', value:maxDD>0?fmtPnl(-maxDD):'—', tone:'red', red:true,
+     sub:maxDDPct>0?maxDDPct.toFixed(1)+'% from peak':'no drawdown'},
+    {label:'Streaks', tone:'', listValue:`<span class="accent">${maxWin}</span> <span style="color:var(--text3);font-weight:400">/</span> <span class="red">${maxLoss}</span>`,
+     sub:curWin>0?`🔥 ${curWin} win streak now`:curLoss>0?`❄️ ${curLoss} loss streak now`:ft.length?'best W / worst L':'best W / worst L',
+     cardHtml:`
       <div class="stat-label">Streaks</div>
       <div style="display:flex;gap:10px;align-items:baseline;margin-top:2px">
         <div><div class="stat-value accent" style="font-size:18px">${maxWin}</div><div class="stat-sub">best W</div></div>
         <div style="color:var(--border2);font-size:18px;font-weight:300">|</div>
         <div><div class="stat-value red" style="font-size:18px">${maxLoss}</div><div class="stat-sub">worst L</div></div>
       </div>
-      <div class="stat-sub" style="margin-top:4px">${curWin>0?`🔥 ${curWin} win streak now`:curLoss>0?`❄️ ${curLoss} loss streak now`:ft.length?'No active streak':''}</div>
-    </div>
-  `;
+      <div class="stat-sub" style="margin-top:4px">${curWin>0?`🔥 ${curWin} win streak now`:curLoss>0?`❄️ ${curLoss} loss streak now`:ft.length?'No active streak':''}</div>`}
+  ];
+  paintStatCards(coreStatItems, streakStatItems);
+
 
   // ── Win Rate by Setup ──
   // A setup chip row doubles as the focus filter: picking one narrows the
@@ -7934,6 +8061,19 @@ let symbolsSelectedPairs = null; // null = not yet initialized for this render p
 let symbolsActiveSeg = null;
 // Hover preview (mouse only) — selection still wins, see focusSeg in draw().
 let symbolsHoverSeg = null;
+// The donut's inline handlers (onmouseenter/onmouseleave/onclick) live in
+// markup that can outlive the render pass that created them — e.g. a pointer
+// already sitting over a segment when the card re-renders, a hover firing
+// during the very first paint, or a stale SVG left behind after the account
+// filter empties the card. Previously symHoverSeg/symSelectSeg only existed
+// as closures assigned inside renderSymbolsCard(), so any of those cases threw
+// "symHoverSeg is not defined" and left the detail box half-drawn. These
+// top-level definitions guarantee the functions always exist; renderSymbolsCard
+// overwrites them with the live, entry-aware versions on every render.
+window.symHoverSeg = window.symHoverSeg || function(pair){ symbolsHoverSeg = pair || null; };
+window.symSelectSeg = window.symSelectSeg || function(pair){ symbolsActiveSeg = (symbolsActiveSeg===pair) ? null : pair; symbolsHoverSeg = null; };
+window.symToggleAll = window.symToggleAll || function(){};
+window.symTogglePair = window.symTogglePair || function(){};
 const PAIR_COLS = {wins:'Wins',losses:'Losses',total:'Total',winrate:'Winrate',pnl:'Total P&L',pf:'Profit Factor',dur:'Avg Duration',rr:'Risk Reward',avgwl:'Avg Win/Loss',maxdd:'Max Symbol Drawdown'};
 let pairColVisible = {wins:true,losses:true,total:true,winrate:true,pnl:true,pf:false,dur:false,rr:false,avgwl:false,maxdd:false};
 
@@ -7976,7 +8116,8 @@ function renderSymbolsCard(pairMap){
     entries.forEach(e=>{
       h += `<label class="mini-popover-row"><input type="checkbox" ${symbolsSelectedPairs.has(e.pair)?'checked':''} onchange="symTogglePair('${escapeHtml(e.pair)}',this.checked)"><span style="width:9px;height:9px;border-radius:2px;background:${e.color};display:inline-block;flex-shrink:0"></span>${escapeHtml(e.pair)}</label>`;
     });
-    document.getElementById('symbolsFilterPanel').innerHTML = h;
+    const panel = document.getElementById('symbolsFilterPanel');
+    if(panel) panel.innerHTML = h;
   }
 
   window.symToggleAll = function(checked){
@@ -8002,11 +8143,20 @@ function renderSymbolsCard(pairMap){
   };
 
   function draw(){
+    // Bail out rather than throw if the card isn't in the DOM for this pass
+    // (tab not built yet, or the panel was replaced mid-hover).
+    const donutWrap = document.getElementById('symbolsDonutWrap');
+    const legendEl = document.getElementById('symbolsLegend');
+    const leftEl = document.getElementById('symbolsLeftDetail');
+    const rightEl = document.getElementById('symbolsRightDetail');
+    const countEl = document.getElementById('symbolsCount');
+    const filterBtn = document.getElementById('symbolsFilterBtn');
+    if(!donutWrap || !legendEl || !leftEl || !rightEl) return;
     renderFilterPanel();
     const shown = entries.filter(e=>symbolsSelectedPairs.has(e.pair));
     const totalTrades = shown.reduce((s,e)=>s+e.total,0);
-    document.getElementById('symbolsCount').textContent = shown.length;
-    document.getElementById('symbolsFilterBtn').textContent = symbolsSelectedPairs.size===entries.length ? `All ${entries.length}` : `Selected ${symbolsSelectedPairs.size}/${entries.length}`;
+    if(countEl) countEl.textContent = shown.length;
+    if(filterBtn) filterBtn.textContent = symbolsSelectedPairs.size===entries.length ? `All ${entries.length}` : `Selected ${symbolsSelectedPairs.size}/${entries.length}`;
 
     const r=52,c=2*Math.PI*r; let offset=0, arcs='', hits=''; const segSide={};
     // Selected wins over hovered, so a tap sticks and a mouse just previews.
@@ -8030,22 +8180,22 @@ function renderSymbolsCard(pairMap){
     const focusEntry = focusSeg ? shown.find(x=>x.pair===focusSeg) : null;
     const centreTop = focusEntry ? focusEntry.total : totalTrades;
     const centreBot = focusEntry ? focusEntry.pair : 'trades';
-    document.getElementById('symbolsDonutWrap').innerHTML = shown.length
+    donutWrap.innerHTML = shown.length
       ? `<svg width="140" height="140" viewBox="0 0 140 140" role="img"><title>Symbols traded</title><circle cx="70" cy="70" r="${r}" fill="none" stroke="var(--surface2)" stroke-width="18"/>${arcs}${hits}<text x="70" y="66" text-anchor="middle" fill="var(--text)" font-size="18" font-weight="700" style="pointer-events:none">${centreTop}</text><text x="70" y="82" text-anchor="middle" fill="var(--text3)" font-size="9" style="pointer-events:none">${escapeHtml(String(centreBot))}</text></svg>`
       : `<svg width="140" height="140" viewBox="0 0 140 140"><circle cx="70" cy="70" r="${r}" fill="none" stroke="var(--surface2)" stroke-width="18"/></svg>`;
 
-    document.getElementById('symbolsLegend').innerHTML = shown.length ? shown.map(e=>{
+    legendEl.innerHTML = shown.length ? shown.map(e=>{
       const pct = totalTrades? (e.total/totalTrades*100).toFixed(1) : 0;
       return `<span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text);cursor:pointer;opacity:${focusSeg&&focusSeg!==e.pair?0.5:1}" onclick="symSelectSeg('${escapeHtml(e.pair)}')"><span style="width:8px;height:8px;border-radius:2px;background:${e.color};display:inline-block"></span>${escapeHtml(e.pair)} ${e.total} <span style="color:var(--text3)">${pct}%</span></span>`;
     }).join('') : '<div style="color:var(--text3);font-size:13px">No symbols selected</div>';
 
-    document.getElementById('symbolsLeftDetail').innerHTML='';
-    document.getElementById('symbolsRightDetail').innerHTML='';
+    leftEl.innerHTML='';
+    rightEl.innerHTML='';
     if(focusSeg && shown.some(e=>e.pair===focusSeg)){
       const e = shown.find(x=>x.pair===focusSeg);
       const pct = totalTrades? (e.total/totalTrades*100).toFixed(1) : 0;
       const box = `<div class="donut-detail-box"><div style="display:flex;align-items:center;gap:5px;margin-bottom:4px"><span style="width:8px;height:8px;border-radius:2px;background:${e.color};display:inline-block;flex-shrink:0"></span><span style="font-size:12px;font-weight:700;color:var(--text)">${escapeHtml(e.pair)}</span></div><div style="font-size:11px;color:var(--text2)">Trades <span class="ddb-val">${e.total}</span></div><div style="font-size:11px;color:var(--text2)">Share <span class="ddb-val">${pct}%</span></div></div>`;
-      document.getElementById(segSide[focusSeg]==='left'?'symbolsLeftDetail':'symbolsRightDetail').innerHTML = box;
+      (segSide[focusSeg]==='left'?leftEl:rightEl).innerHTML = box;
     }
 
   }
