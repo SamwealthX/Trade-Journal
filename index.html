@@ -217,13 +217,22 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
    their own full-width row spread edge to edge (period picker left, zoom
    pill and ⋮ right), so nothing ever presses the card edge or wraps
    mid-group. On wider screens the controls sit on the title row as before. */
-.balance-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:2px;flex-wrap:wrap}
+.balance-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:2px;flex-wrap:nowrap}
 .balance-head>.balance-head-main{min-width:0;flex:1 1 auto}
-.balance-controls{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;justify-content:flex-end;min-width:0;max-width:100%}
+.balance-controls{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;justify-content:flex-end;flex:0 0 auto;min-width:0}
 .balance-controls .chart-zoom-controls{flex-wrap:nowrap;flex-shrink:0}
+/* Narrow phones (iPhone 8 / 13 portrait): keep the controls on the title row
+   — same single-band layout wider screens get — by shrinking the controls
+   instead of dropping them onto a second full-width row. */
 @media (max-width:430px){
-  .balance-controls{width:100%;justify-content:space-between;margin-top:8px}
-  .balance-controls>div:first-child{order:-1}
+  .balance-controls{gap:4px}
+  .balance-controls .btn-sm{padding:5px 8px;font-size:11px;gap:3px}
+  .balance-controls .chart-zoom-btn{padding:5px 7px;font-size:11px}
+  #balanceAmount{font-size:20px}
+}
+@media (max-width:360px){
+  .balance-controls .btn-sm{padding:5px 6px;font-size:10.5px}
+  .balance-controls .chart-zoom-btn{padding:5px 6px}
 }
 
 /* ── Forms ── */
@@ -352,18 +361,20 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .setup-chip.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
 .setup-focus-note{font-size:11px;color:var(--text3);margin:-4px 0 6px}
 .perf-row.dimmed{opacity:.38}
-.pnl-chart{position:relative;height:120px;margin-top:4px;overflow:hidden}
+.pnl-chart{position:relative;height:120px;margin-top:4px;overflow:visible}
 .pnl-bars-row{display:flex;align-items:center;height:120px;gap:3px}
 .pnl-bar-hit{flex:1 1 0;height:100%;position:relative;min-width:2px;cursor:pointer;outline:none;border-radius:3px}
 .pnl-bar-hit:focus-visible{box-shadow:0 0 0 2px var(--accent)}
 .pnl-bar-fill{position:absolute;left:1px;right:1px;opacity:.78;border-radius:3px;transition:opacity .15s,filter .15s}
 .pnl-bar-hit:hover .pnl-bar-fill,.pnl-bar-hit:focus .pnl-bar-fill{opacity:1;filter:brightness(1.15)}
 .pnl-bar-hit.pinned .pnl-bar-fill{opacity:1;filter:brightness(1.25);box-shadow:0 0 0 1.5px var(--text2)}
-.pnl-tooltip{position:absolute;z-index:5;display:none;transform:translate(-50%,-100%);min-width:150px;max-width:230px;padding:9px 11px;border:1px solid var(--border2);border-radius:var(--radius-xs);background:var(--surface2);box-shadow:var(--shadow);font-size:11px;color:var(--text2);white-space:nowrap;pointer-events:none}
+.pnl-tooltip{position:absolute;z-index:20;display:none;transform:translate(-50%,-100%);min-width:0;width:max-content;max-width:min(230px,calc(100vw - 48px));padding:9px 11px;border:1px solid var(--border2);border-radius:var(--radius-xs);background:var(--surface2);box-shadow:var(--shadow);font-size:11px;color:var(--text2);white-space:normal;overflow-wrap:anywhere;pointer-events:none}
 .pnl-tooltip.show{display:block}
 .pnl-tooltip.pinned{pointer-events:auto}
-.pnl-tooltip strong{display:block;color:var(--text);font-size:12px;margin-bottom:3px}
-.pnl-tip-row{display:flex;justify-content:space-between;gap:14px;line-height:1.55}
+.pnl-tooltip strong{display:block;color:var(--text);font-size:12px;margin-bottom:3px;overflow-wrap:anywhere}
+.pnl-tip-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;line-height:1.55}
+.pnl-tip-row span:first-child{flex:0 0 auto;white-space:nowrap}
+.pnl-tip-row span:last-child{flex:1 1 auto;min-width:0;text-align:right;overflow-wrap:anywhere}
 .pnl-tip-row span:last-child{color:var(--text);font-family:var(--mono)}
 .pnl-tip-pin{margin-top:6px;padding-top:5px;border-top:1px solid var(--border);font-size:10px;color:var(--text3)}
 
@@ -8714,7 +8725,11 @@ function movePnlTooltip(event){
   const tip=document.getElementById('pnlTooltip'), wrap=tip?.parentElement; if(!tip||!wrap)return;
   if(pnlPinnedIndex!==null && !event?.currentTarget?.classList?.contains('pinned')) return;
   const r=wrap.getBoundingClientRect(), source=event.touches?.[0]||event;
-  tip.style.left=Math.max(84,Math.min(r.width-84,(source.clientX||event.currentTarget?.getBoundingClientRect().left||0)-r.left))+'px';
+  // Clamp against the tooltip's REAL half-width (it can be up to 230px wide,
+  // so the old fixed 84px margin let it hang off the card edge and get clipped).
+  const half=(tip.offsetWidth||160)/2+6;
+  const x=(source.clientX||event.currentTarget?.getBoundingClientRect().left||0)-r.left;
+  tip.style.left=(half*2>r.width ? r.width/2 : Math.max(half,Math.min(r.width-half,x)))+'px';
   tip.style.top=Math.max(tip.offsetHeight+8,(event.currentTarget?.getBoundingClientRect().top||r.top)-r.top+56)+'px';
 }
 function hidePnlTooltip(force){
