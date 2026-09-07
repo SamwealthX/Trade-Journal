@@ -196,18 +196,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
    caption of its own, where a divider under each would look like clutter. */
 .stat-card>.stat-value+.stat-sub{border-top:1px solid var(--border);padding-top:7px;margin-top:7px}
 
-/* ── Stat view toggle (grid ⇄ list) ──
-   The same 11 KPIs can be shown either as the scoreboard grid of cards
-   (default) or as Option B from the consistency mockups: borderless
-   label/value rows sharing one card, in the same hairline-divider language
-   as Best Day of Week / Win Rate by Setup. Choice is remembered locally. */
+/* ── Stat section: hero pair + rows (no view toggle) ──
+   The two numbers checked first (Win Rate, Total P&L) stay as big cards;
+   the other KPIs collapse into borderless label/value rows sharing one
+   card, in the same hairline-divider language as Win Rate by Setup. */
 .stat-view-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
 .stat-view-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.9px}
-.stat-view-seg{display:flex;align-items:center;border:1px solid var(--border);border-radius:var(--radius-xs);overflow:hidden;flex-shrink:0}
-.stat-view-seg button{background:var(--surface);border:none;color:var(--text3);font:inherit;font-size:11px;font-weight:700;padding:5px 9px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:background .15s,color .15s}
-.stat-view-seg button+button{border-left:1px solid var(--border)}
-.stat-view-seg button.active{background:var(--accent-dim);color:var(--accent)}
-.stat-view-seg svg{width:13px;height:13px}
 .metric-list{padding-top:2px}
 .metric-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
 .metric-row:last-child{border-bottom:none}
@@ -219,15 +213,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .metric-row-key{min-width:0}
 
 /* ── Balance card header ──
-   Period picker + calendar + zoom controls + overflow menu are a wide row;
-   on a 375px screen (iPhone 8/SE) they used to push past the card edge and
-   widen the whole page. They now wrap onto their own line below the title
-   instead of overflowing. */
+   Two stacked bands on phones: title + amount on top, then the controls on
+   their own full-width row spread edge to edge (period picker left, zoom
+   pill and ⋮ right), so nothing ever presses the card edge or wraps
+   mid-group. On wider screens the controls sit on the title row as before. */
 .balance-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:2px;flex-wrap:wrap}
 .balance-head>.balance-head-main{min-width:0;flex:1 1 auto}
-.balance-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;min-width:0;max-width:100%}
-@media (max-width:400px){
-  .balance-controls{width:100%;justify-content:flex-start;margin-top:8px}
+.balance-controls{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;justify-content:flex-end;min-width:0;max-width:100%}
+.balance-controls .chart-zoom-controls{flex-wrap:nowrap;flex-shrink:0}
+@media (max-width:430px){
+  .balance-controls{width:100%;justify-content:space-between;margin-top:8px}
   .balance-controls>div:first-child{order:-1}
 }
 
@@ -357,9 +352,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .setup-chip.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
 .setup-focus-note{font-size:11px;color:var(--text3);margin:-4px 0 6px}
 .perf-row.dimmed{opacity:.38}
-.pnl-chart{position:relative;height:120px;margin-top:4px}
+.pnl-chart{position:relative;height:120px;margin-top:4px;overflow:hidden}
 .pnl-bars-row{display:flex;align-items:center;height:120px;gap:3px}
-.pnl-bar-hit{flex:1;height:100%;position:relative;min-width:8px;cursor:pointer;outline:none;border-radius:3px}
+.pnl-bar-hit{flex:1 1 0;height:100%;position:relative;min-width:2px;cursor:pointer;outline:none;border-radius:3px}
 .pnl-bar-hit:focus-visible{box-shadow:0 0 0 2px var(--accent)}
 .pnl-bar-fill{position:absolute;left:1px;right:1px;opacity:.78;border-radius:3px;transition:opacity .15s,filter .15s}
 .pnl-bar-hit:hover .pnl-bar-fill,.pnl-bar-hit:focus .pnl-bar-fill{opacity:1;filter:brightness(1.15)}
@@ -581,6 +576,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .donut-hit{cursor:pointer;stroke:transparent;fill:none}
 @media (hover:hover){.donut-hit:hover + .donut-seg,.donut-seg.hovered{stroke-opacity:1}}
 .donut-detail-box{background:var(--bg,var(--surface2));border:1px solid var(--border2);border-radius:10px;padding:9px 10px;animation:donut-detail-in .14s ease}
+/* Floating donut tooltip — same surface language as the detail box, but
+   absolutely positioned inside the card so it can chase the pointer. */
+.symbols-tip{position:absolute;z-index:35;pointer-events:none;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;box-shadow:var(--shadow);padding:9px 10px;min-width:120px;animation:donut-detail-in .12s ease}
+.symbols-tip .ddb-val{font-family:var(--mono);font-weight:700;color:var(--text)}
 @keyframes donut-detail-in{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
 .donut-detail-box .ddb-val{font-family:var(--mono);font-weight:700;color:var(--text)}
 
@@ -1225,17 +1224,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
 
 
 
-  <!-- Grid ⇄ list toggle for the 11 KPIs (see setStatCardView) -->
-  <div class="stat-view-bar">
-    <span class="stat-view-title">Performance</span>
-    <div class="stat-view-seg" id="statViewSeg">
-      <button type="button" id="statViewBtn-grid" onclick="setStatCardView('grid')" aria-label="Scoreboard grid view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Grid</button>
-      <button type="button" id="statViewBtn-list" onclick="setStatCardView('list')" aria-label="Metric rows view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>Rows</button>
-    </div>
-  </div>
-  <div class="stat-grid" id="statGrid"></div>
-  <!-- Streak + Drawdown row -->
-  <div class="stat-grid" id="streakDrawdownGrid" style="margin-top:-4px;margin-bottom:24px"></div>
+  <!-- KPI section: hero pair + rows (see paintStatCards) -->
+   <div class="stat-view-bar">
+     <span class="stat-view-title">Performance</span>
+   </div>
+   <!-- Hero pair (Win Rate + Total P&L) -->
+   <div class="stat-grid" id="statGrid"></div>
+   <!-- Remaining KPIs as quiet rows in one card -->
+   <div id="streakDrawdownGrid" style="margin-bottom:24px"></div>
 
   <!-- Trade-by-trade performance cards -->
   <div class="card stats-panel">
@@ -1269,18 +1265,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
               <div class="balance-period-row" id="balancePeriodRow-month" onclick="setBalancePeriod('month');toggleMiniPopover('balancePeriodPanel')">Month</div>
               <div class="balance-period-row" id="balancePeriodRow-year" onclick="setBalancePeriod('year');toggleMiniPopover('balancePeriodPanel')">Year</div>
               <div class="balance-period-row active" id="balancePeriodRow-all" onclick="setBalancePeriod('all');toggleMiniPopover('balancePeriodPanel')">All Time</div>
-              <div class="balance-period-row" id="balancePeriodRow-custom" onclick="toggleMiniPopover('balancePeriodPanel');useCustomRangeOnBalance()">Custom range</div>
+              <!-- Calendar icon lives on the row itself — the separate header
+                   calendar button did the same job, so it was removed. When a
+                   range is active the row shows the dates instead. -->
+              <div class="balance-period-row" id="balancePeriodRow-custom" onclick="toggleMiniPopover('balancePeriodPanel');useCustomRangeOnBalance()" style="display:flex;align-items:center;gap:7px"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/><circle cx="12" cy="15" r="1.4" fill="currentColor" stroke="none"/></svg><span id="balancePeriodCustomLabel">Custom range</span></div>
 
             </div>
           </div>
-          <!-- Calendar button: one tap puts the Balance chart on the tab-wide
-               custom range. With no range set yet it opens the picker first. -->
-          <button class="btn-sm balance-cal-btn" id="balanceCalBtn" type="button" aria-label="Use custom date range" onclick="useCustomRangeOnBalance()" style="padding:6px 8px;display:flex;align-items:center"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/><circle cx="12" cy="15" r="1.4" fill="currentColor" stroke="none"/></svg></button>
 
           <div class="chart-zoom-controls">
             <button class="chart-zoom-btn" type="button" aria-label="Zoom out balance chart" onclick="balanceZoomBy(1.6)">−</button>
             <button class="chart-zoom-btn" type="button" aria-label="Zoom in balance chart" onclick="balanceZoomBy(1/1.6)">+</button>
-            <button class="chart-zoom-btn chart-zoom-reset" type="button" id="balanceResetBtn" onclick="balanceResetView()">Reset</button>
           </div>
           <div style="position:relative">
             <button class="btn-sm" onclick="event.stopPropagation();toggleMiniPopover('balanceMenuPanel')" style="padding:6px 8px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
@@ -1290,11 +1285,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
               </label>
               <div style="border-top:1px solid var(--border);margin:2px 0"></div>
               <div style="padding:8px 6px;font-size:13px;color:var(--accent);cursor:pointer" onclick="toggleMiniPopover('balanceMenuPanel');openLedgerModal()">+ Log deposit/withdrawal</div>
+              <!-- Double-tapping an axis resets the chart, but keep an explicit
+                   escape hatch here for anyone who never finds the gesture. -->
+              <div style="padding:8px 6px;font-size:13px;color:var(--text2);cursor:pointer" onclick="toggleMiniPopover('balanceMenuPanel');balanceResetView()">Reset view</div>
             </div>
           </div>
         </div>
       </div>
       <div class="balance-range-note" id="balanceRangeNote"></div>
+      <!-- One-off gesture hint: fades in the first time the user zooms, then
+           never again (remembered in localStorage). -->
+      <div id="balanceZoomHint" style="display:none;font-size:11px;color:var(--text3);margin-top:2px;transition:opacity .4s">Tip: double-tap an axis to reset the chart</div>
       <div class="balance-chart-scroll" id="balanceChartScroll"><div class="balance-chart-inner" id="balanceChartInner"><canvas id="equityChart" height="210"></canvas></div></div>
     </div>
   </div>
@@ -1303,7 +1304,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
        right below carries the profitability numbers; keeping them separate
        is what let the donut stay clean like the reference instead of
        cramming everything into one widget. -->
-  <div class="card stats-panel">
+  <div class="card stats-panel" id="symbolsCard" style="position:relative">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
       <div>
         <div class="chart-title" style="margin-bottom:2px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 9 9"/></svg>Symbols Traded</div>
@@ -1323,6 +1324,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
       <div id="symbolsRightDetail"></div>
     </div>
     <div id="symbolsLegend" style="display:flex;flex-wrap:wrap;gap:6px 14px"></div>
+    <!-- Floating tooltip: follows the pointer/finger around the ring, flips
+         near the card edge, sits above the finger on touch. Positioned by
+         symTipMove(); content set in draw(). -->
+    <div id="symbolsTip" class="symbols-tip" style="display:none"></div>
   </div>
 
   <!-- Panel: Pair performance table — replaces the old progress-bar rows -->
@@ -4631,6 +4636,7 @@ function selectDrawerTab(tab){
 function switchTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(name!=='Stats' && window.symClearPin) window.symClearPin();
   document.getElementById('tab'+name).classList.add('active');
   // Highlight the PARENT nav button (Dashboard/Journal/Accounts) for tabs
   // reached through a drawer; falls back to `name` itself for Settings,
@@ -7685,8 +7691,6 @@ function _syncCustomRangeUI(){
       note.innerHTML = 'Showing '+escapeHtml(customRangeLabel())+' <span class="range-clear" onclick="openRangeModal()">Edit</span><span class="range-clear" onclick="clearCustomRange()">Clear</span>';
     } else note.style.display='none';
   }
-  const calBtn=document.getElementById('balanceCalBtn');
-  if(calBtn) calBtn.classList.toggle('active', balancePeriod==='custom' && hasCustomRange());
 }
 // Updates the period dropdown's trigger label + active row — shared between
 // setBalancePeriod() (user picks a period) and renderBalanceCard() (so the
@@ -7700,7 +7704,24 @@ function _syncBalancePeriodUI(){
     const row=document.getElementById('balancePeriodRow-'+k);
     if(row) row.classList.toggle('active', k===balancePeriod);
   });
+  // The custom row shows the actual dates once a range is live, so it reads
+  // as state, not just an action.
+  const customLabel=document.getElementById('balancePeriodCustomLabel');
+  if(customLabel) customLabel.textContent = (balancePeriod==='custom' && hasCustomRange()) ? customRangeLabel() : 'Custom range';
   _syncCustomRangeUI();
+}
+// First zoom ever → fade in the one-off "double-tap an axis" hint, remember
+// that we've shown it, then fade it back out after a few seconds.
+function _maybeShowBalanceZoomHint(){
+  let seen=false;
+  try{ seen = localStorage.getItem('tj_balanceZoomHintSeen')==='1'; }catch(e){}
+  if(seen) return;
+  try{ localStorage.setItem('tj_balanceZoomHintSeen','1'); }catch(e){}
+  const hint=document.getElementById('balanceZoomHint');
+  if(!hint) return;
+  hint.style.display='block';
+  hint.style.opacity='1';
+  setTimeout(()=>{ hint.style.opacity='0'; setTimeout(()=>{ hint.style.display='none'; },450); },5000);
 }
 function setStatFilter(f){
   statPeriod = f;
@@ -7788,26 +7809,9 @@ function statsFilteredTrades(){
 }
 
 // ─── Stats ───
-// ── Stat card view: 'grid' (scoreboard, default) | 'list' (Option B rows) ──
-// Both views are fed by the same item descriptors built in renderStats(), so
-// the numbers can never drift between them. The choice is a display-only
-// preference, kept in localStorage rather than CloudStorage.
-let statCardView = (()=>{ try{ return localStorage.getItem('tj_statCardView')==='list' ? 'list' : 'grid'; }catch(e){ return 'grid'; } })();
-
-function _syncStatViewButtons(){
-  ['grid','list'].forEach(v=>{
-    const b=document.getElementById('statViewBtn-'+v);
-    if(b) b.classList.toggle('active', statCardView===v);
-  });
-}
-
-function setStatCardView(view){
-  statCardView = view==='list' ? 'list' : 'grid';
-  try{ localStorage.setItem('tj_statCardView', statCardView); }catch(e){}
-  _syncStatViewButtons();
-  renderStats();
-}
-
+// Fixed layout (no view toggle): Win Rate + Total P&L as two hero cards,
+// the remaining KPIs as quiet rows in one card underneath. Same item
+// descriptors feed both, so the numbers can never drift between them.
 function _statCardHtml(it){
   if(it.cardHtml) return `<div class="stat-card${it.red?' red-accent':''}">${it.cardHtml}</div>`;
   return `<div class="stat-card${it.red?' red-accent':''}">`
@@ -7824,29 +7828,17 @@ function _statRowHtml(it){
     + `<div class="metric-row-val${it.tone?' '+it.tone:''}">${val}</div></div>`;
 }
 
-// Paints the 9 core KPIs + the Drawdown/Streaks pair into their two hosts.
-// In list mode everything collapses into one shared card in the first host
-// and the second host is emptied, so the section keeps a single margin.
+// Hero pair into the first host, everything else as rows in the second.
 function paintStatCards(coreItems, streakItems){
   const grid = document.getElementById('statGrid');
-  const streakGrid = document.getElementById('streakDrawdownGrid');
-  if(!grid || !streakGrid) return;
-  _syncStatViewButtons();
-  if(statCardView==='list'){
-    grid.className = 'card metric-list';
-    grid.style.marginBottom = '24px';
-    grid.innerHTML = [...coreItems, ...streakItems].map(_statRowHtml).join('');
-    streakGrid.className = '';
-    streakGrid.innerHTML = '';
-    streakGrid.style.display = 'none';
-  } else {
-    grid.className = 'stat-grid';
-    grid.style.marginBottom = '';
-    grid.innerHTML = coreItems.map(_statCardHtml).join('');
-    streakGrid.className = 'stat-grid';
-    streakGrid.style.display = '';
-    streakGrid.innerHTML = streakItems.map(_statCardHtml).join('');
-  }
+  const rowsHost = document.getElementById('streakDrawdownGrid');
+  if(!grid || !rowsHost) return;
+  const hero = coreItems.slice(0,2);
+  const rest = [...coreItems.slice(2), ...streakItems];
+  grid.className = 'stat-grid';
+  grid.innerHTML = hero.map(_statCardHtml).join('');
+  rowsHost.className = 'card metric-list';
+  rowsHost.innerHTML = rest.map(_statRowHtml).join('');
 }
 
 function renderStats(){
@@ -7885,9 +7877,8 @@ function renderStats(){
     if(acct&&acct.balance>0){ const pct=(totalPnl/acct.balance*100); pctHtml=`<span style="font-size:12px;font-weight:700;color:${pct>=0?'var(--green)':'var(--red)'}">(${pct>=0?'+':''}${pct.toFixed(2)}%)</span>`; }
   }
 
-  // The nine KPIs are described once as data, then painted either as the
-  // scoreboard grid of cards or as Option B's borderless metric rows —
-  // see paintStatCards()/statCardView.
+  // The KPIs are described once as data, then painted as the hero pair
+  // (first two) plus borderless metric rows — see paintStatCards().
   const coreStatItems = [
     {label:'Win Rate', value:`${winRate}%`, tone:'accent', sub:`${wins.length}W / ${losses.length}L`},
     {label:'Total P&L', value:fmtPnl(totalPnl), tone:totalPnl>=0?'accent':'red', red:totalPnl<0,
@@ -8074,6 +8065,22 @@ window.symHoverSeg = window.symHoverSeg || function(pair){ symbolsHoverSeg = pai
 window.symSelectSeg = window.symSelectSeg || function(pair){ symbolsActiveSeg = (symbolsActiveSeg===pair) ? null : pair; symbolsHoverSeg = null; };
 window.symToggleAll = window.symToggleAll || function(){};
 window.symTogglePair = window.symTogglePair || function(){};
+window.symTipMove = window.symTipMove || function(){};
+window.symClearPin = window.symClearPin || function(){ symbolsActiveSeg = null; };
+// Last pointer position over the donut, in client coords — the floating
+// tooltip chases this. Touch pointers anchor the tooltip above the finger.
+let symbolsTipPos = null;
+// Outside-tap unpin: registered once, delegates to whatever the live
+// render pass exposed as symClearPin. Scrolling also clears the pin.
+if(!window._symPinListeners){
+  window._symPinListeners = true;
+  document.addEventListener('pointerdown', e=>{
+    if(!symbolsActiveSeg) return;
+    const card=document.getElementById('symbolsCard');
+    if(card && !card.contains(e.target)) window.symClearPin();
+  }, true);
+  window.addEventListener('scroll', ()=>{ if(symbolsActiveSeg) window.symClearPin(); }, {capture:true, passive:true});
+}
 const PAIR_COLS = {wins:'Wins',losses:'Losses',total:'Total',winrate:'Winrate',pnl:'Total P&L',pf:'Profit Factor',dur:'Avg Duration',rr:'Risk Reward',avgwl:'Avg Win/Loss',maxdd:'Max Symbol Drawdown'};
 let pairColVisible = {wins:true,losses:true,total:true,winrate:true,pnl:true,pf:false,dur:false,rr:false,avgwl:false,maxdd:false};
 
@@ -8141,6 +8148,36 @@ function renderSymbolsCard(pairMap){
     symbolsHoverSeg = pair;
     draw();
   };
+  // Pointer tracking for the floating tooltip — separate from symHoverSeg
+  // so movement within one segment repositions without a redraw.
+  window.symTipMove = function(ev){
+    symbolsTipPos = {x:ev.clientX, y:ev.clientY, touch:ev.pointerType==='touch'};
+    positionTip();
+  };
+  // Tap outside the card / scroll / tab switch → unpin (see the global
+  // listeners near the top-level stubs).
+  window.symClearPin = function(){
+    if(!symbolsActiveSeg && !symbolsHoverSeg) return;
+    symbolsActiveSeg=null; symbolsHoverSeg=null;
+    draw();
+  };
+  function positionTip(){
+    const tip=document.getElementById('symbolsTip');
+    const card=document.getElementById('symbolsCard');
+    if(!tip || !card) return;
+    if(!symbolsHoverSeg || !symbolsTipPos){ tip.style.display='none'; return; }
+    const rect=card.getBoundingClientRect();
+    const gap=12;
+    let x=symbolsTipPos.x-rect.left+gap;
+    let y=symbolsTipPos.y-rect.top+(symbolsTipPos.touch?-72:gap);
+    // Flip left/above near the card edges so the tip never clips outside.
+    const tw=tip.offsetWidth||140, th=tip.offsetHeight||70;
+    if(x+tw>rect.width-8) x=symbolsTipPos.x-rect.left-gap-tw;
+    if(y+th>rect.height-8) y=rect.height-8-th;
+    if(y<4) y=4;
+    tip.style.left=x+'px'; tip.style.top=y+'px';
+    tip.style.display='block';
+  }
 
   function draw(){
     // Bail out rather than throw if the card isn't in the DOM for this pass
@@ -8172,7 +8209,7 @@ function renderSymbolsCard(pairMap){
       const pq = escapeHtml(e.pair);
       arcs += `<circle class="donut-seg" cx="70" cy="70" r="${r}" fill="none" stroke="${e.color}" stroke-width="${w}" stroke-opacity="${op}" stroke-dasharray="${Math.max(len,0)} ${c}" stroke-dashoffset="${-offset}" transform="rotate(-90 70 70)"/>`;
       // Invisible fat arc on top: 34px of tappable width instead of 18px.
-      hits += `<circle class="donut-hit" cx="70" cy="70" r="${r}" stroke-width="34" stroke-dasharray="${Math.max(len,0)} ${c}" stroke-dashoffset="${-offset}" transform="rotate(-90 70 70)" onclick="symSelectSeg('${pq}')" onmouseenter="symHoverSeg('${pq}')" onmouseleave="symHoverSeg(null)"><title>${pq} — ${e.total} trades</title></circle>`;
+      hits += `<circle class="donut-hit" cx="70" cy="70" r="${r}" stroke-width="34" stroke-dasharray="${Math.max(len,0)} ${c}" stroke-dashoffset="${-offset}" transform="rotate(-90 70 70)" onclick="symSelectSeg('${pq}')" onmouseenter="symHoverSeg('${pq}')" onmouseleave="symHoverSeg(null)" onpointermove="symTipMove(event)"><title>${pq} — ${e.total} trades</title></circle>`;
       offset += frac*c;
     });
     // Centre label follows the focused segment, so the donut itself answers
@@ -8191,13 +8228,24 @@ function renderSymbolsCard(pairMap){
 
     leftEl.innerHTML='';
     rightEl.innerHTML='';
-    if(focusSeg && shown.some(e=>e.pair===focusSeg)){
-      const e = shown.find(x=>x.pair===focusSeg);
+    const detailFor = e=>{
       const pct = totalTrades? (e.total/totalTrades*100).toFixed(1) : 0;
-      const box = `<div class="donut-detail-box"><div style="display:flex;align-items:center;gap:5px;margin-bottom:4px"><span style="width:8px;height:8px;border-radius:2px;background:${e.color};display:inline-block;flex-shrink:0"></span><span style="font-size:12px;font-weight:700;color:var(--text)">${escapeHtml(e.pair)}</span></div><div style="font-size:11px;color:var(--text2)">Trades <span class="ddb-val">${e.total}</span></div><div style="font-size:11px;color:var(--text2)">Share <span class="ddb-val">${pct}%</span></div></div>`;
-      (segSide[focusSeg]==='left'?leftEl:rightEl).innerHTML = box;
+      return `<div style="display:flex;align-items:center;gap:5px;margin-bottom:4px"><span style="width:8px;height:8px;border-radius:2px;background:${e.color};display:inline-block;flex-shrink:0"></span><span style="font-size:12px;font-weight:700;color:var(--text)">${escapeHtml(e.pair)}</span></div><div style="font-size:11px;color:var(--text2)">Trades <span class="ddb-val">${e.total}</span></div><div style="font-size:11px;color:var(--text2)">Share <span class="ddb-val">${pct}%</span></div>`;
+    };
+    // Pinned segment → stable detail box beside the donut.
+    if(symbolsActiveSeg && shown.some(e=>e.pair===symbolsActiveSeg)){
+      const e = shown.find(x=>x.pair===symbolsActiveSeg);
+      const box = `<div class="donut-detail-box">${detailFor(e)}</div>`;
+      (segSide[symbolsActiveSeg]==='left'?leftEl:rightEl).innerHTML = box;
     }
-
+    // Hovered segment → floating tooltip that chases the pointer.
+    const tip=document.getElementById('symbolsTip');
+    if(tip){
+      if(symbolsHoverSeg && shown.some(e=>e.pair===symbolsHoverSeg)){
+        tip.innerHTML = detailFor(shown.find(x=>x.pair===symbolsHoverSeg));
+        positionTip();
+      } else tip.style.display='none';
+    }
   }
   draw();
 }
@@ -8371,8 +8419,6 @@ async function renderBalanceCard(){
   balanceView.start=vs; balanceView.end=ve;
   const view=points.slice(vs,ve+1);
   const zoomed = !(vs===0 && ve===N-1);
-  const resetBtn=document.getElementById('balanceResetBtn');
-  if(resetBtn) resetBtn.disabled=!zoomed;
   const noteEl=document.getElementById('balanceRangeNote');
   if(noteEl){
     const fmtD=s=>{const d=s?parseLocalDate(s):null;return d?d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—';};
@@ -8455,6 +8501,7 @@ function balanceZoomBy(factor,anchorRatio=0.5){
   let start=Math.round(anchor-next*anchorRatio);
   start=Math.max(0,Math.min(N-1-next,start));
   balanceView.start=start; balanceView.end=start+next;
+  _maybeShowBalanceZoomHint();
   balanceRerender();
 }
 function balanceResetView(){
@@ -8558,7 +8605,22 @@ function attachBalanceInteractions(canvas){
       if(target!==balanceView.start){ balanceView.end=balanceView.start+span; balancePanBy(target-balanceView.start); }
     }
   });
+  // Double-tap / double-click reset, routed by where it lands:
+  // bottom strip (date axis) → time zoom+pan, right strip (price axis) →
+  // value scale, plot → both. Only a time window is zoomable today, so all
+  // three currently resolve to balanceResetView(); the routing is kept so a
+  // future value-scale zoom slots in without reworking the gesture.
+  let lastTap=null;
+  const resetForRegion=(clientX,clientY)=>{
+    const c=chart(); if(!c){ balanceResetView(); return; }
+    const r=canvas.getBoundingClientRect(), a=c.chartArea;
+    const x=clientX-r.left, y=clientY-r.top;
+    if(y>a.bottom){ balanceResetView(); return; }       // date axis
+    if(x>a.right){ balanceResetView(); return; }        // price axis
+    balanceResetView();                                 // plot → both
+  };
   const finish=e=>{
+    const wasTap = mode===null && pointers.size===1;
     pointers.delete(e.pointerId);
     clearTimeout(holdTimer);
     // Always clear the guide on release — a quick tap never set mode to
@@ -8569,12 +8631,20 @@ function attachBalanceInteractions(canvas){
     if(pointers.size<2 && mode==='pinch') mode=null;
     if(pointers.size===0) mode=null;
     canvas.classList.remove('is-panning','is-scrubbing');
+    // Touch double-tap: two quick taps that never became a pan/scrub.
+    if(wasTap && e.type==='pointerup'){
+      const now=Date.now();
+      if(lastTap && now-lastTap.t<320 && Math.abs(e.clientX-lastTap.x)<28 && Math.abs(e.clientY-lastTap.y)<28){
+        lastTap=null;
+        resetForRegion(e.clientX,e.clientY);
+      } else lastTap={t:now,x:e.clientX,y:e.clientY};
+    } else lastTap=null;
   };
   canvas.addEventListener('pointerup',finish);
   canvas.addEventListener('pointercancel',finish);
   canvas.addEventListener('pointerleave',finish);
   canvas.addEventListener('contextmenu',e=>{ if(mode==='scrub') e.preventDefault(); });
-  canvas.addEventListener('dblclick',()=>balanceResetView());
+  canvas.addEventListener('dblclick',e=>resetForRegion(e.clientX,e.clientY));
 }
 
 // ─── P&L per Trade ───
