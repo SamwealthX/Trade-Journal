@@ -360,6 +360,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .setup-chip:hover{border-color:var(--border2);color:var(--text)}
 .setup-chip.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
 .setup-focus-note{font-size:11px;color:var(--text3);margin:-4px 0 6px}
+.month-strip-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.month-strip-link{display:flex;align-items:center;gap:3px;font-size:12px;color:var(--accent);cursor:pointer;flex-shrink:0}
+.month-strip-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.month-strip-cell{background:var(--surface2);border-radius:var(--radius-xs);padding:10px 8px;text-align:center}
+.month-strip-label{font-size:9px;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.month-strip-value{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--text)}
+.month-strip-sub{font-size:9px;color:var(--text3);margin-top:2px}
+.rule-adherence-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text)}
+.rule-adherence-row:last-child{border-bottom:none}
 .perf-row.dimmed{opacity:.38}
 .pnl-chart{position:relative;height:120px;margin-top:4px;overflow:visible}
 .pnl-bars-row{display:flex;align-items:center;height:120px;gap:3px}
@@ -367,10 +376,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .pnl-bar-hit:focus-visible{box-shadow:0 0 0 2px var(--accent)}
 .pnl-bar-fill{position:absolute;left:1px;right:1px;opacity:.78;border-radius:3px;transition:opacity .15s,filter .15s}
 .pnl-bar-hit:hover .pnl-bar-fill,.pnl-bar-hit:focus .pnl-bar-fill{opacity:1;filter:brightness(1.15)}
-.pnl-bar-hit.pinned .pnl-bar-fill{opacity:1;filter:brightness(1.25);box-shadow:0 0 0 1.5px var(--text2)}
 .pnl-tooltip{position:absolute;z-index:20;display:none;transform:translate(-50%,-100%);min-width:0;width:max-content;max-width:min(230px,calc(100vw - 48px));padding:9px 11px;border:1px solid var(--border2);border-radius:var(--radius-xs);background:var(--surface2);box-shadow:var(--shadow);font-size:11px;color:var(--text2);white-space:normal;overflow-wrap:anywhere;pointer-events:none}
 .pnl-tooltip.show{display:block}
-.pnl-tooltip.pinned{pointer-events:auto}
 .pnl-tooltip strong{display:block;color:var(--text);font-size:12px;margin-bottom:3px;overflow-wrap:anywhere}
 .pnl-tip-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;line-height:1.55}
 .pnl-tip-row span:first-child{flex:0 0 auto;white-space:nowrap}
@@ -1189,9 +1196,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
 
 <!-- ══ TAB: Stats ══ -->
 <div id="tabStats" class="tab">
-  <div class="section-header">
-    <span class="section-title">Performance</span>
-  </div>
   <!-- Time period filter. "Custom" is the same kind of control as the other
        four — it just gets its bounds from customRange (set in the date-range
        modal) instead of from the calendar math in _calendarBounds(). -->
@@ -1243,6 +1247,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
    <div class="stat-grid" id="statGrid"></div>
    <!-- Remaining KPIs as quiet rows in one card -->
    <div id="streakDrawdownGrid" style="margin-bottom:24px"></div>
+
+  <!-- Panel: "This month" strip — a quick current-month glance without
+       duplicating the full Calendar tab (which already owns the day-by-day
+       P&L grid). Always shows the real calendar month regardless of the
+       tab-wide period filter above; "View calendar" jumps to the real tab. -->
+  <div class="card stats-panel" id="monthStripCard"></div>
 
   <!-- Trade-by-trade performance cards -->
   <div class="card stats-panel">
@@ -1310,6 +1320,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
       <div class="balance-chart-scroll" id="balanceChartScroll"><div class="balance-chart-inner" id="balanceChartInner"><canvas id="equityChart" height="210"></canvas></div></div>
     </div>
   </div>
+  <!-- Panel: Drawdown — peak-to-trough excursions on the same P&L basis as
+       the "Max Drawdown" KPI row above (see renderDrawdownChart()), so the
+       headline number and this chart never disagree. -->
+  <div class="card stats-panel">
+    <div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>Drawdown</div>
+    <div id="drawdownSummary" style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px"></div>
+    <div id="drawdownChart"></div>
+  </div>
   <!-- Panel: Symbols traded donut — replaces the old Pair Performance
        progress-bar block. Trade-distribution only (no P&L) since the table
        right below carries the profitability numbers; keeping them separate
@@ -1361,6 +1379,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
   </div>
 
   <div class="card stats-panel"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>P&amp;L per Trade</div><div id="pnlSetupNote" class="setup-focus-note"></div><div id="pnlBars"></div></div>
+  <!-- Panel: Duration vs Result — only plots trades with both entry+close
+       time AND a set risk amount (needs both tradeDurationMinutes() and
+       calcR() to return a value); see renderDurationScatter(). -->
+  <div class="card stats-panel">
+    <div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>Duration vs Result</div>
+    <div id="durationScatterCard"></div>
+  </div>
 
   <!-- Deposit/Withdrawal ledger modal — manual entries only. Prop-firm payouts
        (propFirms[].payouts[]) show here read-only when the current account is
@@ -1401,6 +1426,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
   <div class="card stats-panel">
     <div class="stats-subsection"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Best Day of Week</div><div id="dowBreakdown"></div></div>
     <div class="stats-subsection" style="margin-bottom:0"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>Session Performance</div><div id="sessionBreakdown"></div></div>
+  </div>
+
+  <!-- Panel: Rule Adherence — win rate when every checklist category was
+       filled in vs. partial/skipped, using the same 7 CL_KEYS categories as
+       the Trade/Pre-Trade checklist. See renderRuleAdherence(). -->
+  <div class="card stats-panel">
+    <div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>Rule Adherence</div>
+    <div id="ruleAdherence"></div>
   </div>
 
   <!-- Panel 3: individual trade highlights — kept separate since it's a
@@ -4658,8 +4691,8 @@ function switchTab(name){
   // Persist active tab to Telegram CloudStorage (session state)
   CS.set('active_tab', name);
   // Update header title and subtitle to reflect current tab
-  const tabLabels={Journal:'Trade Journal',PreTrade:'Pre-Trade',DailyJournal:'Daily Journal',Library:'Library',Calendar:'Calendar',Stats:'Performance',Prop:'Prop Firm Tracker',TradingAccounts:'Trading Accounts',Strategy:'Strategy & Edge',Settings:'Settings'};
-  const tabSubs={PreTrade:'Planned Setups',DailyJournal:'Daily Reflections',Library:'Screenshot Review',Calendar:'P&L Overview',Stats:'Analytics',Prop:'Phases & Payouts',TradingAccounts:'Manage Accounts',Strategy:'Plan & Rules',Settings:'Accounts & Data'};
+  const tabLabels={Journal:'Trade Journal',PreTrade:'Pre-Trade',DailyJournal:'Daily Journal',Library:'Library',Calendar:'Calendar',Stats:'Metrics',Prop:'Prop Firm Tracker',TradingAccounts:'Trading Accounts',Strategy:'Strategy & Edge',Settings:'Settings'};
+  const tabSubs={PreTrade:'Planned Setups',DailyJournal:'Daily Reflections',Library:'Screenshot Review',Calendar:'P&L Overview',Stats:'Performance & Analytics',Prop:'Phases & Payouts',TradingAccounts:'Manage Accounts',Strategy:'Plan & Rules',Settings:'Accounts & Data'};
   document.getElementById('headerTitle').textContent=tabLabels[name]||name;
   const subEl=document.getElementById('headerSub');
   subEl.style.opacity='0';
@@ -7858,6 +7891,7 @@ function renderStats(){
   if(activeTab !== 'Stats'){ statsDirty = true; return; }
   statsDirty = false;
   const ft = statsFilteredTrades();
+  renderMonthStripCard();
 
   const wins   = ft.filter(t=>parseFloat(t.pnl)>0);
   const losses = ft.filter(t=>parseFloat(t.pnl)<0);
@@ -8049,7 +8083,115 @@ function renderStats(){
     </div>`;
   }).join('')||'<div style="color:var(--text3);font-size:14px;padding:8px 0">No trades yet</div>';
 
+  renderRuleAdherence(ft);
+  renderDurationScatter(ft);
   renderCharts(ft);
+}
+
+// ─── This Month strip ───
+// Always the real calendar month, independent of the tab-wide period filter
+// above (filteredTrades() is account-scoped only — see its use in
+// computeBalanceSeries() for the same reasoning). Deliberately does not
+// duplicate the Calendar tab's day grid — "View calendar" jumps there instead.
+function renderMonthStripCard(){
+  const el=document.getElementById('monthStripCard'); if(!el) return;
+  const now=new Date();
+  const monthStart=new Date(now.getFullYear(),now.getMonth(),1);
+  const monthEnd=new Date(now.getFullYear(),now.getMonth()+1,0);
+  const monthLabel=now.toLocaleDateString('en-US',{month:'long'});
+  const monthTrades=filteredTrades().filter(t=>{
+    if(!t.date) return false;
+    const d=parseLocalDate(t.date);
+    return d && d>=monthStart && d<=monthEnd;
+  });
+  const head=`<div class="month-strip-head"><div class="chart-title" style="margin-bottom:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>This Month</div><div class="month-strip-link" onclick="switchTab('Calendar')">View calendar<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></div></div>`;
+  if(!monthTrades.length){
+    el.innerHTML=head+`<div style="color:var(--text3);font-size:13px;padding:4px 0 2px">No trades logged in ${escapeHtml(monthLabel)} yet</div>`;
+    return;
+  }
+  const wins=monthTrades.filter(t=>parseFloat(t.pnl)>0).length;
+  const winRate=(wins/monthTrades.length*100).toFixed(0);
+  const byDate={};
+  monthTrades.forEach(t=>{ byDate[t.date]=(byDate[t.date]||0)+(parseFloat(t.pnl)||0); });
+  const dayEntries=Object.entries(byDate);
+  let bestDay=dayEntries[0], worstDay=dayEntries[0];
+  dayEntries.forEach(e=>{ if(e[1]>bestDay[1]) bestDay=e; if(e[1]<worstDay[1]) worstDay=e; });
+  const fmtDay=s=>{ const d=parseLocalDate(s); return d?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):''; };
+  el.innerHTML=head+`<div class="month-strip-grid">
+    <div class="month-strip-cell"><div class="month-strip-label">Win Rate</div><div class="month-strip-value">${winRate}%</div></div>
+    <div class="month-strip-cell"><div class="month-strip-label">Best Day</div><div class="month-strip-value ${bestDay[1]>=0?'positive':'negative'}">${fmtPnl(bestDay[1])}</div><div class="month-strip-sub">${fmtDay(bestDay[0])}</div></div>
+    <div class="month-strip-cell"><div class="month-strip-label">Worst Day</div><div class="month-strip-value ${worstDay[1]>=0?'positive':'negative'}">${fmtPnl(worstDay[1])}</div><div class="month-strip-sub">${fmtDay(worstDay[0])}</div></div>
+  </div>`;
+}
+
+// ─── Rule Adherence ───
+// Win rate when every one of the 7 checklist categories (CL_KEYS) had at
+// least one selection, vs. trades where the checklist was left partial or
+// empty — reuses the same checklist data New Trade/Pre-Trade already collect.
+function renderRuleAdherence(ft){
+  const el=document.getElementById('ruleAdherence'); if(!el) return;
+  if(!ft.length){ el.innerHTML='<div style="color:var(--text3);font-size:14px;padding:8px 0">No trades in this period</div>'; return; }
+  const full=[], partial=[];
+  ft.forEach(t=>{
+    const cl=t.checklist||{};
+    const complete=CL_KEYS.every(k=>cl[k]&&cl[k].length>0);
+    (complete?full:partial).push(t);
+  });
+  const row=(label,list)=>{
+    if(!list.length) return `<div class="rule-adherence-row"><span>${escapeHtml(label)}</span><span style="font-family:var(--mono);color:var(--text3)">No trades</span></div>`;
+    const wins=list.filter(t=>parseFloat(t.pnl)>0).length;
+    const wr=(wins/list.length*100).toFixed(0);
+    return `<div class="rule-adherence-row"><span>${escapeHtml(label)}</span><span style="font-family:var(--mono);font-weight:700;color:${wr>=50?'var(--green)':'var(--red)'}">${wr}% win · ${list.length} trade${list.length===1?'':'s'}</span></div>`;
+  };
+  el.innerHTML=row('Full checklist followed',full)+row('Partial / skipped',partial);
+}
+
+// ─── Duration vs Result scatter ───
+// Only plots trades where BOTH tradeDurationMinutes() and calcR() resolve —
+// i.e. entry+close time AND a risk amount were logged — since duration
+// without an R multiple has no meaningful y-axis to plot against.
+function renderDurationScatter(ft){
+  const el=document.getElementById('durationScatterCard'); if(!el) return;
+  const pts=ft.map(t=>{
+    const mins=tradeDurationMinutes(t), r=calcR(t);
+    if(mins===null||r===null) return null;
+    return {mins, r:parseFloat(r), win:parseFloat(t.pnl)>0};
+  }).filter(Boolean);
+  if(pts.length<2){
+    el.innerHTML='<div style="color:var(--text3);font-size:13px;text-align:center;padding:12px 0">Log entry/close time and risk on more trades to see this</div>';
+    return;
+  }
+  const T=themeColors();
+  const W=340,H=150,padL=10,padR=10,padT=10,padB=10;
+  const minMins=Math.min(...pts.map(p=>p.mins)), maxMins=Math.max(...pts.map(p=>p.mins));
+  const maxAbsR=Math.max(...pts.map(p=>Math.abs(p.r)),1);
+  const xOf=m=>padL+(maxMins>minMins?(m-minMins)/(maxMins-minMins):0.5)*(W-padL-padR);
+  const yOf=r=>(H)/2-(r/maxAbsR)*((H-padT-padB)/2);
+  const zeroY=yOf(0);
+  const dots=pts.map(p=>`<circle cx="${xOf(p.mins).toFixed(1)}" cy="${yOf(p.r).toFixed(1)}" r="4" fill="${p.win?T.accent:T.red}" opacity="0.85"/>`).join('');
+  const buckets=Math.min(4,pts.length);
+  const bucketSize=(maxMins-minMins)/buckets||1;
+  let bestBucket=null, bestAvg=-Infinity;
+  for(let i=0;i<buckets;i++){
+    const lo=minMins+i*bucketSize, hi=i===buckets-1?maxMins:lo+bucketSize;
+    const inb=pts.filter(p=>p.mins>=lo&&p.mins<=hi);
+    if(inb.length){ const avg=inb.reduce((s,p)=>s+p.r,0)/inb.length; if(avg>bestAvg){bestAvg=avg;bestBucket={lo,hi};} }
+  }
+  const bestLabel=bestBucket?`${minutesToDuration(Math.round(bestBucket.lo))}–${minutesToDuration(Math.round(bestBucket.hi))}`:'—';
+  el.innerHTML=`
+    <div style="display:flex;gap:16px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent);display:inline-block"></span>Win</div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><span style="width:7px;height:7px;border-radius:50%;background:var(--red);display:inline-block"></span>Loss</div>
+    </div>
+    <svg viewBox="0 0 ${W} ${H}" width="100%" height="150">
+      <line x1="${padL}" y1="${zeroY.toFixed(1)}" x2="${W-padR}" y2="${zeroY.toFixed(1)}" stroke="${T.border2}" stroke-width="1" stroke-dasharray="2,3"/>
+      ${dots}
+    </svg>
+    <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3);margin-top:-2px">
+      <span>${minutesToDuration(Math.round(minMins))}</span><span>${minutesToDuration(Math.round(maxMins))}</span>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-top:6px">${pts.length} trade${pts.length===1?'':'s'} · best window <span style="font-family:var(--mono);color:var(--accent)">${escapeHtml(bestLabel)}</span></div>
+  `;
 }
 
 // ─── Symbols donut + Pair performance table (Metrics tab) ───
@@ -8307,6 +8449,7 @@ async function renderCharts(ft){
   if(token !== chartsRenderToken) return;
   const sorted=[...(ft||filteredTrades())].sort((a,b)=>new Date(a.date)-new Date(b.date));
   renderBalanceCard();
+  renderDrawdownChart(sorted);
   renderPnlBars(setupFocus ? sorted.filter(t=>(t.setup||'Untagged')===setupFocus) : sorted);
   const rData=sorted.map(t=>calcR(t)).filter(r=>r!==null).map(r=>parseFloat(r));
   renderRHistogram(rData);
@@ -8663,11 +8806,53 @@ function attachBalanceInteractions(canvas){
 // visual language (and, like it, theme-aware for free via CSS vars — Chart.js
 // isn't needed here since it's the same per-category bar rendering the
 // histogram already does, just chronological instead of bucketed).
+// ─── Drawdown chart ───
+// Same peak/trough walk as the "Max Drawdown" KPI row in renderStats() (P&L
+// running from 0, not the account's real starting balance) so this chart's
+// headline % always agrees with that card. `sorted` is the period-filtered,
+// chronologically-ordered trade list renderCharts() already builds.
+function renderDrawdownChart(sorted){
+  const summaryEl=document.getElementById('drawdownSummary'), chartEl=document.getElementById('drawdownChart');
+  if(!chartEl||!summaryEl) return;
+  if(!sorted.length){
+    summaryEl.innerHTML='';
+    chartEl.innerHTML='<div style="color:var(--text3);font-size:13px;text-align:center;padding:12px 0">No trades in this period</div>';
+    return;
+  }
+  let peak=0, running=0, maxDD=0, maxDDPct=0;
+  const series=[];
+  sorted.forEach(t=>{
+    running+=parseFloat(t.pnl)||0;
+    if(running>peak) peak=running;
+    const dd=peak-running;
+    if(dd>maxDD){ maxDD=dd; maxDDPct=peak>0?(dd/peak*100):0; }
+    series.push(dd);
+  });
+  const T=themeColors();
+  const scaleMax=Math.max(maxDD,1);
+  const W=340,H=90,top=8,bottom=82;
+  const n=series.length;
+  const pts=series.map((dd,i)=>{
+    const x=n>1?(i/(n-1))*W:W/2;
+    const y=top+(dd/scaleMax)*(bottom-top);
+    return [x,y];
+  });
+  const lineD=pts.map((p,i)=>(i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+  const areaD=`M0,${top} ${pts.map(p=>'L'+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')} L${W},${top} Z`;
+  summaryEl.innerHTML = maxDD>0
+    ? `<span class="negative" style="font-family:var(--mono);font-size:18px;font-weight:700">-${maxDDPct.toFixed(1)}%</span><span style="font-size:11px;color:var(--text3)">max drawdown · ${fmtPnl(-maxDD)}</span>`
+    : `<span style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--text)">0%</span><span style="font-size:11px;color:var(--text3)">no drawdown in this period</span>`;
+  chartEl.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="90" preserveAspectRatio="none">
+    <line x1="0" y1="${top}" x2="${W}" y2="${top}" stroke="${T.border2}" stroke-width="1"/>
+    <path d="${areaD}" fill="${T.red}" opacity="0.14"/>
+    <path d="${lineD}" fill="none" stroke="${T.red}" stroke-width="1.5"/>
+  </svg>`;
+}
+
 function renderPnlBars(sorted){
   const el=document.getElementById('pnlBars'); if(!el) return;
   const noteEl=document.getElementById('pnlSetupNote');
   if(noteEl) noteEl.innerHTML = setupFocus ? `Focused on <strong style="color:var(--accent)">${escapeHtml(setupFocus)}</strong> · <span style="color:var(--accent);cursor:pointer" onclick="setSetupFocus(null)">show all</span>` : '';
-  pnlPinnedIndex=null;
   if(!sorted.length){ el.innerHTML=`<div style="color:var(--text3);font-size:13px;text-align:center;padding:12px 0">No trades ${setupFocus?'for this setup':'in this period'}</div>`; return; }
   const pnls=sorted.map(t=>parseFloat(t.pnl)||0);
   const max=Math.max(...pnls.map(v=>Math.abs(v)),1);
@@ -8686,44 +8871,30 @@ function renderPnlBars(sorted){
 // Hover previews the bar's trade; clicking pins that tooltip so the numbers can
 // be read without keeping the cursor on the bar. Deliberately no longer opens
 // the trade-log peek dialog — this chart answers "what was this bar", in place.
-let pnlPinnedIndex=null;
 function _pnlTipRow(k,v){ return `<div class="pnl-tip-row"><span>${k}</span><span>${v}</span></div>`; }
 function pnlTooltipHtml(t,index){
   const pnl=parseFloat(t.pnl)||0, d=t.date?parseLocalDate(t.date):null;
-  const r=typeof calcR==='function'?calcR(t):null;
-  const rows=[];
-  rows.push(_pnlTipRow('Date',d?d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—'));
-  if(t.direction||t.side) rows.push(_pnlTipRow('Direction',escapeHtml(String(t.direction||t.side))));
-  rows.push(_pnlTipRow('Setup',escapeHtml(t.setup||'Untagged')));
-  if(t.session) rows.push(_pnlTipRow('Session',escapeHtml(t.session)));
-  if(r!==null&&r!==undefined) rows.push(_pnlTipRow('R multiple',(parseFloat(r)>=0?'+':'')+r+'R'));
-  if(t.riskAmount) rows.push(_pnlTipRow('Risk','$'+(parseFloat(t.riskAmount)||0).toFixed(2)));
-  if(t.entry) rows.push(_pnlTipRow('Entry',escapeHtml(String(t.entry))));
-  if(t.exit) rows.push(_pnlTipRow('Exit',escapeHtml(String(t.exit))));
-  rows.push(_pnlTipRow('Trade #',(index+1)+' of '+(window._pnlChartTrades?.length||0)));
-  return `<strong>${escapeHtml(t.pair||'Trade')} · <span class="${pnl>=0?'positive':'negative'}">${fmtPnl(pnl)}</span></strong>${rows.join('')}<div class="pnl-tip-pin">${pnlPinnedIndex===index?'Pinned · click the bar again to unpin':'Click the bar to pin these details'}</div>`;
+  const dateRow=_pnlTipRow('Date',d?d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—');
+  return `<strong>${escapeHtml(t.pair||'Trade')} · <span class="${pnl>=0?'positive':'negative'}">${fmtPnl(pnl)}</span></strong>${dateRow}<div class="pnl-tip-pin">Tap for full trade details</div>`;
 }
 function showPnlTooltip(event,index){
-  if(pnlPinnedIndex!==null && pnlPinnedIndex!==index) return; // pinned tooltip wins
   const tip=document.getElementById('pnlTooltip'), t=window._pnlChartTrades?.[index]; if(!tip||!t)return;
   tip.innerHTML=pnlTooltipHtml(t,index);
   tip.classList.add('show'); movePnlTooltip(event);
 }
+// Tapping/clicking a bar used to pin this tooltip open with a long list of
+// fields; now it just jumps straight to the real Trade Detail peek — the
+// tooltip itself only ever needs to answer "which bar is this" (pair, P&L,
+// date), and the deep fields live one tap away where they're already
+// maintained (see openPeek()).
 function togglePnlPin(event,index){
   event.stopPropagation();
-  const wasPinned = pnlPinnedIndex===index;
-  document.querySelectorAll('.pnl-bar-hit.pinned').forEach(n=>n.classList.remove('pinned'));
-  pnlPinnedIndex = wasPinned ? null : index;
-  const tip=document.getElementById('pnlTooltip');
-  if(!tip) return;
-  if(wasPinned){ tip.classList.remove('pinned'); showPnlTooltip(event,index); return; }
-  event.currentTarget?.classList.add('pinned');
-  tip.classList.add('pinned');
-  showPnlTooltip(event,index);
+  const t=window._pnlChartTrades?.[index]; if(!t) return;
+  hidePnlTooltip();
+  openPeek(t.id);
 }
 function movePnlTooltip(event){
   const tip=document.getElementById('pnlTooltip'), wrap=tip?.parentElement; if(!tip||!wrap)return;
-  if(pnlPinnedIndex!==null && !event?.currentTarget?.classList?.contains('pinned')) return;
   const r=wrap.getBoundingClientRect(), source=event.touches?.[0]||event;
   // Clamp against the tooltip's REAL half-width (it can be up to 230px wide,
   // so the old fixed 84px margin let it hang off the card edge and get clipped).
@@ -8732,16 +8903,9 @@ function movePnlTooltip(event){
   tip.style.left=(half*2>r.width ? r.width/2 : Math.max(half,Math.min(r.width-half,x)))+'px';
   tip.style.top=Math.max(tip.offsetHeight+8,(event.currentTarget?.getBoundingClientRect().top||r.top)-r.top+56)+'px';
 }
-function hidePnlTooltip(force){
-  if(pnlPinnedIndex!==null && force!==true) return; // keep pinned tooltip open
-  if(force===true){
-    pnlPinnedIndex=null;
-    document.querySelectorAll('.pnl-bar-hit.pinned').forEach(n=>n.classList.remove('pinned'));
-    document.getElementById('pnlTooltip')?.classList.remove('pinned');
-  }
+function hidePnlTooltip(){
   document.getElementById('pnlTooltip')?.classList.remove('show');
 }
-document.addEventListener('click',e=>{ if(pnlPinnedIndex!==null && !e.target.closest('.pnl-chart')) hidePnlTooltip(true); });
 
 // R-Multiple Distribution: buckets every closed R-multiple in the current
 // filter into fixed ranges and renders bars sized to each bucket's trade
