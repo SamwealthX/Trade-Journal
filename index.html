@@ -596,7 +596,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .donut-detail-box{background:var(--bg,var(--surface2));border:1px solid var(--border2);border-radius:10px;padding:9px 10px;animation:donut-detail-in .14s ease}
 /* Floating donut tooltip — same surface language as the detail box, but
    absolutely positioned inside the card so it can chase the pointer. */
-.symbols-tip{position:absolute;z-index:35;pointer-events:none;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;box-shadow:var(--shadow);padding:9px 10px;min-width:120px;animation:donut-detail-in .12s ease}
+.symbols-tip{position:absolute;z-index:35;pointer-events:none;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;box-shadow:var(--shadow);padding:9px 10px;min-width:120px;max-width:160px;animation:donut-detail-in .12s ease}
 .symbols-tip .ddb-val{font-family:var(--mono);font-weight:700;color:var(--text)}
 @keyframes donut-detail-in{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
 .donut-detail-box .ddb-val{font-family:var(--mono);font-weight:700;color:var(--text)}
@@ -8223,6 +8223,8 @@ window.symClearPin = window.symClearPin || function(){ symbolsActiveSeg = null; 
 // Last pointer position over the donut, in client coords — the floating
 // tooltip chases this. Touch pointers anchor the tooltip above the finger.
 let symbolsTipPos = null;
+let symbolsPointerType = 'mouse';
+let symbolsSegAnchors = {};
 // Outside-tap unpin: registered once, delegates to whatever the live
 // render pass exposed as symClearPin. Scrolling also clears the pin.
 if(!window._symPinListeners){
@@ -8290,21 +8292,28 @@ function renderSymbolsCard(pairMap){
     if(!checked && symbolsActiveSeg===pair) symbolsActiveSeg=null;
     draw();
   };
+  window.symPointerDown = function(ev){
+    symbolsPointerType = ev.pointerType || 'mouse';
+  };
   window.symSelectSeg = function(pair){
+    // Desktop is hover-only. Touch/pen taps toggle one persistent tooltip.
+    if(window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
     symbolsActiveSeg = (symbolsActiveSeg===pair) ? null : pair;
     symbolsHoverSeg = null;
     draw();
   };
-  // Hover just previews a segment; it never changes the selection.
-  window.symHoverSeg = function(pair){
+  // Hover previews are mouse-only and cannot stack on a pinned touch result.
+  window.symHoverSeg = function(pair,ev){
+    if(symbolsActiveSeg || (ev && ev.pointerType && ev.pointerType!=='mouse')) return;
     if(symbolsHoverSeg === pair) return;
     symbolsHoverSeg = pair;
     draw();
   };
-  // Pointer tracking for the floating tooltip — separate from symHoverSeg
-  // so movement within one segment repositions without a redraw.
+  // Mouse tooltip follows the pointer. Touch position is deliberately ignored:
+  // a tap is anchored to the selected arc instead of to the finger/card edge.
   window.symTipMove = function(ev){
-    symbolsTipPos = {x:ev.clientX, y:ev.clientY, touch:ev.pointerType==='touch'};
+    if((ev.pointerType||symbolsPointerType)!=='mouse' || symbolsActiveSeg) return;
+    symbolsTipPos = {x:ev.clientX, y:ev.clientY};
     positionTip();
   };
   // Tap outside the card / scroll / tab switch → unpin (see the global
@@ -8318,16 +8327,30 @@ function renderSymbolsCard(pairMap){
     const tip=document.getElementById('symbolsTip');
     const card=document.getElementById('symbolsCard');
     if(!tip || !card) return;
-    if(!symbolsHoverSeg || !symbolsTipPos){ tip.style.display='none'; return; }
+    const focus = symbolsActiveSeg || symbolsHoverSeg;
+    if(!focus){ tip.style.display='none'; return; }
     const rect=card.getBoundingClientRect();
-    const gap=12;
-    let x=symbolsTipPos.x-rect.left+gap;
-    let y=symbolsTipPos.y-rect.top+(symbolsTipPos.touch?-72:gap);
-    // Flip left/above near the card edges so the tip never clips outside.
-    const tw=tip.offsetWidth||140, th=tip.offsetHeight||70;
-    if(x+tw>rect.width-8) x=symbolsTipPos.x-rect.left-gap-tw;
-    if(y+th>rect.height-8) y=rect.height-8-th;
-    if(y<4) y=4;
+    const gap=10, tw=tip.offsetWidth||140, th=tip.offsetHeight||70;
+    let x, y;
+    if(symbolsActiveSeg && symbolsSegAnchors[focus]){
+      const a=symbolsSegAnchors[focus];
+      // Place the pinned tip around the ring: above/below for vertical arcs,
+      // beside it for left/right arcs. This keeps it visually attached.
+      if(Math.abs(a.dx)>Math.abs(a.dy)){
+        x=a.dx<0 ? a.cx-a.outer-gap-tw : a.cx+a.outer+gap;
+        y=a.cy-th/2;
+      }else{
+        x=a.cx-tw/2;
+        y=a.dy<0 ? a.cy-a.outer-gap-th : a.cy+a.outer+gap;
+      }
+    }else if(symbolsTipPos){
+      x=symbolsTipPos.x-rect.left+gap;
+      y=symbolsTipPos.y-rect.top+gap;
+      if(x+tw>rect.width-8) x=symbolsTipPos.x-rect.left-gap-tw;
+      if(y+th>rect.height-8) y=symbolsTipPos.y-rect.top-gap-th;
+    }else{ tip.style.display='none'; return; }
+    x=Math.max(8,Math.min(x,rect.width-tw-8));
+    y=Math.max(8,Math.min(y,rect.height-th-8));
     tip.style.left=x+'px'; tip.style.top=y+'px';
     tip.style.display='block';
   }
@@ -8348,21 +8371,21 @@ function renderSymbolsCard(pairMap){
     if(countEl) countEl.textContent = shown.length;
     if(filterBtn) filterBtn.textContent = symbolsSelectedPairs.size===entries.length ? `All ${entries.length}` : `Selected ${symbolsSelectedPairs.size}/${entries.length}`;
 
-    const r=52,c=2*Math.PI*r; let offset=0, arcs='', hits=''; const segSide={};
+    const r=52,c=2*Math.PI*r; let offset=0, arcs='', hits=''; const segAngles={};
     // Selected wins over hovered, so a tap sticks and a mouse just previews.
     const focusSeg = symbolsActiveSeg || symbolsHoverSeg;
     shown.forEach(e=>{
       const frac = totalTrades? e.total/totalTrades : 0;
       const len = frac*c-2;
       const mid = offset+len/2, ang=(mid/c)*2*Math.PI-Math.PI/2;
-      segSide[e.pair] = Math.cos(ang)<0 ? 'left' : 'right';
+      segAngles[e.pair] = ang;
       const isActive = focusSeg===e.pair;
       const op = focusSeg ? (isActive?1:0.3) : 1;
       const w = isActive ? 22 : 18;
       const pq = escapeHtml(e.pair);
       arcs += `<circle class="donut-seg" cx="70" cy="70" r="${r}" fill="none" stroke="${e.color}" stroke-width="${w}" stroke-opacity="${op}" stroke-dasharray="${Math.max(len,0)} ${c}" stroke-dashoffset="${-offset}" transform="rotate(-90 70 70)"/>`;
       // Invisible fat arc on top: 34px of tappable width instead of 18px.
-      hits += `<circle class="donut-hit" cx="70" cy="70" r="${r}" stroke-width="34" stroke-dasharray="${Math.max(len,0)} ${c}" stroke-dashoffset="${-offset}" transform="rotate(-90 70 70)" onclick="symSelectSeg('${pq}')" onmouseenter="symHoverSeg('${pq}')" onmouseleave="symHoverSeg(null)" onpointermove="symTipMove(event)"><title>${pq} — ${e.total} trades</title></circle>`;
+      hits += `<circle class="donut-hit" cx="70" cy="70" r="${r}" stroke-width="34" stroke-dasharray="${Math.max(len,0)} ${c}" stroke-dashoffset="${-offset}" transform="rotate(-90 70 70)" onpointerdown="symPointerDown(event)" onclick="symSelectSeg('${pq}')" onpointerenter="symHoverSeg('${pq}',event)" onpointerleave="symHoverSeg(null,event)" onpointermove="symTipMove(event)"><title>${pq} — ${e.total} trades</title></circle>`;
       offset += frac*c;
     });
     // Centre label follows the focused segment, so the donut itself answers
@@ -8381,21 +8404,31 @@ function renderSymbolsCard(pairMap){
 
     leftEl.innerHTML='';
     rightEl.innerHTML='';
+    // Resolve each segment's midpoint against the newly rendered donut so a
+    // pinned touch tooltip hugs the selected arc at every card/viewport size.
+    const cardRect=document.getElementById('symbolsCard').getBoundingClientRect();
+    const donutRect=donutWrap.getBoundingClientRect();
+    const cx=donutRect.left-cardRect.left+donutRect.width/2;
+    const cy=donutRect.top-cardRect.top+donutRect.height/2;
+    const outer=donutRect.width/2+2;
+    symbolsSegAnchors={};
+    Object.keys(segAngles).forEach(pair=>{
+      const ang=segAngles[pair];
+      symbolsSegAnchors[pair]={cx,cy,outer,dx:Math.cos(ang),dy:Math.sin(ang)};
+    });
     const detailFor = e=>{
       const pct = totalTrades? (e.total/totalTrades*100).toFixed(1) : 0;
       return `<div style="display:flex;align-items:center;gap:5px;margin-bottom:4px"><span style="width:8px;height:8px;border-radius:2px;background:${e.color};display:inline-block;flex-shrink:0"></span><span style="font-size:12px;font-weight:700;color:var(--text)">${escapeHtml(e.pair)}</span></div><div style="font-size:11px;color:var(--text2)">Trades <span class="ddb-val">${e.total}</span></div><div style="font-size:11px;color:var(--text2)">Share <span class="ddb-val">${pct}%</span></div>`;
     };
-    // Pinned segment → stable detail box beside the donut.
-    if(symbolsActiveSeg && shown.some(e=>e.pair===symbolsActiveSeg)){
-      const e = shown.find(x=>x.pair===symbolsActiveSeg);
-      const box = `<div class="donut-detail-box">${detailFor(e)}</div>`;
-      (segSide[symbolsActiveSeg]==='left'?leftEl:rightEl).innerHTML = box;
-    }
-    // Hovered segment → floating tooltip that chases the pointer.
+    // One tooltip serves both interactions: pointer-following on desktop,
+    // arc-anchored and pinned after a touch/pen tap. It can never duplicate.
     const tip=document.getElementById('symbolsTip');
     if(tip){
-      if(symbolsHoverSeg && shown.some(e=>e.pair===symbolsHoverSeg)){
-        tip.innerHTML = detailFor(shown.find(x=>x.pair===symbolsHoverSeg));
+      const tipPair=symbolsActiveSeg || symbolsHoverSeg;
+      const tipEntry=tipPair ? shown.find(x=>x.pair===tipPair) : null;
+      if(tipEntry){
+        tip.innerHTML = detailFor(tipEntry);
+        tip.style.display='block';
         positionTip();
       } else tip.style.display='none';
     }
