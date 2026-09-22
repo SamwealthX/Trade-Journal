@@ -553,6 +553,66 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .perf-row-wr{font-size:11px;font-family:var(--mono);min-width:30px;text-align:right}
 .perf-bar-track{height:7px;background:var(--surface2);border-radius:4px;overflow:hidden}
 .perf-bar-fill{height:100%;border-radius:4px;transition:width .3s}
+
+/* ── Session 21: Daily P&L bars ── */
+.dbar-wrap{display:flex;align-items:stretch;gap:4px;height:132px;padding-top:4px;position:relative}
+.dbar-col{flex:1;display:flex;flex-direction:column;min-width:0;cursor:pointer}
+.dbar-up{flex:1;display:flex;align-items:flex-end}
+.dbar-dn{flex:1;display:flex;align-items:flex-start}
+.dbar-b{width:100%;border-radius:2px 2px 0 0;min-height:2px}
+.dbar-b.neg{border-radius:0 0 2px 2px}
+.dbar-zero{height:1px;background:var(--border2)}
+.dbar-labels{display:flex;gap:4px;margin-top:6px}
+.dbar-labels div{flex:1;text-align:center;font-size:9px;color:var(--text3);white-space:nowrap;overflow:hidden}
+.dbar-tip{position:absolute;transform:translate(-50%,-100%);background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:8px 10px;font-size:11.5px;white-space:nowrap;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.35);z-index:5;opacity:0;transition:opacity .12s}
+.dbar-tip.show{opacity:1}
+.dbar-tip strong{display:block;font-size:12.5px;margin-bottom:3px}
+.dbar-tip-pin{color:var(--accent);font-size:10px;margin-top:4px;font-weight:700}
+
+/* ── Long vs Short ── */
+.ls-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.ls-tile{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 12px}
+.ls-head{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px}
+.ls-head svg{width:14px;height:14px;flex-shrink:0}
+.ls-pnl{font-size:19px;font-weight:800;font-family:var(--mono);letter-spacing:-.4px;font-variant-numeric:tabular-nums}
+.ls-meta{font-size:11px;color:var(--text3);margin-top:2px}
+.ls-split{display:flex;height:7px;border-radius:4px;overflow:hidden;margin-top:12px;background:var(--surface2)}
+.ls-split i{display:block;height:100%}
+.ls-legend{display:flex;justify-content:space-between;font-size:10.5px;color:var(--text3);margin-top:6px}
+
+/* ── Trade Distribution (3-in-1) ── */
+.dist-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.dist-t{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 6px;text-align:center}
+.dist-n{font-size:19px;font-weight:800;font-family:var(--mono);line-height:1.1}
+.dist-l{font-size:9.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-top:4px;font-weight:600}
+.dist-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;margin-top:11px;background:var(--surface2)}
+.dist-bar i{display:block;height:100%}
+
+/* ── Hour of Day ── */
+.hour-wrap{display:flex;align-items:flex-end;gap:3px;height:96px}
+.hour-col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;min-width:0;height:100%}
+.hour-b{width:100%;border-radius:2px;min-height:2px}
+.hour-labels{display:flex;gap:3px;margin-top:5px}
+.hour-labels div{flex:1;font-size:9px;color:var(--text3);text-align:center}
+.hour-note{font-size:10.5px;color:var(--text3);margin-top:10px}
+
+/* ── Recent Trades ── */
+.rt-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.rt-row:last-of-type{border-bottom:none}
+.rt-pair{font-size:12.5px;font-weight:800;min-width:62px}
+.rt-dir{font-size:9.5px;font-weight:800;letter-spacing:.5px;padding:2px 6px;border-radius:4px;text-transform:uppercase;flex-shrink:0}
+.rt-dir.long{background:var(--accent-dim);color:var(--accent)}
+.rt-dir.short{background:var(--red-dim);color:var(--red)}
+.rt-when{flex:1;min-width:0;font-size:10.5px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rt-r{font-size:10.5px;font-family:var(--mono);color:var(--text2);min-width:34px;text-align:right}
+.rt-pnl{font-size:12.5px;font-weight:800;font-family:var(--mono);min-width:56px;text-align:right}
+.rt-chev{color:var(--text3);display:flex;flex-shrink:0}
+.rt-chev svg{width:14px;height:14px}
+
+/* ── Symbols header controls (merged with Pair Table) ── */
+.wb-goal-empty{display:none}
+.sym-head-ctl{display:flex;gap:6px;align-items:center}
+.expander{width:100%;margin-top:12px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);border-radius:var(--radius-xs);padding:8px;font-size:12px;font-weight:700;font-family:var(--font);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
 /* R-Multiple Distribution histogram — replaces the old per-trade rChart
    Chart.js bar chart (whose x-axis was one label per trade). Buckets
    R-multiples into fixed ranges so the shape of the edge (not a
@@ -603,17 +663,19 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
 
 /* ══ P&L CALENDAR ══ */
-.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .cal-nav-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
 .cal-nav-btn:active{transform:scale(.92)}
 .cal-month-label{font-size:17px;font-weight:800;letter-spacing:-.3px}
-.cal-summary-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
-.cal-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;position:relative;overflow:hidden}
-.cal-stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);opacity:.25;border-radius:2px 2px 0 0}
-.cal-stat.red-accent::before{background:var(--red)}
-.cal-stat-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;font-weight:600}
-.cal-stat-value{font-size:18px;font-weight:800;font-family:var(--mono);letter-spacing:-.4px}
-.goal-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:14px}
+/* Calendar KPI tiles share the Metrics hero-card tokens (.stat-card) so
+   both tabs carry the same visual weight. */
+.cal-summary-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px}
+.cal-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 13px;position:relative;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+.cal-stat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent);opacity:.8;border-radius:3px 3px 0 0;box-shadow:0 0 8px var(--accent-glow)}
+.cal-stat.red-accent::before{background:var(--red);box-shadow:0 0 8px rgba(244,63,94,0.35)}
+.cal-stat-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;font-weight:600}
+.cal-stat-value{font-size:22px;font-weight:800;font-family:var(--mono);letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.goal-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 13px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,.18)}
 .goal-row-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .goal-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px}
 .goal-edit-btn{font-size:11px;color:var(--accent);cursor:pointer;font-weight:700;opacity:.8}
@@ -639,14 +701,30 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .cal-day-pnl.neg{color:var(--red)}
 .cal-day-count{font-size:9px;color:var(--text3);font-weight:600}
 .cal-dash{font-size:13px;color:var(--text3);text-align:center;line-height:1}
+/* Weekly total column (wide screens only — an 8th data column doesn't fit at 390px) */
+.cal-week-total{display:none}
+.cal-week-total-pnl{font-size:11px;font-weight:800;font-family:var(--mono);letter-spacing:-.3px}
+.cal-week-total-count{font-size:9px;color:var(--text3);font-weight:600}
+@media(min-width:900px){
+  .cal-grid-header,.cal-grid{grid-template-columns:28px repeat(7,1fr) 72px}
+  .cal-cell,.cal-week-num{max-height:110px;aspect-ratio:auto;min-height:96px}
+  .cal-week-total{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:var(--radius-xs);background:var(--surface);border:1px solid var(--border2);min-height:96px;max-height:110px}
+  .cal-dow.cal-week-total{display:block;min-height:0;border:none;background:none}
+}
+/* Daily Breakdown: capped list + weekly sub-headers */
+.cal-week-sub{display:flex;justify-content:space-between;align-items:center;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;padding:9px 0 3px;border-bottom:1px solid var(--border)}
+.cal-week-sub .v{font-family:var(--mono);font-size:11px;text-transform:none;letter-spacing:-.2px}
+.cal-breakdown-more{width:100%;margin-top:10px;padding:9px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font)}
+.cal-breakdown-more:active{transform:scale(.98)}
 /* ── Yearly Performance grid (Calendar tab, Year/All Time filters) ── */
 .yp-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -14px;padding:0 14px}
 .yp-grid{display:grid;grid-template-columns:50px repeat(13,72px);gap:6px;width:max-content}
 .yp-ycell{position:sticky;left:0;background:var(--surface);z-index:2;display:flex;align-items:center;font-weight:800;color:var(--text2);font-size:13px}
 .yp-mcell{border:1px solid var(--border);border-radius:10px;padding:8px 4px;text-align:center;min-height:50px;display:flex;flex-direction:column;justify-content:center;gap:2px;cursor:pointer;transition:transform .1s}
 .yp-mcell:active{transform:scale(.96)}
-.yp-mcell.yp-win{background:var(--accent-dim);border-color:var(--accent-glow)}
-.yp-mcell.yp-loss{background:var(--red-dim);border-color:rgba(244,63,94,0.28)}
+.yp-mcell.yp-win{background:rgba(0,229,160,0.13);border-color:rgba(0,229,160,0.3)}
+.yp-mcell.yp-loss{background:rgba(244,63,94,0.13);border-color:rgba(244,63,94,0.28)}
+.yp-mcell.yp-current{border-color:var(--accent)!important}
 .yp-mcell.yp-empty{opacity:.4;cursor:default}
 .yp-mcell.yp-total{background:var(--surface2);border-color:var(--border2)}
 .yp-mcell.yp-label{border-color:transparent;background:none;min-height:auto;padding:0 4px 4px;font-size:11px;font-weight:700;color:var(--text3);cursor:default}
@@ -721,6 +799,63 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
    browser default chrome, which stayed dark in light mode. */
 :root{color-scheme:dark}
 [data-theme="light"]{color-scheme:light}
+
+/* ── Background scroll lock ──
+   Any open overlay (modal / peek / lightbox) freezes the page behind it.
+   position:fixed rather than overflow:hidden on body, because iOS Safari
+   ignores overflow:hidden there and keeps rubber-band scrolling the page. */
+body.scroll-locked{position:fixed;left:0;right:0;width:100%;overflow:hidden}
+
+/* ── Customizable widget board (Metrics tab) ──
+   Every direct child of #widgetBoard carrying data-widget is a widget the
+   user can hide or reorder. Chrome (grip + name + remove) is injected only
+   while edit mode is on, so normal reading mode stays untouched. */
+#widgetBoard{position:relative}
+#widgetBoard > [data-widget].wb-hidden{display:none}
+.wb-add-tile{display:none}
+#widgetBoard.wb-edit .wb-add-tile{display:block;width:100%;border:1.5px dashed var(--border2);background:var(--surface2);color:var(--text2);border-radius:var(--radius);padding:16px;font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;margin-bottom:24px}
+#widgetBoard.wb-edit > [data-widget]{position:relative;padding-top:44px;border-style:dashed}
+#widgetBoard.wb-edit > [data-widget] > *:not(.wb-chrome){pointer-events:none}
+#widgetBoard.wb-edit > [data-widget].widget-kpi{border:1.5px dashed var(--border2);border-radius:var(--radius);padding:44px 10px 2px}
+.wb-chrome{position:absolute;top:0;left:0;right:0;height:36px;display:flex;align-items:center;gap:6px;padding:0 8px;background:var(--surface2);border-bottom:1px solid var(--border);border-radius:var(--radius) var(--radius) 0 0;z-index:3}
+.wb-grip{cursor:grab;touch-action:none;font-size:16px;line-height:1;color:var(--text3);padding:6px}
+.wb-name{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--text2);flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.wb-remove{width:24px;height:24px;border-radius:50%;border:1px solid var(--border2);background:var(--surface);color:var(--red);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+#widgetBoard > [data-widget].wb-dragging{opacity:.55;pointer-events:none}
+.wb-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)}
+.wb-row:last-child{border-bottom:none}
+.wb-row-name{flex:1;font-size:13px;font-weight:600;color:var(--text)}
+.wb-row.off .wb-row-name{color:var(--text3)}
+.wb-arrow{width:28px;height:28px;border-radius:var(--radius-xs);border:1px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:12px;flex-shrink:0}
+.wb-arrow:disabled{opacity:.35;cursor:default}
+.wb-toggle{width:44px;height:25px;border-radius:13px;border:1px solid var(--border2);background:var(--surface2);position:relative;cursor:pointer;flex-shrink:0;transition:background .16s,border-color .16s}
+.wb-toggle::after{content:'';position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;background:var(--text3);transition:transform .16s,background .16s}
+.wb-toggle.on{background:var(--accent-dim);border-color:var(--accent)}
+.wb-toggle.on::after{transform:translateX(19px);background:var(--accent)}
+/* Picker list: add/remove only (ordering lives on the board itself, where
+   hidden widgets aren't in the way), so rows are just name + switch. */
+.wb-row-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.wb-row-txt{flex:1;min-width:0}
+.wb-picker-note{font-size:12px;color:var(--text3);margin:-12px 0 12px;line-height:1.5}
+/* Drag: the lifted card is taken out of flow and follows the pointer, while
+   a placeholder of the same height holds the slot it would drop into. The
+   slot is recomputed from sibling midpoints on every move, so it reorders as
+   soon as the pointer passes a neighbour's centre — not only once the card
+   physically overlaps it. */
+.wb-placeholder{border:1.5px dashed var(--accent);border-radius:var(--radius);background:var(--accent-dim);margin-bottom:24px;box-sizing:border-box}
+#widgetBoard > [data-widget].wb-dragging{position:fixed;z-index:60;pointer-events:none;margin:0;opacity:.95;box-shadow:0 18px 40px rgba(0,0,0,.45);transform:scale(1.015);transition:none}
+body.wb-dragging-body{user-select:none;-webkit-user-select:none}
+/* Widget size — desktop/tablet only. Two-column grid; a widget is full width
+   unless the user sets it to half. Phones stay single column. */
+.wb-size{display:none;width:24px;height:24px;border-radius:var(--radius-xs);border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:11px;cursor:pointer;align-items:center;justify-content:center;flex-shrink:0}
+@media(min-width:900px){
+  #widgetBoard{display:grid;grid-template-columns:1fr 1fr;column-gap:16px;align-items:start}
+  #widgetBoard > [data-widget]{grid-column:span 2}
+  #widgetBoard > [data-widget][data-size="half"]{grid-column:span 1}
+  #widgetBoard > .wb-add-tile,#widgetBoard > .wb-placeholder{grid-column:span 2}
+  #widgetBoard.wb-edit .wb-size{display:flex}
+}
+
 html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
 *{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
 ::-webkit-scrollbar{width:3px;height:3px}
@@ -907,20 +1042,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
     <button class="btn-sm accent" id="calFilter-month"  onclick="setCalFilter('month')"  style="flex-shrink:0">Month</button>
     <button class="btn-sm" id="calFilter-year"   onclick="setCalFilter('year')"   style="flex-shrink:0">Year</button>
     <button class="btn-sm" id="calFilter-all"    onclick="setCalFilter('all')"    style="flex-shrink:0">All Time</button>
-    <button class="btn-sm" id="calFilter-custom" onclick="setCalFilter('custom')" style="flex-shrink:0">📅 Custom</button>
+    <button class="btn-sm" id="calFilter-custom" onclick="calCustomTap()" style="flex-shrink:0;display:flex;align-items:center;gap:6px" aria-label="Custom date range"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg><span id="calFilterCustomLabel">Custom</span></button>
   </div>
-  <div id="calCustomRangeRow" style="display:none;margin-bottom:14px">
-    <div class="filter-row" style="margin-bottom:8px">
-      <div>
-        <div class="filter-label">From Date</div>
-        <input type="date" class="filter-select" id="calCustomFrom" onchange="applyCalCustomRange()" style="padding:7px 9px"/>
-      </div>
-      <div>
-        <div class="filter-label">To Date</div>
-        <input type="date" class="filter-select" id="calCustomTo" onchange="applyCalCustomRange()" style="padding:7px 9px"/>
-      </div>
-    </div>
-  </div>
+  <div class="range-note" id="calRangeNote" style="display:none"></div>
   <div id="calMonthView">
     <div class="cal-nav">
       <div class="cal-nav-btn" onclick="calNav(-1)">‹</div>
@@ -946,6 +1070,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
       <div class="cal-wk-label-head"></div>
       <div class="cal-dow">MON</div><div class="cal-dow">TUE</div><div class="cal-dow">WED</div>
       <div class="cal-dow">THU</div><div class="cal-dow">FRI</div><div class="cal-dow">SAT</div><div class="cal-dow">SUN</div>
+      <div class="cal-dow cal-week-total">WEEK</div>
     </div>
     <div class="cal-grid" id="calGrid"></div>
   </div>
@@ -1195,25 +1320,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
 </div>
 
 <!-- ══ TAB: Stats ══ -->
-<div id="tabStats" class="tab">
-  <!-- Time period filter. "Custom" is the same kind of control as the other
-       four — it just gets its bounds from customRange (set in the date-range
-       modal) instead of from the calendar math in _calendarBounds(). -->
-  <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px">
-    <button class="btn-sm" id="statFilter-week"  onclick="setStatFilter('week')"  style="flex-shrink:0">Week</button>
-    <button class="btn-sm" id="statFilter-month" onclick="setStatFilter('month')" style="flex-shrink:0">Month</button>
-    <button class="btn-sm" id="statFilter-year"  onclick="setStatFilter('year')"  style="flex-shrink:0">Year</button>
-    <button class="btn-sm accent" id="statFilter-all" onclick="setStatFilter('all')" style="flex-shrink:0">All Time</button>
-    <button class="btn-sm" id="statFilter-custom" onclick="openRangeModal()" style="flex-shrink:0;display:flex;align-items:center;gap:6px" aria-label="Custom date range"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg><span id="statFilterCustomLabel">Custom</span></button>
-  </div>
-  <div class="range-note" id="statRangeNote" style="display:none"></div>
-
-  <!-- Custom date range modal. One shared range object (customRange) backs
-       both the tab-wide filter and the Balance card's calendar button, so
-       "custom" always means the same two dates everywhere in the tab. -->
+  <!-- Custom date range modal. Shared by the Metrics tab (customRange — also
+       backs the Balance card) and the Calendar tab (calCustomRange). Which
+       one Apply/Clear writes to is decided by _rangeTarget, set by
+       openRangeModal(target). Lives outside the tabs so either can open it. -->
   <div class="modal-overlay centered" id="rangeModal" onclick="closeOnOverlay(event)">
     <div class="modal">
-      <div class="modal-title">Custom date range</div>
+      <div class="modal-title" id="rangeModalTitle">Custom date range</div>
       <div style="display:flex;gap:10px">
         <div class="form-group" style="flex:1">
           <label class="form-label">From</label>
@@ -1236,26 +1349,45 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
       </div>
     </div>
   </div>
+<div id="tabStats" class="tab">
+  <!-- Time period filter. "Custom" is the same kind of control as the other
+       four — it just gets its bounds from customRange (set in the date-range
+       modal) instead of from the calendar math in _calendarBounds(). -->
+  <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px">
+    <button class="btn-sm" id="statFilter-week"  onclick="setStatFilter('week')"  style="flex-shrink:0">Week</button>
+    <button class="btn-sm" id="statFilter-month" onclick="setStatFilter('month')" style="flex-shrink:0">Month</button>
+    <button class="btn-sm" id="statFilter-year"  onclick="setStatFilter('year')"  style="flex-shrink:0">Year</button>
+    <button class="btn-sm accent" id="statFilter-all" onclick="setStatFilter('all')" style="flex-shrink:0">All Time</button>
+    <button class="btn-sm" id="statFilter-custom" onclick="openRangeModal()" style="flex-shrink:0;display:flex;align-items:center;gap:6px" aria-label="Custom date range"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg><span id="statFilterCustomLabel">Custom</span></button>
+  </div>
+  <div class="range-note" id="statRangeNote" style="display:none"></div>
 
-
-
+  <!-- KPI section: hero pair + rows (see paintStatCards) -->
   <!-- KPI section: hero pair + rows (see paintStatCards) -->
    <div class="stat-view-bar">
      <span class="stat-view-title">Performance</span>
+     <button class="btn-sm" id="wbEditBtn" onclick="toggleWidgetEdit()" style="display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span id="wbEditBtnLabel">Customize</span></button>
    </div>
+   <!-- Widget board: every direct child carrying data-widget is a user-
+        toggleable, user-reorderable widget. Order/visibility live in
+        widgetPrefs (localStorage + CloudStorage) and are applied by
+        applyWidgetPrefs() at the top of renderStats(). -->
+   <div id="widgetBoard">
+   <div class="stats-panel widget-kpi" data-widget="kpi" data-widget-label="Performance KPIs">
    <!-- Hero pair (Win Rate + Total P&L) -->
    <div class="stat-grid" id="statGrid"></div>
    <!-- Remaining KPIs as quiet rows in one card -->
    <div id="streakDrawdownGrid" style="margin-bottom:24px"></div>
+   </div>
 
   <!-- Panel: "This month" strip — a quick current-month glance without
        duplicating the full Calendar tab (which already owns the day-by-day
        P&L grid). Always shows the real calendar month regardless of the
        tab-wide period filter above; "View calendar" jumps to the real tab. -->
-  <div class="card stats-panel" id="monthStripCard"></div>
+  <div class="card stats-panel" data-widget="monthStrip" data-widget-label="This Month" id="monthStripCard"></div>
 
   <!-- Trade-by-trade performance cards -->
-  <div class="card stats-panel">
+  <div class="card stats-panel" data-widget="balance" data-widget-label="Balance &amp; Equity Curve">
     <div>
       <!-- Balance header: real dollar balance (starting balance + trades + ledger),
            badge is TRADING performance only (excludes deposits/withdrawals) so a
@@ -1320,28 +1452,49 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
       <div class="balance-chart-scroll" id="balanceChartScroll"><div class="balance-chart-inner" id="balanceChartInner"><canvas id="equityChart" height="210"></canvas></div></div>
     </div>
   </div>
+  <!-- Panel: Daily P&L — per-day net result, separate from P&L per Trade
+       (per-trade, trade order) which answers a different question. See
+       renderDailyPnlWidget(). -->
+  <div class="card stats-panel" data-widget="dailyPnl" data-widget-label="Daily P&amp;L">
+    <div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Daily P&amp;L</div>
+    <div id="dailyPnlWidget"></div>
+  </div>
   <!-- Panel: Drawdown — peak-to-trough excursions on the same P&L basis as
        the "Max Drawdown" KPI row above (see renderDrawdownChart()), so the
        headline number and this chart never disagree. -->
-  <div class="card stats-panel">
+  <div class="card stats-panel" data-widget="drawdown" data-widget-label="Drawdown">
     <div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>Drawdown</div>
     <div id="drawdownSummary" style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px"></div>
     <div id="drawdownChart"></div>
+  </div>
+  <!-- Panel: Long vs Short — direction split by t.dir. Identity colour
+       (green=Long, red=Short) is deliberately kept off the P&L figure and
+       the win-rate track — those are outcomes, not identities. See
+       renderLongShortWidget(). -->
+  <div class="card stats-panel" data-widget="longShort" data-widget-label="Long vs Short">
+    <div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 11 21 7 17 3"/><line x1="21" y1="7" x2="9" y2="7"/><polyline points="7 13 3 17 7 21"/><line x1="3" y1="17" x2="15" y2="17"/></svg>Long vs Short</div>
+    <div id="longShortWidget"></div>
   </div>
   <!-- Panel: Symbols traded donut — replaces the old Pair Performance
        progress-bar block. Trade-distribution only (no P&L) since the table
        right below carries the profitability numbers; keeping them separate
        is what let the donut stay clean like the reference instead of
        cramming everything into one widget. -->
-  <div class="card stats-panel" id="symbolsCard" style="position:relative">
+  <div class="card stats-panel" data-widget="symbols" data-widget-label="Symbols Traded" id="symbolsCard" style="position:relative">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
       <div>
         <div class="chart-title" style="margin-bottom:2px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 9 9"/></svg>Symbols Traded</div>
         <div style="font-size:22px;font-weight:800;color:var(--text)" id="symbolsCount">0</div>
       </div>
-      <div class="mini-popover-trigger-wrap">
-        <button class="btn-sm" onclick="event.stopPropagation();toggleMiniPopover('symbolsFilterPanel')" style="display:flex;align-items:center;gap:6px" id="symbolsFilterBtn">All</button>
-        <div class="mini-popover-panel" id="symbolsFilterPanel" onclick="event.stopPropagation()"></div>
+      <div class="sym-head-ctl">
+        <div class="mini-popover-trigger-wrap">
+          <button class="btn-sm" onclick="event.stopPropagation();toggleMiniPopover('symbolsFilterPanel')" style="display:flex;align-items:center;gap:6px" id="symbolsFilterBtn">All</button>
+          <div class="mini-popover-panel" id="symbolsFilterPanel" onclick="event.stopPropagation()"></div>
+        </div>
+        <div class="mini-popover-trigger-wrap">
+          <button class="btn-sm" onclick="event.stopPropagation();toggleMiniPopover('pairColPanel')" aria-label="Choose columns" style="width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="5" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.2" fill="currentColor" stroke="none"/></svg></button>
+          <div class="mini-popover-panel" id="pairColPanel" onclick="event.stopPropagation()"></div>
+        </div>
       </div>
     </div>
     <!-- minmax(0,104px) rather than a fixed 104px: on a 375px screen the two
@@ -1357,36 +1510,87 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
          near the card edge, sits above the finger on touch. Positioned by
          symTipMove(); content set in draw(). -->
     <div id="symbolsTip" class="symbols-tip" style="display:none"></div>
-  </div>
-
-  <!-- Panel: Pair performance table — replaces the old progress-bar rows -->
-  <div class="card stats-panel">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div class="chart-title" style="margin-bottom:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>Pair Performance Table</div>
-      <div class="mini-popover-trigger-wrap">
-        <button class="btn-sm" onclick="event.stopPropagation();toggleMiniPopover('pairColPanel')" aria-label="Choose columns" style="width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="5" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.2" fill="currentColor" stroke="none"/></svg></button>
-        <div class="mini-popover-panel" id="pairColPanel" onclick="event.stopPropagation()"></div>
-      </div>
+    <!-- Pair Performance table, folded into this card (was its own widget).
+         Collapsed by default; toggled by toggleSymPairTable(). -->
+    <button class="expander" id="symPairExpander" onclick="toggleSymPairTable()">Show pair performance table<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+    <div id="symPairTableWrap" style="display:none;margin-top:10px">
+      <div class="symtable-scroll"><table class="symtable" id="pairTable"></table></div>
     </div>
-    <div class="symtable-scroll"><table class="symtable" id="pairTable"></table></div>
   </div>
 
-  <div class="card stats-panel"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="14" width="4" height="7"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="11" width="4" height="10"/></svg>R-Multiple Distribution</div><div id="rHistogram"></div></div>
+  <!-- Panel: Trade Distribution — 3-in-1 (Wins/Losses/Break-even). Open is
+       held out until there's a real status field on the trade — see
+       renderTradeDistributionWidget(). -->
+  <div class="card stats-panel" data-widget="tradeDistribution" data-widget-label="Trade Distribution">
+    <div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Trade Distribution</div>
+    <div id="tradeDistributionWidget"></div>
+  </div>
+
+  <div class="card stats-panel" data-widget="rmultiple" data-widget-label="R-Multiple Distribution"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="14" width="4" height="7"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="11" width="4" height="10"/></svg>R-Multiple Distribution</div><div id="rHistogram"></div></div>
 
 
-  <div class="card stats-panel">
+  <div class="card stats-panel" data-widget="winBySetup" data-widget-label="Win Rate by Setup">
     <div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg>Win Rate by Setup</div><div class="setup-chip-row" id="setupChipRow"></div><div id="winBySetup"></div>
   </div>
 
-  <div class="card stats-panel"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>P&amp;L per Trade</div><div id="pnlSetupNote" class="setup-focus-note"></div><div id="pnlBars"></div></div>
+  <div class="card stats-panel" data-widget="pnlPerTrade" data-widget-label="P&amp;L per Trade"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>P&amp;L per Trade</div><div id="pnlSetupNote" class="setup-focus-note"></div><div id="pnlBars"></div></div>
   <!-- Panel: Duration vs Result — only plots trades with both entry+close
        time AND a set risk amount (needs both tradeDurationMinutes() and
        calcR() to return a value); see renderDurationScatter(). -->
-  <div class="card stats-panel">
+  <div class="card stats-panel" data-widget="duration" data-widget-label="Duration vs Result">
     <div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>Duration vs Result</div>
     <div id="durationScatterCard"></div>
   </div>
 
+
+  <!-- Day and session breakdowns -->
+  <div class="card stats-panel" data-widget="daySession" data-widget-label="Day &amp; Session Breakdown">
+    <div class="stats-subsection"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Best Day of Week</div><div id="dowBreakdown"></div></div>
+    <div class="stats-subsection" style="margin-bottom:0"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>Session Performance</div><div id="sessionBreakdown"></div></div>
+  </div>
+
+  <!-- Panel: Hour of Day — finer cut than Session, from the same t.time
+       field. No broker dependency. See renderHourOfDayWidget(). -->
+  <div class="card stats-panel" data-widget="hourOfDay" data-widget-label="Hour of Day">
+    <div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Hour of Day</div>
+    <div id="hourOfDayWidget"></div>
+  </div>
+
+  <!-- Panel: Rule Adherence — win rate when every checklist category was
+       filled in vs. partial/skipped, using the same 7 CL_KEYS categories as
+       the Trade/Pre-Trade checklist. See renderRuleAdherence(). -->
+  <div class="card stats-panel" data-widget="ruleAdherence" data-widget-label="Rule Adherence">
+    <div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>Rule Adherence</div>
+    <div id="ruleAdherence"></div>
+  </div>
+
+  <!-- Panel: Recent Trades — a way out of the aggregate charts, straight to
+       a single trade. Reuses openPeek() (Trade Detail). See
+       renderRecentTradesWidget(). -->
+  <div class="card stats-panel" data-widget="recentTrades" data-widget-label="Recent Trades">
+    <div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Recent Trades</div>
+    <div id="recentTradesWidget"></div>
+  </div>
+
+  <!-- Panel: Monthly Goal — always the real current calendar month
+       (independent of the Stats period filter), same monthlyGoals map the
+       Calendar tab's own goal bar reads/writes. Hidden until a goal is set.
+       See renderMonthlyGoalWidget(). -->
+  <div class="card stats-panel wb-goal-empty" data-widget="monthlyGoal" data-widget-label="Monthly Goal" id="monthlyGoalWidgetCard">
+    <div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg><span id="monthlyGoalTitle">Monthly Goal</span><span class="spacer" style="flex:1"></span><span class="btn-sm" onclick="openGoalEdit()" style="cursor:pointer">Edit</span></div>
+    <div id="monthlyGoalWidget"></div>
+  </div>
+
+  <!-- Panel 3: individual trade highlights — kept separate since it's a
+       highlight list, not an aggregate breakdown like Panel 2's contents -->
+  <div class="card stats-panel" data-widget="bestWorst" data-widget-label="Best &amp; Worst Trades"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4"/><path d="M17 4H7v6a5 5 0 0 0 10 0V4z"/><path d="M7 4H4.5A1.5 1.5 0 0 0 3 5.5v.5a3 3 0 0 0 3 3M17 4h2.5A1.5 1.5 0 0 1 21 5.5v.5a3 3 0 0 1-3 3"/></svg>Best & Worst Trades</div><div id="bestWorst"></div></div>
+  <!-- Add-widget tile: only visible in edit mode -->
+  <button class="wb-add-tile" onclick="openWidgetPicker()">＋ Add widget</button>
+  </div><!-- /#widgetBoard -->
+</div>
+
+<!-- Moved out of #widgetBoard: the board is a CSS grid on wide screens,
+     so only widget cards should be its children. -->
   <!-- Deposit/Withdrawal ledger modal — manual entries only. Prop-firm payouts
        (propFirms[].payouts[]) show here read-only when the current account is
        linked, so a funded account's payout never needs logging twice. -->
@@ -1421,25 +1625,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
       <div id="ledgerEntryList" style="margin-top:16px"></div>
     </div>
   </div>
-
-  <!-- Day and session breakdowns -->
-  <div class="card stats-panel">
-    <div class="stats-subsection"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Best Day of Week</div><div id="dowBreakdown"></div></div>
-    <div class="stats-subsection" style="margin-bottom:0"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>Session Performance</div><div id="sessionBreakdown"></div></div>
-  </div>
-
-  <!-- Panel: Rule Adherence — win rate when every checklist category was
-       filled in vs. partial/skipped, using the same 7 CL_KEYS categories as
-       the Trade/Pre-Trade checklist. See renderRuleAdherence(). -->
-  <div class="card stats-panel">
-    <div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>Rule Adherence</div>
-    <div id="ruleAdherence"></div>
-  </div>
-
-  <!-- Panel 3: individual trade highlights — kept separate since it's a
-       highlight list, not an aggregate breakdown like Panel 2's contents -->
-  <div class="card stats-panel"><div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4"/><path d="M17 4H7v6a5 5 0 0 0 10 0V4z"/><path d="M7 4H4.5A1.5 1.5 0 0 0 3 5.5v.5a3 3 0 0 0 3 3M17 4h2.5A1.5 1.5 0 0 1 21 5.5v.5a3 3 0 0 1-3 3"/></svg>Best & Worst Trades</div><div id="bestWorst"></div></div>
-</div>
 
 <!-- ══ TAB: Settings ══ -->
 <div id="tabSettings" class="tab">
@@ -1865,10 +2050,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
      Swipe a row left to reveal Edit (see _swipeStart/_swipeMove/_swipeEnd),
      which reuses this same acctModal in edit mode rather than duplicating
      the rename/balance form. ══ -->
-<div class="modal-overlay" id="switchAcctModal" onclick="closeOnOverlay(event)">
+<div class="modal-overlay centered" id="switchAcctModal" onclick="closeOnOverlay(event)">
   <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Switch Account</div>
+        <div class="modal-title">Switch Account</div>
     <div id="switchAcctList"></div>
     <button class="btn btn-primary" style="margin-top:4px" onclick="closeSwitchAcctModal();openAddAccount();">＋ Add Account</button>
   </div>
@@ -2110,10 +2294,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
 </div>
 
 <!-- ══ Skip Reason Modal ══ -->
-<div class="modal-overlay" id="skipReasonModal" onclick="closeOnOverlay(event)">
+<div class="modal-overlay centered" id="skipReasonModal" onclick="closeOnOverlay(event)">
   <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Why skipped?</div>
+        <div class="modal-title">Why skipped?</div>
     <div style="display:flex;flex-direction:column;gap:8px">
       <button class="btn btn-ghost" onclick="confirmSkipPreTrade('Missed Entry')" style="text-align:left">Missed Entry</button>
       <button class="btn btn-ghost" onclick="confirmSkipPreTrade('Invalidated')" style="text-align:left">Invalidated</button>
@@ -2124,10 +2307,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
 </div>
 
 <!-- ══ Goal Edit Modal ══ -->
-<div class="modal-overlay" id="goalModal" onclick="closeOnOverlay(event)">
+<div class="modal-overlay centered" id="goalModal" onclick="closeOnOverlay(event)">
   <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Monthly Goal</div>
+        <div class="modal-title">Monthly Goal</div>
     <div class="form-group">
       <label class="form-label">Target P&L ($)</label>
       <input class="form-input" id="goalInput" type="number" step="any" placeholder="e.g. 5000"/>
@@ -2244,14 +2426,27 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
 </div>
 
 <!-- ══ Confirm Dialog Modal ══ -->
-<div class="modal-overlay" id="confirmModal">
+<div class="modal-overlay centered" id="confirmModal">
   <div class="modal" style="padding:22px 18px 28px">
-    <div class="modal-handle"></div>
     <div style="font-size:18px;font-weight:800;margin-bottom:10px;letter-spacing:-.3px" id="confirmTitle">Remove option?</div>
     <div style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:22px" id="confirmMsg"></div>
     <div style="display:flex;gap:10px">
       <button class="btn btn-danger" id="confirmOkBtn" style="flex:1">Remove</button>
       <button class="btn btn-ghost" onclick="closeConfirmModal()" style="flex:1">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Widget Picker — add/remove Metrics widgets. Centered pop-up (short
+     list + toggles), same family as the other quick decision pop-ups. ══ -->
+<div class="modal-overlay centered" id="widgetPickerModal" onclick="closeOnOverlay(event)">
+  <div class="modal">
+    <div class="modal-title">Dashboard widgets</div>
+    <div class="wb-picker-note"><span id="widgetPickerCount"></span> · reorder by dragging ⠿ on the board while Customize is on.</div>
+    <div id="widgetPickerList"></div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn-sm" style="flex:1" onclick="resetWidgets()">Reset</button>
+      <button class="btn btn-primary" style="flex:2;margin:0" onclick="closeWidgetPicker()">Done</button>
     </div>
   </div>
 </div>
@@ -4609,10 +4804,347 @@ function createFirstAccount(){
 // never un-collapse a bar the user deliberately swiped away, and swiping
 // should never fight a modal that's currently covering the screen.
 let navSwiped = false;
+// ═══════════════════════════════════════════════════════════════════
+// Background scroll lock
+// Overlays are opened/closed from dozens of call sites, so instead of
+// patching each one we watch for .open class changes and derive the lock
+// from "is any overlay open right now". iOS needs position:fixed (it
+// ignores overflow:hidden on body), so the scroll offset is saved and
+// restored to avoid the page jumping to the top on close.
+// ═══════════════════════════════════════════════════════════════════
+let _scrollLockY = 0, _scrollLocked = false;
+function anyOverlayOpen(){
+  return !!document.querySelector('.modal-overlay.open, .peek-overlay.open, .peek-panel.open, .lightbox.open');
+}
+function syncScrollLock(){
+  const want = anyOverlayOpen();
+  if(want === _scrollLocked) return;
+  if(want){
+    _scrollLockY = window.scrollY || document.documentElement.scrollTop || 0;
+    document.body.style.top = (-_scrollLockY) + 'px';
+    document.body.classList.add('scroll-locked');
+    _scrollLocked = true;
+  } else {
+    document.body.classList.remove('scroll-locked');
+    document.body.style.top = '';
+    _scrollLocked = false;
+    window.scrollTo(0, _scrollLockY);
+  }
+}
+(function initScrollLock(){
+  const start = ()=>{
+    try{
+      new MutationObserver(syncScrollLock).observe(document.body, {subtree:true, attributes:true, attributeFilter:['class']});
+    }catch(e){}
+    syncScrollLock();
+  };
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+})();
+
+// ═══════════════════════════════════════════════════════════════════
+// Customizable widget board (Metrics tab)
+// widgetPrefs = { order:[widgetId], hidden:[widgetId] }. The widget set
+// itself is read from the DOM ([data-widget] children of #widgetBoard),
+// so adding a new panel to the markup automatically makes it a widget —
+// no registry to keep in sync. Unknown/removed ids in prefs are ignored,
+// and widgets missing from `order` fall back to DOM order.
+// ═══════════════════════════════════════════════════════════════════
+let widgetPrefs = { order: [], hidden: [] };
+let wbEditMode = false;
+
+function wbLoadPrefs(){
+  try{
+    const raw = localStorage.getItem('tj_widgetPrefs');
+    if(raw){
+      const pr = JSON.parse(raw);
+      widgetPrefs = {
+        order:  Array.isArray(pr.order)  ? pr.order  : [],
+        hidden: Array.isArray(pr.hidden) ? pr.hidden : [],
+        // sizes: { widgetId: 'half' } — desktop/tablet only, phones ignore it.
+        sizes:  (pr.sizes && typeof pr.sizes === 'object') ? pr.sizes : {},
+      };
+    } else {
+      // Session 21: fresh install only (no saved prefs at all) — seed a few
+      // short, self-contained widgets as half-width so a 1280px board isn't
+      // one long full-width column. Anyone with existing saved prefs is
+      // untouched. Symbols is deliberately NOT paired here even though it
+      // was in the original proposal — now that Pair Performance is folded
+      // into it as an expandable table, it needs full width to hold that
+      // table comfortably.
+      widgetPrefs = {
+        order: [],
+        hidden: [],
+        sizes: {
+          drawdown: 'half', longShort: 'half',
+          winBySetup: 'half', ruleAdherence: 'half',
+          recentTrades: 'half', monthlyGoal: 'half',
+        },
+      };
+    }
+  }catch(e){}
+  if(!widgetPrefs.sizes) widgetPrefs.sizes = {};
+}
+wbLoadPrefs();
+
+// The markup order IS the default order. Captured once, before any prefs are
+// applied, so "Reset" can restore it in place instead of reloading the app —
+// a reload in Telegram means a full re-init (and on the web, the login screen).
+let wbDefaultOrder = null;
+
+function wbSavePrefs(){
+  try{ localStorage.setItem('tj_widgetPrefs', JSON.stringify(widgetPrefs)); }catch(e){}
+  try{ if(window.CS && CS.set) CS.set('widget_prefs', JSON.stringify(widgetPrefs)); }catch(e){}
+}
+function wbAll(){
+  const board = document.getElementById('widgetBoard');
+  return board ? Array.from(board.children).filter(el=>el.hasAttribute('data-widget')) : [];
+}
+function wbLabel(el){ return el.getAttribute('data-widget-label') || el.getAttribute('data-widget'); }
+
+function applyWidgetPrefs(){
+  const board = document.getElementById('widgetBoard');
+  if(!board) return;
+  const els = {};
+  wbAll().forEach(el=>{ els[el.getAttribute('data-widget')] = el; });
+  const ids = Object.keys(els);
+  if(!wbDefaultOrder) wbDefaultOrder = ids.slice();
+  const ordered = [
+    ...widgetPrefs.order.filter(id=>els[id]),
+    ...ids.filter(id=>!widgetPrefs.order.includes(id)),
+  ];
+  ordered.forEach(id=>board.appendChild(els[id]));
+  const tile = board.querySelector('.wb-add-tile');
+  if(tile) board.appendChild(tile);
+  ordered.forEach(id=>{
+    els[id].classList.toggle('wb-hidden', widgetPrefs.hidden.includes(id));
+    if(widgetPrefs.sizes[id] === 'half') els[id].setAttribute('data-size','half');
+    else els[id].removeAttribute('data-size');
+  });
+  board.classList.toggle('wb-edit', wbEditMode);
+}
+function wbWideBoard(){
+  return window.matchMedia('(min-width:900px)').matches;
+}
+
+function toggleWidgetEdit(){
+  wbEditMode = !wbEditMode;
+  const board = document.getElementById('widgetBoard');
+  if(board) board.classList.toggle('wb-edit', wbEditMode);
+  const lbl = document.getElementById('wbEditBtnLabel');
+  if(lbl) lbl.textContent = wbEditMode ? 'Done' : 'Customize';
+  const btn = document.getElementById('wbEditBtn');
+  if(btn) btn.classList.toggle('accent', wbEditMode);
+  if(wbEditMode){
+    wbBuildChrome();
+    showToast(wbWideBoard() ? 'Drag ⠿ to reorder · ⬌ for half width · ✕ to remove'
+                            : 'Drag ⠿ to reorder · ✕ to remove');
+  }
+  else wbClearChrome();
+}
+
+function wbBuildChrome(){
+  wbAll().forEach(el=>{
+    if(el.querySelector('.wb-chrome')) return;
+    const id = el.getAttribute('data-widget');
+    const c = document.createElement('div');
+    c.className = 'wb-chrome';
+    c.innerHTML = '<span class="wb-grip" title="Drag to reorder">⠿</span>'
+      + '<span class="wb-name"></span>'
+      + '<button class="wb-size" title="Toggle width" aria-label="Toggle widget width">⬌</button>'
+      + '<button class="wb-remove" title="Remove widget" aria-label="Remove widget">✕</button>';
+    c.querySelector('.wb-name').textContent = wbLabel(el);
+    c.querySelector('.wb-remove').addEventListener('click', ev=>{
+      ev.stopPropagation();
+      setWidgetHidden(id, true);
+    });
+    c.querySelector('.wb-size').addEventListener('click', ev=>{
+      ev.stopPropagation();
+      setWidgetSize(id, widgetPrefs.sizes[id] === 'half' ? 'full' : 'half');
+    });
+    wbAttachDrag(c.querySelector('.wb-grip'), el);
+    el.appendChild(c);
+  });
+}
+function wbClearChrome(){
+  document.querySelectorAll('#widgetBoard .wb-chrome').forEach(c=>c.remove());
+}
+
+// Pointer-based drag so one code path covers mouse and touch.
+// The dragged card is lifted out of flow (position:fixed, following the
+// pointer) and a placeholder of the same size holds its slot. On every move
+// the drop slot is recomputed from the *midpoints of the remaining siblings*
+// rather than from whatever sits under the pointer, so the order updates the
+// moment the pointer crosses a neighbour's centre — including upwards, and
+// without the card having to fully overlap the neighbour.
+function wbAttachDrag(handle, el){
+  handle.addEventListener('pointerdown', e=>{
+    e.preventDefault(); e.stopPropagation();
+    const board = el.parentNode;
+    const pid = e.pointerId;
+    const rect = el.getBoundingClientRect();
+    const grabX = e.clientX - rect.left;
+    const grabY = e.clientY - rect.top;
+
+    const ph = document.createElement('div');
+    ph.className = 'wb-placeholder';
+    ph.style.height = rect.height + 'px';
+    if(el.getAttribute('data-size') === 'half') ph.setAttribute('data-size','half');
+    board.insertBefore(ph, el);
+
+    el.classList.add('wb-dragging');
+    document.body.classList.add('wb-dragging-body');
+    el.style.width  = rect.width + 'px';
+    el.style.height = rect.height + 'px';
+    const place = (x, y)=>{
+      el.style.left = (x - grabX) + 'px';
+      el.style.top  = (y - grabY) + 'px';
+    };
+    place(e.clientX, e.clientY);
+
+    const reslot = (y)=>{
+      // Siblings still in flow (placeholder excluded, hidden widgets excluded).
+      const sibs = Array.from(board.children).filter(n=>
+        n !== el && n !== ph && n.hasAttribute('data-widget') && !n.classList.contains('wb-hidden'));
+      let target = null;
+      for(const s of sibs){
+        const r = s.getBoundingClientRect();
+        if(y < r.top + r.height / 2){ target = s; break; }
+      }
+      if(target){ if(ph.nextSibling !== target) board.insertBefore(ph, target); }
+      else {
+        const last = sibs[sibs.length - 1];
+        if(last && ph.previousSibling !== last) board.insertBefore(ph, last.nextSibling);
+      }
+    };
+
+    let raf = 0, lastY = e.clientY;
+    const autoScroll = ()=>{
+      raf = 0;
+      const pad = 90;
+      let dy = 0;
+      if(lastY < pad) dy = -Math.min(18, (pad - lastY) / 4 + 4);
+      else if(lastY > window.innerHeight - pad) dy = Math.min(18, (lastY - (window.innerHeight - pad)) / 4 + 4);
+      if(dy){
+        window.scrollBy(0, dy);
+        reslot(lastY);
+        raf = requestAnimationFrame(autoScroll);
+      }
+    };
+
+    const move = ev=>{
+      if(ev.pointerId !== undefined && ev.pointerId !== pid) return;
+      lastY = ev.clientY;
+      place(ev.clientX, ev.clientY);
+      reslot(ev.clientY);
+      if(!raf) raf = requestAnimationFrame(autoScroll);
+    };
+    const up = ()=>{
+      if(raf) cancelAnimationFrame(raf);
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
+      board.insertBefore(el, ph);
+      ph.remove();
+      el.classList.remove('wb-dragging');
+      document.body.classList.remove('wb-dragging-body');
+      el.style.width = el.style.height = el.style.left = el.style.top = '';
+      // Hidden widgets never move during a drag, so keep their saved slots:
+      // rebuild the order from the board and leave the rest of prefs alone.
+      widgetPrefs.order = wbAll().map(x=>x.getAttribute('data-widget'));
+      wbSavePrefs();
+      const tile = board.querySelector('.wb-add-tile');
+      if(tile) board.appendChild(tile);
+      if(document.getElementById('widgetPickerModal').classList.contains('open')) renderWidgetPicker();
+    };
+    // Listeners live on window, not the handle: the handle can be re-created
+    // by a re-render mid-drag, and pointer capture on it proved unreliable.
+    window.addEventListener('pointermove', move, {passive:false});
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+  });
+}
+
+function setWidgetHidden(id, hidden){
+  const set = new Set(widgetPrefs.hidden);
+  if(hidden) set.add(id); else set.delete(id);
+  widgetPrefs.hidden = Array.from(set);
+  wbSavePrefs();
+  applyWidgetPrefs();
+  // Charts sized while hidden come back with a 0-width canvas, so a widget
+  // coming back on needs a fresh render pass.
+  if(!hidden) renderStats();
+  if(wbEditMode) wbBuildChrome();
+  if(document.getElementById('widgetPickerModal').classList.contains('open')) renderWidgetPicker();
+  showToast(hidden ? 'Widget removed' : 'Widget added');
+}
+// Width is a desktop/tablet affordance; the CSS grid collapses to one column
+// on phones, so a saved 'half' simply has no effect there.
+function setWidgetSize(id, size){
+  if(size === 'half') widgetPrefs.sizes[id] = 'half';
+  else delete widgetPrefs.sizes[id];
+  wbSavePrefs();
+  applyWidgetPrefs();
+  renderStats();           // charts must re-measure at the new width
+  if(wbEditMode) wbBuildChrome();
+  showToast(size === 'half' ? 'Half width' : 'Full width');
+}
+function moveWidget(id, dir){
+  // Steps over *visible* widgets only, so a hidden neighbour can never make
+  // a move look like it did nothing.
+  const ids = wbAll().filter(el=>!el.classList.contains('wb-hidden')).map(el=>el.getAttribute('data-widget'));
+  const i = ids.indexOf(id), j = i + dir;
+  if(i < 0 || j < 0 || j >= ids.length) return;
+  ids.splice(j, 0, ids.splice(i, 1)[0]);
+  const hiddenIds = wbAll().map(el=>el.getAttribute('data-widget')).filter(x=>!ids.includes(x));
+  widgetPrefs.order = ids.concat(hiddenIds);
+  wbSavePrefs();
+  applyWidgetPrefs();
+  if(wbEditMode) wbBuildChrome();
+  renderWidgetPicker();
+}
+// Restores the built-in layout in place — no reload, so a Telegram session
+// isn't re-initialised and a web user isn't bounced back to the login screen.
+function resetWidgets(){
+  widgetPrefs = { order: wbDefaultOrder ? wbDefaultOrder.slice() : [], hidden: [], sizes: {} };
+  wbSavePrefs();
+  applyWidgetPrefs();
+  renderStats();
+  if(wbEditMode) wbBuildChrome();
+  renderWidgetPicker();
+  showToast('Default layout restored');
+}
+function openWidgetPicker(){
+  renderWidgetPicker();
+  document.getElementById('widgetPickerModal').classList.add('open');
+  updateNavVisibility();
+}
+function closeWidgetPicker(){
+  document.getElementById('widgetPickerModal').classList.remove('open');
+  updateNavVisibility();
+}
+// Add/remove only: one row per widget, name + switch. Reordering happens on
+// the board itself under Customize, which keeps this list calm to read.
+function renderWidgetPicker(){
+  const els = wbAll();
+  const onCount = els.filter(el=>!widgetPrefs.hidden.includes(el.getAttribute('data-widget'))).length;
+  const cnt = document.getElementById('widgetPickerCount');
+  if(cnt) cnt.textContent = onCount + ' of ' + els.length + ' widgets showing';
+  document.getElementById('widgetPickerList').innerHTML = els.map(el=>{
+    const id = el.getAttribute('data-widget');
+    const on = !widgetPrefs.hidden.includes(id);
+    return '<div class="wb-row' + (on ? '' : ' off') + '">'
+      + '<span class="wb-row-txt"><span class="wb-row-name">' + escapeHtml(wbLabel(el)) + '</span></span>'
+      + '<button class="wb-toggle' + (on ? ' on' : '') + '" onclick="setWidgetHidden(\'' + id + '\',' + (on ? 'true' : 'false') + ')" aria-label="Toggle widget"></button>'
+      + '</div>';
+  }).join('');
+}
+
 function updateNavVisibility(){
   const anyOpen = document.querySelector('.modal-overlay.open') || document.getElementById('peekOverlay').classList.contains('open');
   document.querySelector('.nav').classList.toggle('nav--hidden', !!anyOpen || navSwiped);
   document.getElementById('navCollapsedBtn').classList.toggle('show', navSwiped && !anyOpen);
+  syncScrollLock();
 }
 function collapseNav(){ navSwiped=true; updateNavVisibility(); }
 function expandNav(){ navSwiped=false; updateNavVisibility(); }
@@ -7207,8 +7739,10 @@ document.getElementById('edgeTagInput').addEventListener('keydown',e=>{ if(e.key
 (function initCal(){ const n=new Date(); calYear=n.getFullYear(); calMonth=n.getMonth(); })();
 
 function setCalFilter(f){
+  // Custom with nothing saved yet → open the pop-up; the filter only flips
+  // to 'custom' once a range is applied.
+  if(f==='custom' && !hasCalCustomRange()) return openRangeModal('calendar');
   calFilter=f;
-  // update button styles
   ['week','month','year','all','custom'].forEach(k=>{
     const btn=document.getElementById('calFilter-'+k);
     if(!btn)return;
@@ -7216,42 +7750,27 @@ function setCalFilter(f){
   });
   const monthView=document.getElementById('calMonthView');
   const summaryView=document.getElementById('calSummaryView');
-  const customRow=document.getElementById('calCustomRangeRow');
   if(f==='month'){
-    customRow.style.display='none';
     monthView.style.display='';
     summaryView.style.display='none';
     renderCalendar();
   } else if(f==='custom'){
-    customRow.style.display='';
     monthView.style.display='none';
     summaryView.style.display='';
-    // default range: last 30 days, unless dates already chosen
-    const fromEl=document.getElementById('calCustomFrom');
-    const toEl=document.getElementById('calCustomTo');
-    if(!fromEl.value || !toEl.value){
-      const now=new Date();
-      const past=new Date(now); past.setDate(now.getDate()-29);
-      toEl.value=now.toISOString().slice(0,10);
-      fromEl.value=past.toISOString().slice(0,10);
-    }
     applyCalCustomRange();
   } else {
-    customRow.style.display='none';
     monthView.style.display='none';
     summaryView.style.display='';
     renderCalSummaryView(f);
   }
+  _syncCalRangeUI();
 }
 
+// Re-renders the Calendar custom view from the saved range (also called by
+// the account switcher / data refresh paths when calFilter==='custom').
 function applyCalCustomRange(){
-  const fromEl=document.getElementById('calCustomFrom');
-  const toEl=document.getElementById('calCustomTo');
-  let fromVal=fromEl.value, toVal=toEl.value;
-  if(!fromVal || !toVal) return;
-  // keep range sane if user picks From after To
-  if(fromVal>toVal){ const tmp=fromVal; fromVal=toVal; toVal=tmp; fromEl.value=fromVal; toEl.value=toVal; }
-  renderCalSummaryView('custom', fromVal, toVal);
+  if(!hasCalCustomRange()) return;
+  renderCalSummaryView('custom', calCustomRange.start, calCustomRange.end);
 }
 
 function parseLocalDate(str){
@@ -7295,10 +7814,12 @@ function yearlyPerfGrid(f){
     const monthsArr = map[y] || Array.from({length:12},()=>({pnl:0,count:0}));
     const yearTotal = monthsArr.reduce((s,mo)=>s+mo.pnl,0);
     const yearCount = monthsArr.reduce((s,mo)=>s+mo.count,0);
+    const nowMonth = new Date().getMonth();
     const cells = monthsArr.map((mo,i)=>{
-      if(mo.count===0) return `<div class="yp-mcell yp-empty"><div class="yp-pnl">–</div></div>`;
+      const cur = (y===nowYear && i===nowMonth) ? ' yp-current' : '';
+      if(mo.count===0) return `<div class="yp-mcell yp-empty${cur}"><div class="yp-pnl">–</div></div>`;
       const cls = mo.pnl>=0 ? 'yp-win' : 'yp-loss';
-      return `<div class="yp-mcell ${cls}" onclick="openMonthReportFor(${y},${i})">
+      return `<div class="yp-mcell ${cls}${cur}" onclick="openMonthReportFor(${y},${i})">
         <div class="yp-pnl">${mo.pnl>=0?'+':'-'}${Math.abs(mo.pnl).toFixed(0)}</div>
         <div class="yp-count">${mo.count} trade${mo.count!==1?'s':''}</div>
       </div>`;
@@ -7352,7 +7873,7 @@ function renderCalSummaryView(f, fromVal, toVal){
   const avgLoss=losses.length?Math.abs(losses.reduce((s,t)=>s+parseFloat(t.pnl),0)/losses.length):0;
 
   const fmtShortDate=(s)=>{ const d=parseLocalDate(s); return d?d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):s; };
-  const label={week:'This Week',year:'This Year',all:'All Time',custom:(fromVal&&toVal)?`${fmtShortDate(fromVal)} – ${fmtShortDate(toVal)}`:'Custom Range'}[f];
+  const label={week:'This Week',year:'This Year',all:'All Time',custom:'Custom Range'}[f]; // dates live in the range-note under the filter row
 
   // Group by date for a summary list
   const dayMap={};
@@ -7364,20 +7885,52 @@ function renderCalSummaryView(f, fromVal, toVal){
   });
   const sortedDays=Object.entries(dayMap).sort((a,b)=>b[0].localeCompare(a[0]));
 
-  const dayRows=sortedDays.map(([date,data])=>{
+  // Daily Breakdown: app-style dates, weekly sub-headers on long ranges,
+  // and a 10-row cap with a "Show all" expander (Year/All can run to 200+).
+  const spanDays = sortedDays.length>1 ? (parseLocalDate(sortedDays[0][0])-parseLocalDate(sortedDays[sortedDays.length-1][0]))/86400000 : 0;
+  const useWeeks = spanDays>14;
+  const isoWk=(d)=>{ const x=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); x.setUTCDate(x.getUTCDate()+4-(x.getUTCDay()||7)); const ys=new Date(Date.UTC(x.getUTCFullYear(),0,1)); return x.getUTCFullYear()+'-'+Math.ceil((((x-ys)/86400000)+1)/7); };
+  const weekTotals={};
+  if(useWeeks) sortedDays.forEach(([date,data])=>{ const k=isoWk(parseLocalDate(date)); if(!weekTotals[k]) weekTotals[k]={pnl:0,count:0,first:date,last:date}; weekTotals[k].pnl+=data.pnl; weekTotals[k].count+=data.count; weekTotals[k].last=date; });
+  const fmtDayRow=(s)=>{ const d=parseLocalDate(s); return d?d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+', '+d.toLocaleDateString('en-US',{weekday:'short'}):s; };
+  const fmtMD=(s)=>{ const d=parseLocalDate(s); return d?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):s; };
+  const CAP=10;
+  let visible='', hidden='', lastWk=null;
+  sortedDays.forEach(([date,data],idx)=>{
+    let html='';
+    if(useWeeks){
+      const k=isoWk(parseLocalDate(date));
+      if(k!==lastWk){
+        lastWk=k; const w=weekTotals[k];
+        html+=`<div class="cal-week-sub"><span>Week ${k.split('-')[1]} · ${fmtMD(w.last)} – ${fmtMD(w.first)}</span><span class="v ${w.pnl>=0?'positive':'negative'}">${fmtPnl(w.pnl)}</span></div>`;
+      }
+    }
     const pnl=data.pnl;
-    return `<div class="info-row">
-      <span class="k" style="font-family:var(--mono);font-size:13px">${date}</span>
+    html+=`<div class="info-row">
+      <span class="k" style="font-size:13px;font-weight:600">${fmtDayRow(date)}</span>
       <div style="display:flex;gap:12px;align-items:center">
         <span style="font-size:11px;color:var(--text3)">${data.count} trade${data.count!==1?'s':''}</span>
         <span class="v ${pnl>=0?'positive':'negative'}">${fmtPnl(pnl)}</span>
       </div>
     </div>`;
-  }).join('') || '<div style="color:var(--text3);font-size:14px;padding:12px 0;text-align:center">No trades in this period</div>';
+    if(idx<CAP) visible+=html; else hidden+=html;
+  });
+  const hiddenCount=Math.max(0,sortedDays.length-CAP);
+  const dayRows = sortedDays.length
+    ? visible + (hiddenCount ? `<div id="calBdMore" style="display:none">${hidden}</div><button class="cal-breakdown-more" id="calBdMoreBtn" onclick="toggleCalBreakdown()">Show all ${sortedDays.length} days</button>` : '')
+    : '<div style="color:var(--text3);font-size:14px;padding:12px 0;text-align:center">No trades in this period</div>';
+
+  // Session 21: the ↗ Report button here always opened openMonthReport(),
+  // which renders one calendar month (calYear/calMonth) — mismatched with
+  // "This Year"/"All" as a label. Report stays only on the Month view's own
+  // nav button and the Yearly grid's per-month tap-through
+  // (openMonthReportFor), both of which set the month before opening it.
 
   document.getElementById('calSummaryView').innerHTML=`
-    <div style="margin-bottom:10px;font-size:17px;font-weight:800;letter-spacing:-.3px">${label}</div>
-    <div class="cal-summary-row" style="margin-bottom:14px">
+    <div class="stat-view-bar">
+      <span class="stat-view-title">${label}</span>
+    </div>
+    <div class="cal-summary-row">
       <div class="cal-stat ${totalPnl<0?'red-accent':''}">
         <div class="cal-stat-label">Total P&L</div>
         <div class="cal-stat-value ${totalPnl>=0?'positive':'negative'}">${fmtPnl(totalPnl)}</div>
@@ -7396,11 +7949,28 @@ function renderCalSummaryView(f, fromVal, toVal){
       </div>
     </div>
     ${yearlyPerfGrid(f)}
-    <div class="card" style="padding:12px">
+    <div class="card" style="padding:14px">
       <div class="chart-title" style="margin-bottom:10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Daily Breakdown</div>
       ${dayRows}
     </div>
   `;
+  // Yearly grid: land on the current month instead of Jan–Apr.
+  requestAnimationFrame(()=>{
+    const wrap=document.querySelector('#calSummaryView .yp-wrap');
+    const cur=wrap && wrap.querySelector('.yp-current');
+    if(!wrap || !cur) return;
+    const stickyW=56; // year column + gap
+    const target=cur.offsetLeft - stickyW - Math.max(0,(wrap.clientWidth - stickyW - cur.offsetWidth)/2);
+    wrap.scrollLeft=Math.max(0,target);
+  });
+}
+function toggleCalBreakdown(){
+  const more=document.getElementById('calBdMore'), btn=document.getElementById('calBdMoreBtn');
+  if(!more||!btn) return;
+  const open=more.style.display!=='none';
+  if(!btn.dataset.all) btn.dataset.all=btn.textContent;
+  more.style.display=open?'none':'';
+  btn.textContent=open?btn.dataset.all:'Show less';
 }
 
 function calNav(dir){
@@ -7511,6 +8081,7 @@ function renderCalendar(){
     }
     const wkNum=wkDate?isoWeek(wkDate):'';
     cells+=`<div class="cal-week-num">W${wkNum}</div>`;
+    let wkPnl=0, wkCount=0;
 
     for(let col=0;col<7;col++){
       const slot=row*7+col;
@@ -7520,6 +8091,7 @@ function renderCalendar(){
       }
       const d=slot-startOffset+1;
       const data=dayMap[d], isToday=isCurrentMonth&&today.getDate()===d;
+      if(data){ wkPnl+=data.pnl; wkCount+=data.count; }
       let cls='cal-cell';
       if(isToday) cls+=' today';
       if(data){ cls+=data.pnl>=0?' win-day':' loss-day'; }
@@ -7548,6 +8120,10 @@ function renderCalendar(){
         cells+=`<div class="${cls}"><div class="cal-day-num">${d}</div><div class="cal-dash">—</div></div>`;
       }
     }
+    // Weekly total column (visible ≥900px only, see .cal-week-total)
+    cells+= wkCount
+      ? `<div class="cal-week-total"><div class="cal-week-total-pnl ${wkPnl>=0?'positive':'negative'}">${wkPnl>0?'+':wkPnl<0?'-':''}$${Math.abs(wkPnl).toFixed(0)}</div><div class="cal-week-total-count">${wkCount} trade${wkCount!==1?'s':''}</div></div>`
+      : `<div class="cal-week-total"><div class="cal-dash">—</div></div>`;
   }
   document.getElementById('calGrid').innerHTML=cells;
 }
@@ -7687,9 +8263,22 @@ function _saveCustomRange(){ try{ localStorage.setItem('tj_customRange', JSON.st
 function hasCustomRange(){ return !!(customRange.start && customRange.end); }
 function _fmtRangeDate(s){ const d=s?parseLocalDate(s):null; return d?d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—'; }
 function customRangeLabel(){ return hasCustomRange() ? _fmtRangeDate(customRange.start)+' → '+_fmtRangeDate(customRange.end) : 'Custom'; }
-function openRangeModal(){
+// Calendar tab keeps its own saved range so the two tabs stay independently
+// filtered (as they always were). _rangeTarget records which tab opened the
+// pop-up so Apply / Clear write to the right one.
+let calCustomRange = (()=>{ try{ return JSON.parse(localStorage.getItem('tj_calCustomRange')||'null')||{start:null,end:null}; }catch(e){ return {start:null,end:null}; } })();
+let _rangeTarget='stats';
+function _saveCalCustomRange(){ try{ localStorage.setItem('tj_calCustomRange', JSON.stringify(calCustomRange)); }catch(e){} }
+function hasCalCustomRange(){ return !!(calCustomRange.start && calCustomRange.end); }
+function calCustomRangeLabel(){ return hasCalCustomRange() ? _fmtRangeDate(calCustomRange.start)+' → '+_fmtRangeDate(calCustomRange.end) : 'Custom'; }
+function _rangeFor(target){ return target==='calendar' ? calCustomRange : customRange; }
+function openRangeModal(target){
+  _rangeTarget = target==='calendar' ? 'calendar' : 'stats';
+  const cur=_rangeFor(_rangeTarget);
+  const title=document.getElementById('rangeModalTitle');
+  if(title) title.textContent = _rangeTarget==='calendar' ? 'Calendar date range' : 'Custom date range';
   const s=document.getElementById('rangeStart'), e=document.getElementById('rangeEnd');
-  if(s) s.value=customRange.start||''; if(e) e.value=customRange.end||'';
+  if(s) s.value=cur.start||''; if(e) e.value=cur.end||'';
   const err=document.getElementById('rangeError'); if(err) err.style.display='none';
   document.getElementById('rangeModal').classList.add('open');
 }
@@ -7706,16 +8295,45 @@ function applyCustomRange(){
   const fail=msg=>{ if(err){ err.textContent=msg; err.style.display='block'; } };
   if(!s || !e) return fail('Pick both a start and an end date.');
   if(parseLocalDate(s) > parseLocalDate(e)) return fail('The start date has to come before the end date.');
-  customRange={start:s,end:e}; _saveCustomRange();
   if(err) err.style.display='none';
   closeRangeModal();
-  setStatFilter('custom');
+  if(_rangeTarget==='calendar'){
+    calCustomRange={start:s,end:e}; _saveCalCustomRange();
+    setCalFilter('custom');
+  } else {
+    customRange={start:s,end:e}; _saveCustomRange();
+    setStatFilter('custom');
+  }
   if(typeof showToast==='function') showToast('Date range applied ✓');
 }
-function clearCustomRange(){
-  customRange={start:null,end:null}; _saveCustomRange();
+function clearCustomRange(target){
+  target = target || _rangeTarget;
   closeRangeModal();
+  if(target==='calendar'){
+    calCustomRange={start:null,end:null}; _saveCalCustomRange();
+    if(calFilter==='custom') setCalFilter('month'); else _syncCalRangeUI();
+    return;
+  }
+  customRange={start:null,end:null}; _saveCustomRange();
   if(statPeriod==='custom') setStatFilter('all'); else { _syncCustomRangeUI(); _syncBalancePeriodUI(); }
+}
+// Calendar filter-row Custom button: first tap applies the saved range (or
+// opens the picker when none is saved); tapping it while already active
+// re-opens the picker to edit.
+function calCustomTap(){
+  if(calFilter==='custom' || !hasCalCustomRange()) return openRangeModal('calendar');
+  setCalFilter('custom');
+}
+function _syncCalRangeUI(){
+  const label=document.getElementById('calFilterCustomLabel');
+  if(label) label.textContent = hasCalCustomRange() ? calCustomRangeLabel() : 'Custom';
+  const note=document.getElementById('calRangeNote');
+  if(note){
+    if(calFilter==='custom' && hasCalCustomRange()){
+      note.style.display='flex';
+      note.innerHTML = 'Showing '+escapeHtml(calCustomRangeLabel())+' <span class="range-clear" onclick="openRangeModal(\'calendar\')">Edit</span><span class="range-clear" onclick="clearCustomRange(\'calendar\')">Clear</span>';
+    } else note.style.display='none';
+  }
 }
 // Balance card's calendar button / "Custom range" dropdown row. With no range
 // saved yet it opens the picker instead of silently doing nothing.
@@ -7732,7 +8350,7 @@ function _syncCustomRangeUI(){
   if(note){
     if(statPeriod==='custom' && hasCustomRange()){
       note.style.display='flex';
-      note.innerHTML = 'Showing '+escapeHtml(customRangeLabel())+' <span class="range-clear" onclick="openRangeModal()">Edit</span><span class="range-clear" onclick="clearCustomRange()">Clear</span>';
+      note.innerHTML = 'Showing '+escapeHtml(customRangeLabel())+' <span class="range-clear" onclick="openRangeModal(\'stats\')">Edit</span><span class="range-clear" onclick="clearCustomRange(\'stats\')">Clear</span>';
     } else note.style.display='none';
   }
 }
@@ -7890,6 +8508,8 @@ function renderStats(){
   // used markStatsDirty() so we know to re-render when the tab opens.
   if(activeTab !== 'Stats'){ statsDirty = true; return; }
   statsDirty = false;
+  applyWidgetPrefs();
+  if(wbEditMode) wbBuildChrome();
   const ft = statsFilteredTrades();
   renderMonthStripCard();
 
@@ -7945,6 +8565,7 @@ function renderStats(){
     const da=(a.date||'')+(a.time?'T'+a.time:''), db=(b.date||'')+(b.time?'T'+b.time:'');
     return da.localeCompare(db);
   });
+  renderDailyPnlWidget(chronological);
   let peak=0, running=0, maxDD=0, maxDDPct=0;
   chronological.forEach(t=>{
     running += parseFloat(t.pnl)||0;
@@ -8037,6 +8658,11 @@ function renderStats(){
   });
   renderSymbolsCard(pairMap);
   renderPairTable(pairMap);
+  renderTradeDistributionWidget(ft);
+  renderLongShortWidget(ft);
+  renderHourOfDayWidget(ft);
+  renderRecentTradesWidget(ft);
+  renderMonthlyGoalWidget();
 
   // ── Day-of-week breakdown ──
   const DOW_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -8469,6 +9095,217 @@ function renderPairTable(pairMap){
   }
   renderColPanel();
   drawTable();
+}
+
+// Pair Performance table, folded into the Symbols card (was its own widget).
+function toggleSymPairTable(){
+  const wrap=document.getElementById('symPairTableWrap'), btn=document.getElementById('symPairExpander');
+  const open = wrap.style.display !== 'none';
+  wrap.style.display = open ? 'none' : 'block';
+  btn.innerHTML = (open?'Show':'Hide')+' pair performance table<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="'+(open?'6 9 12 15 18 9':'18 15 12 9 6 15')+'"/></svg>';
+}
+
+// ═══════ Session 21 widgets ═══════
+
+// ── Daily P&L bars — one bar per calendar day, separate question from
+// P&L per Trade (one bar per trade). Reuses the chronological array
+// renderStats() already built for drawdown/streaks. Tooltip mirrors
+// showPnlTooltip/movePnlTooltip/hidePnlTooltip; tap opens Daily Summary. ──
+function renderDailyPnlWidget(chronological){
+  const el=document.getElementById('dailyPnlWidget'); if(!el) return;
+  if(!chronological.length){ el.innerHTML=`<div style="color:var(--text3);font-size:13px;text-align:center;padding:12px 0">No trades in this period</div>`; return; }
+  const byDate={};
+  chronological.forEach(t=>{ if(!t.date) return; if(!byDate[t.date]) byDate[t.date]={pnl:0,count:0}; byDate[t.date].pnl+=parseFloat(t.pnl)||0; byDate[t.date].count++; });
+  const days=Object.entries(byDate).sort((a,b)=>a[0].localeCompare(b[0]));
+  if(!days.length){ el.innerHTML=`<div style="color:var(--text3);font-size:13px;text-align:center;padding:12px 0">No dated trades in this period</div>`; return; }
+  const max=Math.max(...days.map(([,d])=>Math.abs(d.pnl)))||1;
+  const vals=days.map(([,d])=>d.pnl);
+  const best=Math.max(...vals), worst=Math.min(...vals);
+  const greenDays=vals.filter(v=>v>0).length;
+  const avg=vals.reduce((s,v)=>s+v,0)/vals.length;
+  window._dailyPnlDays=days;
+  const cols=days.map(([d,data],i)=>{
+    const h=Math.round(Math.abs(data.pnl)/max*100);
+    const up=data.pnl>0?`<div class="dbar-b" style="height:${h}%;background:var(--green)"></div>`:'';
+    const dn=data.pnl<0?`<div class="dbar-b neg" style="height:${h}%;background:var(--red)"></div>`:'';
+    const flat=data.pnl===0?'<div class="dbar-b" style="height:2px;background:var(--border2)"></div>':'';
+    return `<div class="dbar-col" onmouseenter="showDbarTip(event,${i})" onmousemove="moveDbarTip(event)" onmouseleave="hideDbarTip()" onclick="showDayTradesForDate('${d}')"><div class="dbar-up">${up}${data.pnl===0?flat:''}</div><div class="dbar-zero"></div><div class="dbar-dn">${dn}</div></div>`;
+  }).join('');
+  const step=Math.max(1,Math.ceil(days.length/8));
+  const labs=days.map(([d],i)=>{
+    const show=i===0||i===days.length-1||i%step===0;
+    const dt=parseLocalDate(d);
+    return `<div>${show&&dt?dt.toLocaleDateString('en-US',{month:'short',day:'numeric'}):''}</div>`;
+  }).join('');
+  el.innerHTML=`<div style="position:relative"><div class="dbar-tip" id="dbarTip"></div><div class="dbar-wrap">${cols}</div></div>
+    <div class="dbar-labels">${labs}</div>
+    <div class="rhist-footer"><span>${days.length} day${days.length!==1?'s':''} · <span class="positive">${greenDays}</span>/<span class="negative">${days.length-greenDays}</span></span><span>Avg <span class="v ${avg>=0?'positive':'negative'}">${fmtPnl(avg)}</span></span></div>`;
+}
+function showDbarTip(e,i){
+  const tip=document.getElementById('dbarTip'), r=window._dailyPnlDays&&window._dailyPnlDays[i]; if(!tip||!r) return;
+  const [d,data]=r, dt=parseLocalDate(d), dateText=dt?dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):d;
+  const cls=data.pnl>0?'positive':(data.pnl<0?'negative':'');
+  tip.innerHTML=`<strong>${dateText} · <span class="${cls}">${fmtPnl(data.pnl)}</span></strong>${data.count} trade${data.count!==1?'s':''}<div class="dbar-tip-pin">Tap for Daily Summary</div>`;
+  tip.classList.add('show'); moveDbarTip(e);
+}
+function moveDbarTip(e){
+  const tip=document.getElementById('dbarTip'); if(!tip)return;
+  const wrap=tip.parentElement, wr=wrap.getBoundingClientRect(), tr=e.currentTarget.getBoundingClientRect();
+  const half=(tip.offsetWidth||140)/2+4, x=tr.left-wr.left+tr.width/2;
+  tip.style.left=Math.max(half,Math.min(wr.width-half,x))+'px';
+  tip.style.top=(tr.top-wr.top-8)+'px';
+}
+function hideDbarTip(){ document.getElementById('dbarTip')?.classList.remove('show'); }
+// Daily P&L bars open the Daily Summary directly by date, independent of
+// calMonth/calYear (a Stats-period range can span months) — mirrors
+// showDayTrades() but takes a full date string instead of a day-of-month.
+function showDayTradesForDate(dateStr){
+  const stats = dayReportStats(dateStr, activeAcctFilter);
+  if(stats.total===0) return;
+  document.getElementById('dayListBody').innerHTML = dayReportHtml(stats);
+  document.getElementById('dayListViewBtn').onclick = ()=>viewDayInJournal(dateStr);
+  document.getElementById('dayListModal').classList.add('open');
+}
+
+// ── Long vs Short — direction split. Identity colour (green/red) stays on
+// the label only; the P&L figure keeps its real sign and the win-rate track
+// is neutral, so a profitable Short can't be misread as a loss. ──
+function renderLongShortWidget(ft){
+  const el=document.getElementById('longShortWidget'); if(!el) return;
+  const L={n:0,wins:0,pnl:0}, S={n:0,wins:0,pnl:0};
+  ft.forEach(t=>{
+    const p=parseFloat(t.pnl)||0, bucket=t.dir==='short'?S:L;
+    bucket.n++; bucket.pnl+=p; if(p>0) bucket.wins++;
+  });
+  if(!L.n && !S.n){ el.innerHTML=`<div style="color:var(--text3);font-size:13px;text-align:center;padding:12px 0">No trades in this period</div>`; return; }
+  const tile=(label,d,idColor,dirIcon)=>{
+    if(!d.n) return `<div class="ls-tile"><div class="ls-head" style="color:${idColor}">${dirIcon}${label}</div><div style="color:var(--text3);font-size:12px;padding:4px 0">No ${label.toLowerCase()}s in this range</div></div>`;
+    const wr=(d.wins/d.n*100).toFixed(0), sign=d.pnl>0?'positive':(d.pnl<0?'negative':'');
+    return `<div class="ls-tile">
+      <div class="ls-head" style="color:${idColor}">${dirIcon}${label}</div>
+      <div class="ls-pnl ${sign}">${fmtPnl(d.pnl)}</div>
+      <div class="ls-meta">${d.n} trade${d.n!==1?'s':''} · ${wr}% win</div>
+      <div class="perf-bar-track" style="margin-top:9px"><div class="perf-bar-fill" style="width:${wr}%;background:var(--text2)"></div></div>
+    </div>`;
+  };
+  const longIco='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>';
+  const shortIco='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>';
+  const tot=Math.abs(L.pnl)+Math.abs(S.pnl);
+  const lShare=tot?Math.max(0,L.pnl)/tot*100:50, sShare=tot?Math.max(0,S.pnl)/tot*100:50;
+  el.innerHTML=`<div class="ls-grid">${tile('Long',L,'var(--accent)',longIco)}${tile('Short',S,'var(--red)',shortIco)}</div>
+    <div class="ls-split"><i style="width:${lShare}%;background:var(--accent)"></i><i style="width:${sShare}%;background:var(--red)"></i></div>
+    <div class="ls-legend"><span>Long ${L.n} trade${L.n!==1?'s':''}</span><span>Short ${S.n} trade${S.n!==1?'s':''}</span></div>`;
+}
+
+// ── Trade Distribution — 3-in-1 (Wins/Losses/Break-even). Open is held out:
+// every saved trade already has entry/exit/pnl filled in, and a blank exit
+// already resolves pnl to 0 (indistinguishable from a real break-even trade),
+// so there is no safe way to derive "open" without a new status field. ──
+function renderTradeDistributionWidget(ft){
+  const el=document.getElementById('tradeDistributionWidget'); if(!el) return;
+  if(!ft.length){ el.innerHTML=`<div style="color:var(--text3);font-size:13px;text-align:center;padding:12px 0">No trades in this period</div>`; return; }
+  let w=0,l=0,b=0;
+  ft.forEach(t=>{ const p=parseFloat(t.pnl)||0; if(p>0)w++; else if(p<0)l++; else b++; });
+  const tot=w+l+b;
+  const pct=n=>tot?(n/tot*100):0;
+  el.innerHTML=`<div class="dist-tiles">
+      <div class="dist-t"><div class="dist-n" style="color:var(--green)">${w}</div><div class="dist-l">Wins</div></div>
+      <div class="dist-t"><div class="dist-n" style="color:var(--red)">${l}</div><div class="dist-l">Losses</div></div>
+      <div class="dist-t"><div class="dist-n" style="color:var(--text2)">${b}</div><div class="dist-l">Break-even</div></div>
+    </div>
+    <div class="dist-bar"><i style="width:${pct(w)}%;background:var(--green)"></i><i style="width:${pct(l)}%;background:var(--red)"></i><i style="width:${pct(b)}%;background:var(--text3)"></i></div>
+    <div class="ls-legend"><span>${tot} trade${tot!==1?'s':''} logged</span><span class="mono">${pct(w).toFixed(1)}% / ${pct(l).toFixed(1)}% / ${pct(b).toFixed(1)}%</span></div>`;
+}
+
+// ── Hour of Day — finer cut than Session, same t.time field. No broker
+// dependency: works exactly as well (or as poorly) as Day & Session does. ──
+function renderHourOfDayWidget(ft){
+  const el=document.getElementById('hourOfDayWidget'); if(!el) return;
+  const withTime=ft.filter(t=>t.time);
+  if(!withTime.length){ el.innerHTML=`<div style="color:var(--text3);font-size:13px;text-align:center;padding:12px 0">Log trades with an entry time to see this breakdown</div>`; return; }
+  const hours=Array.from({length:24},()=>({pnl:0,n:0}));
+  withTime.forEach(t=>{
+    const h=parseInt((t.time||'').split(':')[0],10);
+    if(isNaN(h)||h<0||h>23) return;
+    hours[h].pnl+=parseFloat(t.pnl)||0; hours[h].n++;
+  });
+  const active=hours.map((d,h)=>({h,...d})).filter(d=>d.n>0);
+  if(!active.length){ el.innerHTML=`<div style="color:var(--text3);font-size:13px;text-align:center;padding:12px 0">No usable entry times in this period</div>`; return; }
+  const max=Math.max(...active.map(d=>Math.abs(d.pnl)))||1;
+  const cols=active.map(d=>{
+    const ht=Math.max(4,Math.round(Math.abs(d.pnl)/max*100));
+    const color=d.pnl>0?'var(--green)':(d.pnl<0?'var(--red)':'var(--text3)');
+    const thin=d.n<3;
+    const label=String(d.h).padStart(2,'0')+':00 · '+d.n+' trade'+(d.n!==1?'s':'')+' · '+fmtPnl(d.pnl);
+    return `<div class="hour-col" title="${escapeHtml(label)}"><div class="hour-b" style="height:${ht}%;background:${color};opacity:${thin?0.4:0.92}"></div></div>`;
+  }).join('');
+  const labs=active.map(d=>`<div>${String(d.h).padStart(2,'0')}</div>`).join('');
+  let best=active[0], worst=active[0];
+  active.forEach(d=>{ if(d.pnl>best.pnl) best=d; if(d.pnl<worst.pnl) worst=d; });
+  el.innerHTML=`<div class="hour-wrap">${cols}</div>
+    <div class="hour-labels">${labs}</div>
+    <div class="metric-row" style="margin-top:8px"><div class="metric-row-label">Best hour</div><div class="metric-row-val accent">${String(best.h).padStart(2,'0')}:00 · ${fmtPnl(best.pnl)}</div></div>
+    <div class="metric-row"><div class="metric-row-label">Worst hour</div><div class="metric-row-val red">${String(worst.h).padStart(2,'0')}:00 · ${fmtPnl(worst.pnl)}</div></div>
+    <div class="hour-note">Hours with under 3 trades are dimmed. Time shown is exactly as entered — no timezone conversion.</div>`;
+}
+
+// ── Recent Trades — a way out of the aggregate board, straight to one
+// trade. Reuses openPeek() (Trade Detail) rather than a new dialog. ──
+function renderRecentTradesWidget(ft){
+  const el=document.getElementById('recentTradesWidget'); if(!el) return;
+  const sorted=[...ft].sort((a,b)=>{
+    const da=(a.date||'')+(a.time?'T'+a.time:''), db=(b.date||'')+(b.time?'T'+b.time:'');
+    return db.localeCompare(da);
+  }).slice(0,5);
+  if(!sorted.length){ el.innerHTML=`<div style="color:var(--text3);font-size:13px;text-align:center;padding:12px 0">No trades in this period</div>`; return; }
+  const rows=sorted.map(t=>{
+    const p=parseFloat(t.pnl)||0, r=calcR(t), dt=t.date?parseLocalDate(t.date):null;
+    const when=dt?dt.toLocaleDateString('en-US',{month:'short',day:'numeric'})+(t.time?', '+t.time:''):'';
+    const cls=p>0?'positive':(p<0?'negative':'');
+    return `<div class="rt-row" onclick="openPeek('${t.id}')">
+      <span class="rt-pair">${escapeHtml(t.pair||'—')}</span>
+      <span class="rt-dir ${t.dir==='short'?'short':'long'}">${t.dir==='short'?'S':'L'}</span>
+      <span class="rt-when">${escapeHtml(when)}</span>
+      <span class="rt-r">${r!==null?(parseFloat(r)>=0?'+':'')+r+'R':''}</span>
+      <span class="rt-pnl ${cls}" style="${p===0?'color:var(--text2)':''}">${p===0?'$0':fmtPnl(p)}</span>
+      <span class="rt-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+    </div>`;
+  }).join('');
+  el.innerHTML=rows+`<button class="expander" onclick="switchTab('Journal')" style="margin-top:10px">View all trades</button>`;
+}
+
+// ── Monthly Goal — always the real current calendar month, independent of
+// the Stats period filter (same basis as renderMonthStripCard). Reads/writes
+// the existing monthlyGoals map; Edit opens the existing goal modal. Hidden
+// until a goal is set for the current month. ──
+function renderMonthlyGoalWidget(){
+  const card=document.getElementById('monthlyGoalWidgetCard'), el=document.getElementById('monthlyGoalWidget');
+  if(!card||!el) return;
+  const now=new Date();
+  const monthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const goal=monthlyGoals[monthKey]||0;
+  card.classList.toggle('wb-goal-empty', !goal);
+  if(!goal) return;
+  document.getElementById('monthlyGoalTitle').textContent=now.toLocaleDateString('en-US',{month:'long'})+' Goal';
+  const monthStart=new Date(now.getFullYear(),now.getMonth(),1);
+  const monthEnd=new Date(now.getFullYear(),now.getMonth()+1,0);
+  const monthTrades=filteredTrades().filter(t=>{ if(!t.date) return false; const d=parseLocalDate(t.date); return d && d>=monthStart && d<=monthEnd; });
+  const made=monthTrades.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
+  const pct=Math.max(0,Math.min(100,goal>0?(made/goal*100):0));
+  const today=now.getDate(), daysInMonth=monthEnd.getDate();
+  const tradingDaysLeft=Math.max(0,daysInMonth-today);
+  const remaining=Math.max(0,goal-made);
+  const perDay=tradingDaysLeft>0?remaining/tradingDaysLeft:remaining;
+  const linearPace=(today/daysInMonth*100);
+  const paceDelta=pct-linearPace;
+  el.innerHTML=`<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:9px">
+      <div class="stat-value accent" style="font-size:22px">${fmtPnl(made)}</div>
+      <div style="font-size:12px;color:var(--text2);font-family:var(--mono)">${pct.toFixed(0)}% of ${fmtPnl(goal).replace('+','')}</div>
+    </div>
+    <div class="goal-progress"><div class="goal-fill" style="width:${pct}%"></div></div>
+    <div class="goal-amounts"><span style="color:var(--text3)">${monthStart.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span><span style="color:var(--text3)">${monthEnd.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span></div>
+    <div class="metric-row" style="margin-top:8px"><div><div class="metric-row-label">Needed per day</div><div class="metric-row-sub">${tradingDaysLeft} day${tradingDaysLeft!==1?'s':''} left in the month</div></div><div class="metric-row-val">${remaining>0?fmtPnl(perDay).replace('+',''):'Goal reached'}</div></div>
+    <div class="metric-row"><div><div class="metric-row-label">Pace</div><div class="metric-row-sub">vs. linear target</div></div><div class="metric-row-val ${paceDelta>=0?'accent':'red'}">${paceDelta>=0?'+':''}${paceDelta.toFixed(0)}%</div></div>`;
 }
 
 async function renderCharts(ft){
