@@ -1366,7 +1366,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
   <!-- KPI section: hero pair + rows (see paintStatCards) -->
    <div class="stat-view-bar">
      <span class="stat-view-title">Performance</span>
-     <button class="btn-sm" id="wbEditBtn" onclick="toggleWidgetEdit()" style="display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span id="wbEditBtnLabel">Customize</span></button>
+     <div style="display:flex;align-items:center;gap:8px">
+       <button class="btn-sm" id="wbAddBtn" onclick="openWidgetPicker()" style="display:none;align-items:center;justify-content:center;width:32px;height:32px;padding:0" aria-label="Add widget"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+       <button class="btn-sm" id="wbEditBtn" onclick="toggleWidgetEdit()" style="display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span id="wbEditBtnLabel">Customize</span></button>
+     </div>
    </div>
    <!-- Widget board: every direct child carrying data-widget is a user-
         toggleable, user-reorderable widget. Order/visibility live in
@@ -1577,7 +1580,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
        Calendar tab's own goal bar reads/writes. Hidden until a goal is set.
        See renderMonthlyGoalWidget(). -->
   <div class="card stats-panel wb-goal-empty" data-widget="monthlyGoal" data-widget-label="Monthly Goal" id="monthlyGoalWidgetCard">
-    <div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg><span id="monthlyGoalTitle">Monthly Goal</span><span class="spacer" style="flex:1"></span><span class="btn-sm" onclick="openGoalEdit()" style="cursor:pointer">Edit</span></div>
+    <div class="chart-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg><span id="monthlyGoalTitle">Monthly Goal</span><span class="spacer" style="flex:1"></span><span class="btn-sm" onclick="openMonthlyGoalWidgetEdit()" style="cursor:pointer">Edit</span></div>
     <div id="monthlyGoalWidget"></div>
   </div>
 
@@ -4853,9 +4856,23 @@ function syncScrollLock(){
 let widgetPrefs = { order: [], hidden: [] };
 let wbEditMode = false;
 
+// Session 21: single source of truth for the shipped half-width defaults —
+// used by a fresh install (wbLoadPrefs) AND "Restore default layout"
+// (resetWidgets), so the two can never disagree with each other. Symbols is
+// deliberately NOT included even though it was in the original proposal —
+// now that Pair Performance is folded into it as an expandable table, it
+// needs full width to hold that table comfortably.
+function wbSeedHalfSizes(){
+  return {
+    drawdown: 'half', longShort: 'half',
+    winBySetup: 'half', ruleAdherence: 'half',
+    recentTrades: 'half', monthlyGoal: 'half',
+  };
+}
 function wbLoadPrefs(){
   try{
     const raw = localStorage.getItem('tj_widgetPrefs');
+    const seedApplied = localStorage.getItem('tj_widgetSeedV1');
     if(raw){
       const pr = JSON.parse(raw);
       widgetPrefs = {
@@ -4864,24 +4881,22 @@ function wbLoadPrefs(){
         // sizes: { widgetId: 'half' } — desktop/tablet only, phones ignore it.
         sizes:  (pr.sizes && typeof pr.sizes === 'object') ? pr.sizes : {},
       };
+      // One-time top-up for pre-existing users: fills in only the pairs the
+      // user has never explicitly sized (key absent) — never touches a key
+      // that's already there. This runs at most once, ever, per user
+      // (gated by tj_widgetSeedV1 below), so it can never re-run and
+      // silently undo a deliberate choice made after this ships. Runs even
+      // for users who'd already touched order/hidden but never sizes.
+      if(!seedApplied){
+        const seed = wbSeedHalfSizes();
+        Object.keys(seed).forEach(id=>{ if(!(id in widgetPrefs.sizes)) widgetPrefs.sizes[id]=seed[id]; });
+        wbSavePrefs();
+      }
     } else {
-      // Session 21: fresh install only (no saved prefs at all) — seed a few
-      // short, self-contained widgets as half-width so a 1280px board isn't
-      // one long full-width column. Anyone with existing saved prefs is
-      // untouched. Symbols is deliberately NOT paired here even though it
-      // was in the original proposal — now that Pair Performance is folded
-      // into it as an expandable table, it needs full width to hold that
-      // table comfortably.
-      widgetPrefs = {
-        order: [],
-        hidden: [],
-        sizes: {
-          drawdown: 'half', longShort: 'half',
-          winBySetup: 'half', ruleAdherence: 'half',
-          recentTrades: 'half', monthlyGoal: 'half',
-        },
-      };
+      // Truly fresh install — no saved prefs of any kind yet.
+      widgetPrefs = { order: [], hidden: [], sizes: wbSeedHalfSizes() };
     }
+    if(!seedApplied) localStorage.setItem('tj_widgetSeedV1','1');
   }catch(e){}
   if(!widgetPrefs.sizes) widgetPrefs.sizes = {};
 }
@@ -4935,6 +4950,10 @@ function toggleWidgetEdit(){
   if(lbl) lbl.textContent = wbEditMode ? 'Done' : 'Customize';
   const btn = document.getElementById('wbEditBtn');
   if(btn) btn.classList.toggle('accent', wbEditMode);
+  // Session 21: "+" lives next to Customize instead of only as a tile at
+  // the very bottom of the board, which now has 18 widgets to scroll past.
+  const addBtn = document.getElementById('wbAddBtn');
+  if(addBtn) addBtn.style.display = wbEditMode ? 'flex' : 'none';
   if(wbEditMode){
     wbBuildChrome();
     showToast(wbWideBoard() ? 'Drag ⠿ to reorder · ⬌ for half width · ✕ to remove'
@@ -5106,7 +5125,9 @@ function moveWidget(id, dir){
 // Restores the built-in layout in place — no reload, so a Telegram session
 // isn't re-initialised and a web user isn't bounced back to the login screen.
 function resetWidgets(){
-  widgetPrefs = { order: wbDefaultOrder ? wbDefaultOrder.slice() : [], hidden: [], sizes: {} };
+  // Session 21 fix: this used to hardcode sizes:{}, so "Restore default
+  // layout" stripped the half-width defaults instead of restoring them.
+  widgetPrefs = { order: wbDefaultOrder ? wbDefaultOrder.slice() : [], hidden: [], sizes: wbSeedHalfSizes() };
   wbSavePrefs();
   applyWidgetPrefs();
   renderStats();
@@ -8223,17 +8244,36 @@ function viewDayInJournal(dateStr){
   }, 180); // let the modal close animate first
 }
 
+// Session 21 fix: goalModal previously had one opener (openGoalEdit, tied to
+// the Calendar tab's currently-browsed month via calYear/calMonth) and
+// saveGoal() recomputed that same month-key independently. The Monthly Goal
+// widget always shows the REAL current month, not whatever month the
+// Calendar happens to be browsing — reusing openGoalEdit() as-is for its
+// Edit button would silently save to the wrong month if the two ever
+// differ. _goalEditMonthKey is set by whichever opener was used, and
+// saveGoal() writes to that instead of recomputing its own answer.
+let _goalEditMonthKey = null;
 function openGoalEdit(){
-  const monthKey=`${calYear}-${String(calMonth+1).padStart(2,'0')}`;
-  document.getElementById('goalInput').value=monthlyGoals[monthKey]||'';
+  _goalEditMonthKey=`${calYear}-${String(calMonth+1).padStart(2,'0')}`;
+  document.getElementById('goalInput').value=monthlyGoals[_goalEditMonthKey]||'';
+  document.getElementById('goalModal').classList.add('open');
+}
+// Opener for the Metrics tab's Monthly Goal widget specifically — always
+// the real current month, independent of Calendar tab state.
+function openMonthlyGoalWidgetEdit(){
+  const now=new Date();
+  _goalEditMonthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('goalInput').value=monthlyGoals[_goalEditMonthKey]||'';
   document.getElementById('goalModal').classList.add('open');
 }
 function saveGoal(){
-  const monthKey=`${calYear}-${String(calMonth+1).padStart(2,'0')}`;
+  const monthKey=_goalEditMonthKey || `${calYear}-${String(calMonth+1).padStart(2,'0')}`;
   const val=parseFloat(document.getElementById('goalInput').value)||0;
   monthlyGoals[monthKey]=val; saveGoals();
   document.getElementById('goalModal').classList.remove('open');
-  renderCalendar(); showToast('Goal saved ✓');
+  renderCalendar();
+  renderMonthlyGoalWidget(); // Session 21 fix: widget was previously stale until an unrelated render happened
+  showToast('Goal saved ✓');
 }
 
 // ─── Stats period filter ───
@@ -8503,6 +8543,27 @@ function paintStatCards(coreItems, streakItems){
   rowsHost.innerHTML = rest.map(_statRowHtml).join('');
 }
 
+// Session 21: extracted from renderStats() so setSetupFocus() can re-render
+// just this widget (plus P&L per Trade) on every chip click, instead of the
+// entire Stats tab. Only needs ft; mutates the module-level setupFocus.
+function renderWinBySetupCard(ft){
+  const setups={};
+  ft.forEach(t=>{ const s=t.setup||'Untagged'; if(!setups[s])setups[s]={wins:0,losses:0,total:0,pnl:0}; const p=parseFloat(t.pnl)||0; setups[s].total++; setups[s].pnl+=p; if(p>0)setups[s].wins++; else if(p<0)setups[s].losses++; });
+  const setupNames=Object.keys(setups);
+  if(setupFocus && !setupNames.includes(setupFocus)) setupFocus=null; // setup vanished from this period
+  const chipRow=document.getElementById('setupChipRow');
+  if(chipRow){
+    chipRow.innerHTML = setupNames.length>1 ? [
+      `<button type="button" class="setup-chip${setupFocus===null?' active':''}" onclick="setSetupFocus(null)">All setups</button>`,
+      ...setupNames.map(n=>`<button type="button" class="setup-chip${setupFocus===n?' active':''}" onclick="setSetupFocus('${escapeForInlineHandler(n)}')">${escapeHtml(n)} <span style="opacity:.6">${setups[n].total}</span></button>`)
+    ].join('') : '';
+  }
+  document.getElementById('winBySetup').innerHTML=Object.entries(setups).map(([name,d])=>{
+    const row=_perfRowHtml(escapeHtml(name),d);
+    return (setupFocus && name!==setupFocus) ? row.replace('class="perf-row"','class="perf-row dimmed"') : row;
+  }).join('')||'<div style="color:var(--text3);font-size:14px;padding:8px 0">Log trades with setups to see breakdown</div>';
+}
+
 function renderStats(){
   // Defer render if Stats tab is not currently visible — caller should have
   // used markStatsDirty() so we know to re-render when the tab opens.
@@ -8625,21 +8686,11 @@ function renderStats(){
   // Win Rate rows and the P&L per Trade chart to that setup only, while the
   // rest of the dashboard keeps showing the full period (the filter is a
   // reading lens for these two panels, not a global period filter).
-  const setups={};
-  ft.forEach(t=>{ const s=t.setup||'Untagged'; if(!setups[s])setups[s]={wins:0,losses:0,total:0,pnl:0}; const p=parseFloat(t.pnl)||0; setups[s].total++; setups[s].pnl+=p; if(p>0)setups[s].wins++; else if(p<0)setups[s].losses++; });
-  const setupNames=Object.keys(setups);
-  if(setupFocus && !setupNames.includes(setupFocus)) setupFocus=null; // setup vanished from this period
-  const chipRow=document.getElementById('setupChipRow');
-  if(chipRow){
-    chipRow.innerHTML = setupNames.length>1 ? [
-      `<button type="button" class="setup-chip${setupFocus===null?' active':''}" onclick="setSetupFocus(null)">All setups</button>`,
-      ...setupNames.map(n=>`<button type="button" class="setup-chip${setupFocus===n?' active':''}" onclick="setSetupFocus('${escapeForInlineHandler(n)}')">${escapeHtml(n)} <span style="opacity:.6">${setups[n].total}</span></button>`)
-    ].join('') : '';
-  }
-  document.getElementById('winBySetup').innerHTML=Object.entries(setups).map(([name,d])=>{
-    const row=_perfRowHtml(escapeHtml(name),d);
-    return (setupFocus && name!==setupFocus) ? row.replace('class="perf-row"','class="perf-row dimmed"') : row;
-  }).join('')||'<div style="color:var(--text3);font-size:14px;padding:8px 0">Log trades with setups to see breakdown</div>';
+  // Session 21 fix: extracted out of the inline renderStats() body into its
+  // own function so setSetupFocus() (below) can re-render just this widget
+  // plus P&L per Trade, instead of the entire Stats tab — which is what was
+  // sending the page to the top on every chip click.
+  renderWinBySetupCard(ft);
 
   // ── Pair breakdown data (feeds both the Symbols donut and the Pair
   // performance table below) — keeps each trade reference around, not just
@@ -9330,7 +9381,17 @@ let setupFocus=null;
 function setSetupFocus(name){
   setupFocus = (name && name!==setupFocus) ? name : null;
   hidePnlTooltip(true);
-  renderStats();
+  // Session 21 fix: this used to call the full renderStats(), rebuilding
+  // every KPI, chart canvas and widget on the tab for what's only ever a
+  // two-widget change — the likely cause of the page jumping to the top on
+  // every chip click. Scoped to just the two widgets setupFocus affects.
+  const ft = statsFilteredTrades();
+  renderWinBySetupCard(ft);
+  const sorted = [...ft].sort((a,b)=>{
+    const da=(a.date||'')+(a.time?'T'+a.time:''), db=(b.date||'')+(b.time?'T'+b.time:'');
+    return da.localeCompare(db);
+  });
+  renderPnlBars(setupFocus ? sorted.filter(t=>(t.setup||'Untagged')===setupFocus) : sorted);
 }
 
 // ─── Balance ───
