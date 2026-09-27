@@ -422,13 +422,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 /* ── Modal (bottom sheet) ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:500;display:none;align-items:flex-end;backdrop-filter:blur(4px)}
 .modal-overlay.open{display:flex}
-.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius) var(--radius) 0 0;width:100%;max-height:93vh;overflow-y:auto;padding:18px 16px calc(84px + env(safe-area-inset-bottom, 16px));animation:slide-up .22s cubic-bezier(.32,.72,0,1)}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius) var(--radius) 0 0;width:100%;max-height:93vh;overflow-y:auto;padding:18px 16px calc(18px + env(safe-area-inset-bottom, 0px));animation:slide-up .22s cubic-bezier(.32,.72,0,1)}
 @keyframes slide-up{from{transform:translateY(100%)}to{transform:translateY(0)}}
 /* Centered-dialog variant — used for short, self-contained content (Month
    Report, Daily Summary) rather than long forms, which stay as bottom
    sheets since those work better full-height on a phone. */
 .modal-overlay.centered{align-items:center;justify-content:center;padding:20px}
-.modal-overlay.centered .modal{border-radius:var(--radius);width:100%;max-width:440px;max-height:85vh;animation:pop-in .18s cubic-bezier(.32,.72,0,1)}
+.modal-overlay.centered .modal{border-radius:var(--radius);width:100%;max-width:440px;max-height:85vh;padding-bottom:18px;animation:pop-in .18s cubic-bezier(.32,.72,0,1)}
 @keyframes pop-in{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
 .modal-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 16px}
 .modal-title{font-size:19px;font-weight:800;margin-bottom:18px;letter-spacing:-.4px}
@@ -926,6 +926,33 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
 .swipe-delete-bg svg{width:16px;height:16px}
 .swipe-delete-bg.visible{opacity:1}
 
+
+/* Journal polish: compact, horizontally scrollable section selector */
+.journal-segments{display:flex;gap:3px;overflow-x:auto;scrollbar-width:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px;margin:0 0 15px;white-space:nowrap}
+.journal-segments::-webkit-scrollbar,.journal-chips::-webkit-scrollbar{display:none}
+.journal-segments .segment{flex:1 0 auto;min-height:34px;border:0;border-radius:5px;background:transparent;color:var(--text3);font-size:11px;font-weight:700;padding:7px 8px;cursor:pointer}
+.journal-segments .segment.active{background:var(--surface3);color:var(--accent);box-shadow:0 1px 4px var(--border)}
+.journal-chips{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;margin:0 0 13px;padding:1px 0 5px}
+.journal-chips .filter-pill-btn{flex:none}
+.trade-scan{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:start;padding-left:6px}
+.trade-scan-left{min-width:0}.trade-scan-left .trade-pair{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trade-scan-meta{display:flex;align-items:center;gap:6px;margin-top:6px;color:var(--text3);font-size:10px;white-space:nowrap;overflow:hidden}
+.trade-scan-right{text-align:right;min-width:86px;font-variant-numeric:tabular-nums}
+.trade-scan-right .trade-pnl{display:block;font-family:var(--mono)}
+.trade-scan-return{display:block;margin-top:5px;font:11px var(--mono);color:var(--text3)}
+.chart-indicator{display:inline-flex;color:var(--accent);vertical-align:middle;margin-left:5px}.chart-indicator svg{width:14px;height:14px}
+.rr-chip{background:var(--accent-dim);border:1px solid var(--accent);color:var(--accent);font:700 11px var(--mono);padding:3px 8px;border-radius:5px}
+.status-badge{display:inline-flex;align-items:center;gap:4px;border-radius:5px;border:1px solid var(--border2)}
+.status-badge.watching{border-color:var(--amber)}.status-badge.taken{border-color:var(--green)}
+.pretrade-planned{flex-wrap:wrap}.pretrade-actions{flex-wrap:wrap}
+.library-thumb{aspect-ratio:16/9}.library-thumb .lib-outcome{top:auto;bottom:7px;right:7px;display:flex;gap:4px}.library-thumb .lib-outcome .tag{background:var(--surface3);backdrop-filter:blur(12px);border:1px solid var(--border2)}
+.day-performance,.strategy-ribbon{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:9px 0;border:1px solid var(--border);border-radius:6px;background:var(--surface2)}
+.day-performance>div,.strategy-ribbon>div{min-width:0;padding:9px 6px;border-right:1px solid var(--border);text-align:center}.day-performance>div:last-child,.strategy-ribbon>div:last-child{border:0}
+.metric-label{display:block;color:var(--text3);font-size:9px;text-transform:uppercase;font-weight:700}.metric-value{display:block;font:700 12px var(--mono);margin-top:4px;white-space:nowrap}
+.quick-mood{display:flex;gap:5px;overflow-x:auto;margin:7px 0 14px}.quick-mood .filter-pill-btn{flex:none}
+.rule-check{display:flex;gap:9px;align-items:center;padding:8px 0;color:var(--text2);font-size:12px}.rule-check input{accent-color:var(--accent);width:16px;height:16px}
+@media(max-width:380px){.journal-segments .segment{font-size:10px;padding:7px 6px}.trade-scan-right .trade-pnl{font-size:14px}}
+
 /* Session 23: compact interaction refinements */
 html,body{height:100%;min-height:100dvh;overscroll-behavior:none}
 body{min-height:100dvh}
@@ -946,8 +973,8 @@ body{min-height:100dvh}
 .acct-header-balance .val{font-size:17px}.acct-header-pnl{font-size:10px}
 .acct-header-meta .acct-header-refresh{width:23px;height:23px;flex:none}
 .acct-header-sync-status{font-size:9px;color:var(--text3);white-space:nowrap}
-/* Long sheets may scroll; preserve the compact daily report's one-screen treatment. */
-.modal-overlay:not(.centered) .modal,#widgetPickerModal .modal{padding-bottom:calc(84px + env(safe-area-inset-bottom, 16px))}
+/* Dialogs sit above the navigation; keep only content and safe-area spacing. */
+.modal-overlay:not(.centered) .modal{padding-bottom:calc(18px + env(safe-area-inset-bottom, 0px))}
 .dbar-col .dbar-b,.pnl-bar-fill{transition:opacity .15s,filter .15s}
 #dailyPnlWidget.has-pinned .dbar-col:not(.dbar-sel) .dbar-b{opacity:.35}
 #dailyPnlWidget.has-pinned .dbar-col.dbar-sel .dbar-b{opacity:1;filter:brightness(1.12)}
@@ -960,7 +987,7 @@ body{min-height:100dvh}
 .pnl-chart.has-pinned .pnl-bar-hit:not(.pnl-sel) .pnl-bar-fill{opacity:.35;filter:none}
 .pnl-chart.has-pinned .pnl-bar-hit.pnl-sel .pnl-bar-fill{opacity:1;filter:brightness(1.12)}
 .pnl-tip-action{display:block;margin-top:6px;padding-top:6px;border-top:1px solid var(--border);color:var(--accent);font-size:10.5px;font-weight:800;cursor:pointer;text-align:left;background:none;border-left:0;border-right:0;border-bottom:0;width:100%}
-.day-report-balance-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:12px;overflow:hidden}
+.day-report-balance-strip{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:12px;overflow:hidden}
 .day-report-balance-stat{min-width:0;padding:9px 7px;text-align:center;border-right:1px solid var(--border)}
 .day-report-balance-stat:last-child{border-right:0}.day-report-balance-label{font-size:8.5px;color:var(--text3);font-weight:800;text-transform:uppercase;letter-spacing:.5px}.day-report-balance-value{font-family:var(--mono);font-size:clamp(11px,3.3vw,14px);font-weight:800;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wb-filter-pills{display:flex;gap:6px;overflow-x:auto;padding:1px 0 10px;margin-bottom:2px}
@@ -983,6 +1010,35 @@ body{min-height:100dvh}
  #dayListViewBtn{margin-top:8px!important;padding:10px;font-size:13px}
 }
 
+
+/* ── Journal sub-nav popover ── */
+.journal-segments{display:none!important}
+.jnav{position:relative;margin:0 0 14px;display:inline-block}
+.jnav-trigger{display:inline-flex;align-items:center;gap:7px;background:var(--surface2);border:1px solid var(--border);border-radius:999px;color:var(--text);font:600 13px var(--font);padding:8px 13px;cursor:pointer}
+.jnav-trigger svg{width:12px;height:12px;color:var(--text3);transition:transform .12s}
+.jnav.open .jnav-trigger svg{transform:rotate(180deg)}
+.jnav-pop{position:absolute;top:calc(100% + 6px);left:0;min-width:200px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:5px;z-index:300;box-shadow:0 10px 30px rgba(0,0,0,.35);backdrop-filter:blur(14px);opacity:0;transform:translateY(-4px);pointer-events:none;transition:opacity .12s,transform .12s}
+.jnav.open .jnav-pop{opacity:1;transform:none;pointer-events:auto}
+.jnav-item{display:flex;align-items:center;gap:9px;width:100%;border:0;background:transparent;color:var(--text2);font:600 13px var(--font);padding:9px 10px;border-radius:8px;cursor:pointer;text-align:left}
+.jnav-item:hover{background:var(--surface2)}
+.jnav-item.active{background:var(--accent-dim);color:var(--accent)}
+.jnav-item .jnav-check{margin-left:auto;opacity:0}.jnav-item.active .jnav-check{opacity:1}
+/* ── Trade filter dialog ── */
+.tf-modal .filter-label{margin:12px 0 6px}
+.tf-head{display:flex;align-items:center;justify-content:space-between}
+.tf-title{font-size:15px;font-weight:800}
+.tf-x{background:none;border:0;color:var(--text3);font-size:22px;cursor:pointer;line-height:1}
+.tf-seg{display:flex;gap:3px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:3px}
+.tf-seg button{flex:1;border:0;background:transparent;color:var(--text3);font:700 12px var(--font);padding:8px 4px;border-radius:6px;cursor:pointer}
+.tf-seg button.on{background:var(--surface3);color:var(--accent)}
+.tf-actions{display:flex;justify-content:space-between;align-items:center;margin-top:18px}
+.tf-reset{background:none;border:0;color:var(--text2);font:700 13px var(--font);cursor:pointer;padding:8px 4px}
+.tf-apply{background:var(--accent);border:0;color:#04130d;font:800 13px var(--font);padding:10px 18px;border-radius:var(--radius-sm);cursor:pointer}
+/* ── Centered dialogs: balanced padding, internal scroll, no nav clearance ── */
+.modal-overlay.centered{align-items:center;justify-content:center;padding:20px;overscroll-behavior:contain}
+.modal-overlay.centered .modal{padding:20px!important;max-height:calc(100dvh - 40px)!important;overflow-y:auto;overscroll-behavior:contain}
+.peek-panel{padding-bottom:20px;max-height:calc(100dvh - 40px)}
+@media(max-width:380px){.modal-overlay.centered{padding:16px}.modal-overlay.centered .modal{padding:16px!important;max-height:calc(100dvh - 32px)!important}}
 </style>
 </head>
 <body>
@@ -1013,52 +1069,21 @@ body{min-height:100dvh}
       <button class="btn-sm accent" onclick="openAddTrade()">＋ New Trade</button>
     </div>
   </div>
+  <div class="journal-segments" role="tablist" aria-label="Journal sections"><button class="segment" role="tab" data-journal-tab="PreTrade" onclick="switchTab('PreTrade')">Pre-Trade</button><button class="segment active" role="tab" aria-selected="true" data-journal-tab="Journal" onclick="switchTab('Journal')">Trade Log</button><button class="segment" role="tab" data-journal-tab="DailyJournal" onclick="switchTab('DailyJournal')">Daily Journal</button><button class="segment" role="tab" data-journal-tab="Library" onclick="switchTab('Library')">Library</button><button class="segment" role="tab" data-journal-tab="Strategy" onclick="switchTab('Strategy')">Strategy</button></div>
   <!-- Search + Filter bar -->
   <div class="journal-filter-bar">
     <div class="journal-search-wrap">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input class="journal-search" id="journalSearch" placeholder="Search pair, setup, notes…" oninput="onJournalSearchInput()"/>
     </div>
-    <button class="filter-pill-btn" id="filterPillBtn" onclick="toggleFilterDrawer()">
+    <button class="filter-pill-btn" id="filterPillBtn" onclick="openTradeFilterModal()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
       Filter
     </button>
   </div>
-  <!-- Filter drawer -->
-  <div class="filter-drawer" id="filterDrawer">
-    <div class="filter-row">
-      <div>
-        <div class="filter-label">Direction</div>
-        <select class="filter-select" id="filterDir" onchange="renderTradeList()">
-          <option value="">Any</option>
-          <option value="long">Long</option>
-          <option value="short">Short</option>
-        </select>
-      </div>
-      <div>
-        <div class="filter-label">Outcome</div>
-        <select class="filter-select" id="filterOutcome" onchange="renderTradeList()">
-          <option value="">Any</option>
-          <option value="win">Win</option>
-          <option value="loss">Loss</option>
-          <option value="be">Breakeven</option>
-        </select>
-      </div>
-    </div>
-    <div class="filter-row">
-      <div>
-        <div class="filter-label">From Date</div>
-        <input type="date" class="filter-select" id="filterDateFrom" onchange="renderTradeList()" style="padding:7px 9px"/>
-      </div>
-      <div>
-        <div class="filter-label">To Date</div>
-        <input type="date" class="filter-select" id="filterDateTo" onchange="renderTradeList()" style="padding:7px 9px"/>
-      </div>
-    </div>
-    <div class="filter-actions">
-      <button class="btn-sm" onclick="clearFilters()" style="font-size:11px">Clear all</button>
-    </div>
-  </div>
+  <!-- Applied filter state (edited through the Filter dialog) -->
+  <input type="hidden" id="filterDir"/><input type="hidden" id="filterOutcome"/>
+  <input type="hidden" id="filterDateFrom"/><input type="hidden" id="filterDateTo"/>
   <div id="tradeList"></div>
 </div>
 
@@ -1068,6 +1093,7 @@ body{min-height:100dvh}
     <span class="section-title">Pre-Trade</span>
     <button class="btn-sm accent" onclick="openAddPreTrade()">＋ New Setup</button>
   </div>
+  <div class="journal-segments" role="tablist" aria-label="Journal sections"><button class="segment" role="tab" data-journal-tab="PreTrade" onclick="switchTab('PreTrade')">Pre-Trade</button><button class="segment" role="tab" data-journal-tab="Journal" onclick="switchTab('Journal')">Trade Log</button><button class="segment" role="tab" data-journal-tab="DailyJournal" onclick="switchTab('DailyJournal')">Daily Journal</button><button class="segment" role="tab" data-journal-tab="Library" onclick="switchTab('Library')">Library</button><button class="segment" role="tab" data-journal-tab="Strategy" onclick="switchTab('Strategy')">Strategy</button></div>
   <div style="display:flex;gap:8px;margin-bottom:12px">
     <button class="filter-pill-btn has-filter" id="ptViewActive" onclick="setPreTradeView('active')">Active</button>
     <button class="filter-pill-btn" id="ptViewHistory" onclick="setPreTradeView('history')">History</button>
@@ -1081,6 +1107,7 @@ body{min-height:100dvh}
     <span class="section-title">Daily Journal</span>
     <button class="btn-sm accent" onclick="openAddDailyEntry()">＋ New Entry</button>
   </div>
+  <div class="journal-segments" role="tablist" aria-label="Journal sections"><button class="segment" role="tab" data-journal-tab="PreTrade" onclick="switchTab('PreTrade')">Pre-Trade</button><button class="segment" role="tab" data-journal-tab="Journal" onclick="switchTab('Journal')">Trade Log</button><button class="segment" role="tab" data-journal-tab="DailyJournal" onclick="switchTab('DailyJournal')">Daily Journal</button><button class="segment" role="tab" data-journal-tab="Library" onclick="switchTab('Library')">Library</button><button class="segment" role="tab" data-journal-tab="Strategy" onclick="switchTab('Strategy')">Strategy</button></div>
   <div class="filter-pills" id="dailyTagFilterRow" style="display:flex;gap:6px;overflow-x:auto;margin-bottom:10px">
     <button class="filter-pill-btn has-filter" data-tag="" onclick="setDailyTagFilter('')">All</button>
     <button class="filter-pill-btn" data-tag="Disciplined" onclick="setDailyTagFilter('Disciplined')">Disciplined</button>
@@ -1096,6 +1123,7 @@ body{min-height:100dvh}
   <div class="section-header">
     <span class="section-title">Library</span>
   </div>
+  <div class="journal-segments" role="tablist" aria-label="Journal sections"><button class="segment" role="tab" data-journal-tab="PreTrade" onclick="switchTab('PreTrade')">Pre-Trade</button><button class="segment" role="tab" data-journal-tab="Journal" onclick="switchTab('Journal')">Trade Log</button><button class="segment" role="tab" data-journal-tab="DailyJournal" onclick="switchTab('DailyJournal')">Daily Journal</button><button class="segment" role="tab" data-journal-tab="Library" onclick="switchTab('Library')">Library</button><button class="segment" role="tab" data-journal-tab="Strategy" onclick="switchTab('Strategy')">Strategy</button></div>
   <div class="library-filters">
     <select class="form-select" id="libOutcomeFilter" onchange="renderLibrary()">
       <option value="">All Outcomes</option>
@@ -1349,6 +1377,7 @@ body{min-height:100dvh}
     <span class="section-title">Strategy & Plan</span>
     <button class="btn-sm accent" onclick="saveStrategy()">Save</button>
   </div>
+  <div class="journal-segments" role="tablist" aria-label="Journal sections"><button class="segment" role="tab" data-journal-tab="PreTrade" onclick="switchTab('PreTrade')">Pre-Trade</button><button class="segment" role="tab" data-journal-tab="Journal" onclick="switchTab('Journal')">Trade Log</button><button class="segment" role="tab" data-journal-tab="DailyJournal" onclick="switchTab('DailyJournal')">Daily Journal</button><button class="segment" role="tab" data-journal-tab="Library" onclick="switchTab('Library')">Library</button><button class="segment" role="tab" data-journal-tab="Strategy" onclick="switchTab('Strategy')">Strategy</button></div>
   <!-- Empty-state CTA (Batch 4) — a nudge banner, not a gate: the form below
        always stays visible and editable either way. Shown only when the
        whole strategy document is blank; disappears the moment any field has
@@ -1359,6 +1388,7 @@ body{min-height:100dvh}
     <div class="empty-sub">Write down your thesis, entry rules, risk management, and edge — the more specific, the more useful this becomes as a reference.</div>
     <button class="empty-cta-btn" onclick="document.getElementById('stratName').focus();document.getElementById('stratName').scrollIntoView({behavior:'smooth',block:'center'})">Set Up Strategy <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
   </div>
+  <div id="strategyPerformance" class="strategy-ribbon"></div>
   <div class="card">
     <div class="form-group">
       <label class="form-label">Strategy Name</label>
@@ -1370,13 +1400,14 @@ body{min-height:100dvh}
     </div>
     <div class="form-group">
       <label class="form-label">Trade Plan Rules</label>
-      <textarea class="form-textarea" id="stratRules" placeholder="Entry criteria, confirmation signals, timeframe confluence..."></textarea>
+      <textarea class="form-textarea" id="stratRules" oninput="renderStrategyRuleChecks()" placeholder="Entry criteria, confirmation signals, timeframe confluence..."></textarea>
     </div>
     <div class="form-group">
       <label class="form-label">Risk Management</label>
       <textarea class="form-textarea" id="stratRisk" placeholder="Max risk per trade, max daily loss, position sizing rules..."></textarea>
     </div>
   </div>
+  <div id="strategyRuleChecks"></div>
   <div class="section-header"><span class="section-title">My Edge</span></div>
   <div class="card">
     <div class="form-group">
@@ -1393,7 +1424,7 @@ body{min-height:100dvh}
     </div>
     <div class="form-group">
       <label class="form-label">Invalidation Criteria</label>
-      <textarea class="form-textarea" id="stratInvalid" placeholder="When does your setup become invalid?"></textarea>
+      <textarea class="form-textarea" id="stratInvalid" oninput="renderStrategyRuleChecks()" placeholder="When does your setup become invalid?"></textarea>
     </div>
     <button class="btn btn-primary" onclick="saveStrategy()">Save Strategy & Edge</button>
   </div>
@@ -1812,7 +1843,7 @@ body{min-height:100dvh}
      the New Trade / New Account / Prop Firm sheets use) for visual consistency
      and because it's already a proven, working pattern in this app. ══ -->
 <div class="modal-overlay" id="navDrawerModal" onclick="closeNavDrawerOnOverlay(event)">
-  <div class="modal" style="padding-bottom:28px">
+  <div class="modal">
     <div class="nav-drawer-header">
       <span class="modal-title" id="navDrawerTitle" style="margin-bottom:0">Dashboard</span>
       <button class="nav-drawer-close" onclick="closeNavDrawer()" aria-label="Close">
@@ -2357,6 +2388,8 @@ body{min-height:100dvh}
         <option value="Clean Session">Clean Session</option>
       </select>
     </div>
+    <div class="form-group"><label class="form-label">Mood</label><div class="quick-mood" id="dailyMoodChips"><button class="filter-pill-btn" type="button" data-mood="Calm" onclick="setDailyMood('Calm')">Calm</button><button class="filter-pill-btn" type="button" data-mood="Disciplined" onclick="setDailyMood('Disciplined')">Disciplined</button><button class="filter-pill-btn" type="button" data-mood="Anxious" onclick="setDailyMood('Anxious')">Anxious</button><button class="filter-pill-btn" type="button" data-mood="FOMO" onclick="setDailyMood('FOMO')">FOMO</button></div></div>
+    <div class="form-group"><label class="form-label">Rule adherence</label><label class="rule-check"><input type="checkbox" id="deRulePlan" onchange="syncDailyReflectionMeta()"/> Followed trading plan</label><label class="rule-check"><input type="checkbox" id="deRuleRisk" onchange="syncDailyReflectionMeta()"/> Respected risk limit</label></div>
     <div class="form-group">
       <label class="form-label">Reflection</label>
       <textarea class="form-input" id="deReflection" rows="5" placeholder="How did today go — discipline, emotions, what to repeat or change..."></textarea>
@@ -2433,6 +2466,7 @@ body{min-height:100dvh}
       <span class="section-title" style="margin:0">Month Report</span>
       <button class="cal-nav-btn" onclick="document.getElementById('monthReportModal').classList.remove('open')" style="width:28px;height:28px">✕</button>
     </div>
+    <label id="monthReportPayoutControl" style="display:none;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:12px;font-weight:700;color:var(--text2)">Payouts <span style="display:flex;align-items:center;gap:8px"><span id="monthReportPayoutState">ON</span><input id="monthReportPayoutToggle" type="checkbox" checked onchange="toggleMonthReportPayouts()" aria-label="Include payouts in month report" style="accent-color:var(--accent);width:17px;height:17px;margin:0;cursor:pointer"/></span></label>
     <div id="monthReportCanvasWrap" style="border-radius:var(--radius);overflow:hidden;background:var(--surface2);display:flex;justify-content:center">
       <canvas id="monthReportCanvas" style="display:none"></canvas>
       <img id="monthReportImg" alt="Month report" style="width:100%;height:auto;display:block"/>
@@ -2509,6 +2543,18 @@ body{min-height:100dvh}
 </div>
 
 <!-- ══ Confirm Dialog Modal ══ -->
+<div class="modal-overlay centered" id="tradeFilterModal" onclick="if(event.target===this)closeTradeFilterModal()">
+  <div class="modal tf-modal" role="dialog" aria-label="Filter trades">
+    <div class="tf-head"><div class="tf-title">Filter trades</div><button class="tf-x" onclick="closeTradeFilterModal()" aria-label="Close">&times;</button></div>
+    <div class="filter-label">Direction</div>
+    <div class="tf-seg" data-tf="dir"><button data-v="">All</button><button data-v="long">Long</button><button data-v="short">Short</button></div>
+    <div class="filter-label">Outcome</div>
+    <div class="tf-seg" data-tf="outcome"><button data-v="">All</button><button data-v="win">Win</button><button data-v="loss">Loss</button><button data-v="be">BE</button></div>
+    <div class="filter-label">Date range</div>
+    <div class="filter-row"><input type="date" class="filter-select" id="tfFrom" aria-label="From"/><input type="date" class="filter-select" id="tfTo" aria-label="To"/></div>
+    <div class="tf-actions"><button class="tf-reset" onclick="resetTradeFilterModal()">Reset filters</button><button class="tf-apply" onclick="applyTradeFilterModal()">Apply filters</button></div>
+  </div>
+</div>
 <div class="modal-overlay centered" id="confirmModal">
   <div class="modal" style="padding:22px 18px 28px">
     <div style="font-size:18px;font-weight:800;margin-bottom:10px;letter-spacing:-.3px" id="confirmTitle">Remove option?</div>
@@ -2558,7 +2604,7 @@ body{min-height:100dvh}
 
 <!-- ══ Quick-Add Modal ══ -->
 <div class="modal-overlay" id="quickAddModal" onclick="closeOnOverlay(event)">
-  <div class="modal" style="padding:18px 16px 32px">
+  <div class="modal">
     <div class="modal-handle"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <div class="modal-title" style="margin-bottom:0">⚡ Quick Add</div>
@@ -5429,7 +5475,53 @@ function selectDrawerTab(tab){
   switchTab(tab);
 }
 
+
+// ─── Journal sub-nav popover ───
+const JNAV_ITEMS=[['PreTrade','🎯','Pre-Trade'],['Journal','📓','Trade Log'],['DailyJournal','📅','Daily Journal'],['Library','📚','Library'],['Strategy','♟️','Strategy']];
+function buildJournalNav(){
+  document.querySelectorAll('.journal-segments').forEach(seg=>{
+    if(seg.nextElementSibling&&seg.nextElementSibling.classList.contains('jnav'))return;
+    const w=document.createElement('div');w.className='jnav';
+    w.innerHTML='<button class="jnav-trigger" aria-haspopup="menu" onclick="toggleJournalNav(this.parentNode,event)"><span class="jnav-label"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></button><div class="jnav-pop" role="menu">'+JNAV_ITEMS.map(([k,i,l])=>'<button class="jnav-item" role="menuitem" data-jn="'+k+'" onclick="pickJournalNav(\''+k+'\')"><span>'+i+'</span>'+l+'<span class="jnav-check">✓</span></button>').join('')+'</div>';
+    seg.after(w);
+  });
+  syncJournalNav(typeof activeTab!=='undefined'?activeTab:'Journal');
+}
+function syncJournalNav(name){
+  const it=JNAV_ITEMS.find(x=>x[0]===name);
+  document.querySelectorAll('.jnav').forEach(w=>{
+    if(it)w.querySelector('.jnav-label').textContent=it[1]+' '+it[2];
+    w.querySelectorAll('.jnav-item').forEach(b=>b.classList.toggle('active',b.dataset.jn===name));
+  });
+}
+function closeJournalNav(){document.querySelectorAll('.jnav.open').forEach(w=>w.classList.remove('open'));}
+function toggleJournalNav(w,e){e.stopPropagation();const o=w.classList.contains('open');closeJournalNav();if(!o)w.classList.add('open');}
+function pickJournalNav(k){closeJournalNav();switchTab(k);}
+document.addEventListener('pointerdown',e=>{if(!e.target.closest('.jnav'))closeJournalNav();},true);
+window.addEventListener('scroll',closeJournalNav,true);
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',buildJournalNav);else buildJournalNav();
+
+// ─── Trade filter dialog ───
+let _tfDraft={dir:'',outcome:''};
+function _tfPaint(){document.querySelectorAll('#tradeFilterModal .tf-seg').forEach(g=>g.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===_tfDraft[g.dataset.tf])));}
+document.addEventListener('click',e=>{const b=e.target.closest('#tradeFilterModal .tf-seg button');if(!b)return;_tfDraft[b.parentNode.dataset.tf]=b.dataset.v;_tfPaint();});
+function openTradeFilterModal(){
+  const g=id=>document.getElementById(id).value;
+  _tfDraft={dir:g('filterDir'),outcome:g('filterOutcome')};
+  document.getElementById('tfFrom').value=g('filterDateFrom');document.getElementById('tfTo').value=g('filterDateTo');
+  _tfPaint();document.getElementById('tradeFilterModal').style.display='flex';
+}
+function closeTradeFilterModal(){document.getElementById('tradeFilterModal').style.display='none';}
+function resetTradeFilterModal(){_tfDraft={dir:'',outcome:''};document.getElementById('tfFrom').value='';document.getElementById('tfTo').value='';_tfPaint();}
+function applyTradeFilterModal(){
+  const set=(id,v)=>document.getElementById(id).value=v;
+  set('filterDir',_tfDraft.dir);set('filterOutcome',_tfDraft.outcome);
+  set('filterDateFrom',document.getElementById('tfFrom').value);set('filterDateTo',document.getElementById('tfTo').value);
+  closeTradeFilterModal();renderTradeList();
+}
+function toggleFilterDrawer(){openTradeFilterModal();}
 function switchTab(name){
+  if(typeof syncJournalNav==='function')syncJournalNav(name);
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   if(name!=='Stats' && window.symClearPin) window.symClearPin();
@@ -5440,6 +5532,8 @@ function switchTab(name){
   const navEl = document.getElementById('nav'+(TAB_TO_PARENT[name]||name));
   if(navEl){ navEl.classList.add('active'); syncNavCollapsedIcon(navEl); }
   activeTab=name;
+  document.querySelectorAll('.journal-segments .segment').forEach(btn=>{ const selected=btn.dataset.journalTab===name; btn.classList.toggle('active',selected); btn.setAttribute('aria-selected',String(selected)); });
+  if(name==='Strategy') renderStrategyPerformance();
   // Persist active tab to Telegram CloudStorage (session state)
   CS.set('active_tab', name);
   // Update header title and subtitle to reflect current tab
@@ -5671,7 +5765,8 @@ function renderHeader(){
   // Only update the subtitle on the Journal tab — other tabs own their subtitle
   if(activeTab==='Journal'){
     const acctName=activeAcctFilter!=='all'?' · '+(accounts.find(a=>a.id===activeAcctFilter)?.name||''):'';
-    document.getElementById('headerSub').textContent=ft.length+' trade'+(ft.length!==1?'s':'')+acctName;
+    const shown=applyJournalFilters(ft).length;
+    document.getElementById('headerSub').textContent='Showing '+shown+' of '+ft.length+' trade'+(ft.length!==1?'s':'')+acctName;
   }
   updateJournalBadge(ft.length);
 }
@@ -5690,22 +5785,30 @@ function hasActiveFilters(){
   const f=getJournalFilters();
   return !!(f.search||f.dir||f.outcome||f.dateFrom||f.dateTo);
 }
+let tradeQuickFilter='all';
+function setTradeQuickFilter(value){
+  tradeQuickFilter=value;
+  document.querySelectorAll('#tradeQuickFilters [data-quick]').forEach(b=>b.classList.toggle('has-filter',b.dataset.quick===value));
+  renderTradeList();
+}
 function clearFilters(){
+  setTradeQuickFilter('all');
   const ids=['journalSearch','filterDir','filterOutcome','filterDateFrom','filterDateTo'];
   ids.forEach(id=>{ const el=document.getElementById(id); if(el)el.value=''; });
   renderTradeList();
 }
-function toggleFilterDrawer(){
-  const d=document.getElementById('filterDrawer');
-  d.classList.toggle('open');
-}
+
 let _journalFilterCache={base:null,key:'',result:null};
 function applyJournalFilters(ft){
   const f=getJournalFilters();
-  const filterKey=JSON.stringify(f);
+  const filterKey=JSON.stringify(f)+'|'+tradeQuickFilter;
   const c=_journalFilterCache;
   if(c.base===ft && c.key===filterKey) return c.result;
   const result=ft.filter(t=>{
+    const quickPnl=parseFloat(t.pnl)||0;
+    if(tradeQuickFilter==='win' && quickPnl<=0)return false;
+    if(tradeQuickFilter==='loss' && quickPnl>=0)return false;
+    if(tradeQuickFilter==='mistake' && !/mistake|overtrad|revenge|fomo|rule break|undisciplined/i.test([t.emotion,t.notes,t.reason].filter(Boolean).join(' ')))return false;
     if(f.search){
       const hay=[t.pair,t.setup,t.reason,t.notes,t.session,t.emotion].filter(Boolean).join(' ').toLowerCase();
       if(!hay.includes(f.search))return false;
@@ -5728,8 +5831,8 @@ function updateFilterPillBtn(){
   if(!btn) return;
   const f=getJournalFilters();
   // Count only drawer filters (not outcome pills — those have their own UI)
-  const drawerCount=[f.dir,f.dateFrom,f.dateTo].filter(Boolean).length;
-  btn.classList.toggle('has-filter', hasActiveFilters());
+  const drawerCount=[f.dir,f.outcome,f.dateFrom,f.dateTo].filter(Boolean).length;
+  btn.classList.toggle('has-filter', drawerCount>0);
   // Show count badge on filter button when drawer filters are active
   let badge=btn.querySelector('.filter-count');
   if(drawerCount>0){
@@ -5762,7 +5865,7 @@ function _tradeCardKey(t){
   const clText=[cl.htf?.join(','),cl.setup?.join(',')].filter(Boolean).join('·');
   const hasImgs=!!(t.images&&t.images.length);
   return [t.id,t.pair,pnl,t.dir,t.setup||'',t.emotion||'',t.time||'',t.session||'',
-          t.entry||'',t.exit||'',rVal,clText,hasImgs?1:0,t.accountId||''].join('|');
+          t.entry||'',t.exit||'',rVal,clText,hasImgs?1:0,t.accountId||'',accounts.find(a=>a.id===t.accountId)?.balance||0].join('|');
 }
 
 // Render a single trade card's inner HTML (wrap + card elements).
@@ -5796,8 +5899,10 @@ function _tradeCardInnerHtml(t){
   // Slot 3: R if present; else setup if no discipline either.
   // Slot 4: discipline if present; else setup if slot 3 was taken by R.
   // Setup only appears when both R and discipline are absent. No overflow badge.
-  const metaHtml=_tradePriorityTagsHtml(t);
-
+  const rText=rVal!==null?(Number(rVal)>0?'+':'')+rVal+'R':'';
+  const accountBalance=Number(acct?.balance)||0;
+  const percent=accountBalance?((pnl/accountBalance)*100).toFixed(2):null;
+  const returnText=[rText,percent!==null?(pnl>=0?'+':'')+percent+'%':''].filter(Boolean).join(' · ')||'—';
   return '<div class="swipe-delete-bg" id="sdel-'+t.id+'">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>'
     +'Delete'
@@ -5809,17 +5914,12 @@ function _tradeCardInnerHtml(t){
     +' ontouchend="swipeEnd(event,\''+t.id+'\')"'
     +' onmousedown="mouseSwipeStart(event,\''+t.id+'\')"'
     +'>'
-    +'<div class="trade-item-top">'
-    +'<span class="trade-pair">'+escapeHtml(t.pair)+(hasImgs?' \ud83d\udcf7':'')+'</span>'
-    +'<span class="trade-pnl '+(pnl>=0?'positive':'negative')+'">'+fmtPnl(pnl)+'</span>'
-    +'</div>'
-    +'<div class="trade-meta">'+metaHtml+'</div>'
+    +'<div class="trade-scan"><div class="trade-scan-left">'
+    +'<span class="trade-pair">'+escapeHtml(t.pair)+(hasImgs?'<span class="chart-indicator" title="Chart attached"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m6 16 5-5 3 2 5-7"/></svg></span>':'')+'</span>'
+    +'<div class="trade-scan-meta"><span class="tag '+(t.dir==='long'?'tag-long':'tag-short')+'">'+(t.dir||'').toUpperCase()+'</span>'+(t.session?'<span>'+escapeHtml(t.session)+'</span>':'')+(t.time?'<span>'+escapeHtml(t.time)+'</span>':'')+'</div>'
+    +'</div><div class="trade-scan-right"><span class="trade-pnl '+(pnl>=0?'positive':'negative')+'">'+fmtPnl(pnl)+'</span><span class="trade-scan-return">'+returnText+'</span></div></div>'
     +(clText?'<div class="cl-summary">'+escapeHtml(clText)+'</div>':'')
-    +'<div class="trade-bottom">'
-    +'<span>'+(t.time?escapeHtml(t.time):'')+'</span>'
-    +'<span>'+(t.session?'<span style="color:var(--amber);font-size:10px">'+escapeHtml(t.session)+'</span>':acct?escapeHtml(acct.name):'')+'</span>'
-    +'<span>'+(t.entry?'In: '+escapeHtml(t.entry):'')+(t.exit?' \u2192 '+escapeHtml(t.exit):'')+'</span>'
-    +'</div>'
+    +'<div class="trade-bottom"><span>'+(acct?escapeHtml(acct.name):'')+'</span><span>'+(t.entry?'In: '+escapeHtml(t.entry):'')+(t.exit?' \u2192 '+escapeHtml(t.exit):'')+'</span></div>'
     +'</div>';
 }
 
@@ -5832,6 +5932,11 @@ function renderTradeList(){
   const list=document.getElementById('tradeList');
   const base=filteredTrades();
   const ft=applyJournalFilters(base);
+
+  if(activeTab==='Journal'){
+    const acctName=activeAcctFilter!=='all'?' · '+(accounts.find(a=>a.id===activeAcctFilter)?.name||''):'';
+    document.getElementById('headerSub').textContent='Showing '+ft.length+' of '+base.length+' trade'+(base.length!==1?'s':'')+acctName;
+  }
 
   // Update badge with TOTAL filtered account trades (not search-filtered)
   updateJournalBadge(base.length);
@@ -6773,6 +6878,7 @@ function closeOnOverlay(e){
 // ═══════════════════════════════════════════════════════════════════
 let _lastReportStats = null;
 let _lastReportFile = null; // File built from the rendered canvas, for Share/Save
+let _monthReportRenderId = 0;
 
 const _reportMonthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -6849,7 +6955,13 @@ function computePeriodStats(fromDate, toDate, acctId){
 function monthReportStats(){
   const monthKey = `${calYear}-${String(calMonth+1).padStart(2,'0')}`;
   const core = computePeriodStats(monthKey+'-01', monthKey+'-31', activeAcctFilter);
-  return { monthKey, monthLabel: `${_reportMonthNames[calMonth]} ${calYear}`, monthPnl: core.periodPnl, ...core };
+  const account = accounts.find(a=>a.id===activeAcctFilter);
+  const linkedFirms = propFirms.filter(f=>f.linkedAccount===activeAcctFilter);
+  const isProp = !!account && (/\bprop\b/i.test(String(account.type||account.accountType||'')) || /\bprop\b/i.test(account.name||'') || linkedFirms.length>0);
+  const payout = linkedFirms.reduce((sum,f)=>sum+(f.payouts||[])
+    .filter(p=>p.date && p.date>=monthKey+'-01' && p.date<=monthKey+'-31')
+    .reduce((subtotal,p)=>subtotal+(parseFloat(p.amount)||0),0),0);
+  return { monthKey, monthLabel: `${_reportMonthNames[calMonth]} ${calYear}`, monthPnl: core.periodPnl, isProp, payout, ...core };
 }
 
 function dayReportStats(dateStr, acctId){
@@ -6909,6 +7021,11 @@ function _drawIcon(ctx, type, px, py, size, color, pixelScale){
 function renderMonthReportCanvas(){
   const stats = monthReportStats();
   _lastReportStats = stats;
+  const renderId = ++_monthReportRenderId;
+  const payoutControl = document.getElementById('monthReportPayoutControl');
+  payoutControl.style.display = stats.isProp ? 'flex' : 'none';
+  document.getElementById('monthReportPayoutState').textContent = document.getElementById('monthReportPayoutToggle').checked ? 'ON' : 'OFF';
+  const showPayout = stats.isProp && document.getElementById('monthReportPayoutToggle').checked;
   const empty = document.getElementById('monthReportEmpty');
   const actions = document.getElementById('monthReportActions');
   const wrap = document.getElementById('monthReportCanvasWrap');
@@ -7054,14 +7171,16 @@ function renderMonthReportCanvas(){
   ctx.fillText('Account Overview', x+22, y+13);
   y += 22+16;
 
-  // Start / End balance, 2-col
-  const colW = cw/2;
+  // Account overview remains evenly spaced whether payouts are shown or hidden.
+  const colW = cw/(showPayout?3:2);
   ctx.fillStyle = C.text2; ctx.font = '600 12px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText('Start Balance', x, y+13);
   ctx.fillText('End Balance', x+colW, y+13);
+  if(showPayout) ctx.fillText('Payout', x+colW*2, y+13);
   ctx.fillStyle = C.text; ctx.font = '700 17px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText('$'+stats.startBalance.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}), x, y+38);
   ctx.fillText('$'+stats.endBalance.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}), x+colW, y+38);
+  if(showPayout) ctx.fillText('$'+stats.payout.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}), x+colW*2, y+38);
   y += 58+22;
 
   // Divider
@@ -7163,11 +7282,16 @@ function renderMonthReportCanvas(){
   document.getElementById('monthReportImg').src = canvas.toDataURL('image/png');
   _lastReportFile = null;
   canvas.toBlob(blob=>{
-    if(blob) _lastReportFile = new File([blob], _monthReportFilename(), {type:'image/png'});
+    if(blob && renderId===_monthReportRenderId) _lastReportFile = new File([blob], _monthReportFilename(), {type:'image/png'});
   }, 'image/png');
 }
 
+function toggleMonthReportPayouts(){
+  renderMonthReportCanvas();
+}
+
 function openMonthReport(){
+  document.getElementById('monthReportPayoutToggle').checked = true;
   document.getElementById('monthReportModal').classList.add('open');
   renderMonthReportCanvas();
 }
@@ -7554,6 +7678,9 @@ function openLinkedTrade(preTradeId){
 function _preTradeCardHtml(pt){
   const acct=accounts.find(a=>a.id===pt.accountId);
   const dirTag='<span class="tag '+(pt.dir==='long'?'tag-long':'tag-short')+'">'+(pt.dir==='long'?'▲':'▼')+' '+(pt.dir||'').toUpperCase()+'</span>';
+  const entry=Number(pt.plannedEntry), sl=Number(pt.plannedSl), tp=Number(pt.plannedTp);
+  const rr=Number.isFinite(entry)&&Number.isFinite(sl)&&Number.isFinite(tp)&&Math.abs(entry-sl)>0&&entry&&sl&&tp?Math.abs((tp-entry)/(entry-sl)):null;
+  const rrTag=rr!==null?'<span class="rr-chip">1:'+rr.toFixed(1)+'</span>':'';
   const hasChecklist=CL_KEYS.some(k=>pt[k]&&pt[k].length);
   const plannedParts=[];
   if(pt.plannedEntry) plannedParts.push('Entry: '+escapeHtml(String(pt.plannedEntry)));
@@ -7584,7 +7711,7 @@ function _preTradeCardHtml(pt){
   let actionsHtml='';
   if(pt.status==='watching'){
     actionsHtml='<div class="pretrade-actions">'
-      +'<button class="btn-sm accent" onclick="event.stopPropagation();markPreTradeTaken(\''+pt.id+'\')">✓ Mark Taken</button>'
+      +'<button class="btn-sm accent" onclick="event.stopPropagation();markPreTradeTaken(\''+pt.id+'\')">Convert to Trade →</button>'
       +'<button class="btn-sm" onclick="event.stopPropagation();openSkipReason(\''+pt.id+'\')">✕ Mark Skipped</button>'
       +'</div>';
   } else if(pt.status==='taken' && pt.linkedTradeId){
@@ -7594,9 +7721,9 @@ function _preTradeCardHtml(pt){
   return '<div class="pretrade-item '+pt.status+'" onclick="openEditPreTrade(\''+pt.id+'\')">'
     +'<div class="pretrade-top">'
     +'<span class="trade-pair">'+escapeHtml(pt.pair||'')+imgBadge+'</span>'
-    +'<span class="status-badge '+pt.status+'">'+pt.status+'</span>'
+    +'<span class="status-badge '+pt.status+'">'+(pt.status==='watching'?(pt.plannedEntry?'Trigger Pending':'Planned'):pt.status==='taken'?'Taken':/invalid|cancel/i.test(pt.skipReason||'')?'Cancelled':'Missed')+'</span>'
     +'</div>'
-    +'<div class="trade-meta">'+dirTag+'</div>'
+    +'<div class="trade-meta">'+dirTag+rrTag+'</div>'
     +(pt.reasoning?'<div class="pretrade-reasoning">'+escapeHtml(pt.reasoning)+'</div>':'')
     +(pt.status==='skipped'
         ? '<div class="pretrade-planned"><span>Reason: '+escapeHtml(pt.skipReason||'—')+'</span></div>'
@@ -7655,6 +7782,21 @@ function _dailyEntryTradesRefHtml(dateStr){
   return '<span>'+dayTrades.length+' trade'+(dayTrades.length===1?'':'s')+' · '+fmtPnl(pnl)+'</span>';
 }
 
+let dailyMood='';
+function setDailyMood(mood){dailyMood=dailyMood===mood?'':mood;document.querySelectorAll('#dailyMoodChips [data-mood]').forEach(b=>b.classList.toggle('has-filter',b.dataset.mood===dailyMood));syncDailyReflectionMeta();}
+function syncDailyReflectionMeta(){
+  const field=document.getElementById('deReflection');
+  const body=field.value.replace(/^(?:Mood: (?:Calm|Disciplined|Anxious|FOMO)\n|Rules: [^\n]*\n)*/,'').trimStart();
+  field.value=(dailyMood?'Mood: '+dailyMood+'\n':'')+((document.getElementById('deRulePlan').checked||document.getElementById('deRuleRisk').checked)?'Rules: '+[document.getElementById('deRulePlan').checked?'Followed plan':null,document.getElementById('deRuleRisk').checked?'Respected risk':null].filter(Boolean).join(', ')+'\n':'')+body;
+}
+function restoreDailyMeta(){
+  const text=document.getElementById('deReflection').value;
+  dailyMood=(text.match(/^Mood: (Calm|Disciplined|Anxious|FOMO)$/m)||[])[1]||'';
+  document.querySelectorAll('#dailyMoodChips [data-mood]').forEach(b=>b.classList.toggle('has-filter',b.dataset.mood===dailyMood));
+  const rules=(text.match(/^Rules: ([^\n]*)$/m)||[])[1]||'';
+  document.getElementById('deRulePlan').checked=rules.includes('Followed plan');
+  document.getElementById('deRuleRisk').checked=rules.includes('Respected risk');
+}
 function onDailyEntryDateChange(){
   const dateStr=document.getElementById('deDate').value;
   document.getElementById('deTradesForDay').innerHTML=_dailyEntryTradesRefHtml(dateStr);
@@ -7664,6 +7806,7 @@ function onDailyEntryDateChange(){
   editingDailyEntryId = existing ? existing.id : null;
   document.getElementById('deTag').value = existing ? (existing.tag||'') : document.getElementById('deTag').value;
   document.getElementById('deReflection').value = existing ? (existing.reflection||'') : document.getElementById('deReflection').value;
+  restoreDailyMeta();
   document.getElementById('dailyEntryDeleteBtn').style.display = existing ? 'block' : 'none';
   document.getElementById('dailyEntryModalTitle').textContent = existing ? 'Edit Entry' : 'New Entry';
 }
@@ -7689,6 +7832,7 @@ function openEditDailyEntry(id){
   document.getElementById('deDate').value=e.date;
   document.getElementById('deTag').value=e.tag||'';
   document.getElementById('deReflection').value=e.reflection||'';
+  restoreDailyMeta();
   document.getElementById('deTradesForDay').innerHTML=_dailyEntryTradesRefHtml(e.date);
   document.getElementById('dailyEntryModal').classList.add('open');
   updateNavVisibility();
@@ -7727,11 +7871,14 @@ function deleteDailyEntry(){
 
 function _dailyEntryCardHtml(e){
   const dateLabel=new Date(e.date+'T00:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+  const day=tradesOnDate(e.date), dayPnl=day.reduce((sum,t)=>sum+(parseFloat(t.pnl)||0),0);
+  const wins=day.filter(t=>(parseFloat(t.pnl)||0)>0).length,losses=day.filter(t=>(parseFloat(t.pnl)||0)<0).length;
   return '<div class="daily-item" onclick="openEditDailyEntry(\''+e.id+'\')">'
     +'<div class="daily-top">'
     +'<span class="daily-date">'+escapeHtml(dateLabel)+'</span>'
     +(e.tag?'<span class="tag tag-neutral">'+escapeHtml(e.tag)+'</span>':'')
     +'</div>'
+    +'<div class="day-performance"><div><span class="metric-label">Day P&L</span><span class="metric-value '+(dayPnl>=0?'positive':'negative')+'">'+fmtPnl(dayPnl)+'</span></div><div><span class="metric-label">Trades</span><span class="metric-value">'+day.length+'</span></div><div><span class="metric-label">W / L</span><span class="metric-value">'+wins+' / '+losses+'</span></div></div>'
     +(e.reflection?'<div class="daily-reflection">'+escapeHtml(e.reflection)+'</div>':'')
     +'<div class="daily-trades-ref">'+_dailyEntryTradesRefHtml(e.date)+'</div>'
     +'</div>';
@@ -7808,7 +7955,7 @@ function renderLibrary(){
     const outcomeBadge=pnl>0?'<span class="tag tag-win">WIN</span>':pnl<0?'<span class="tag tag-loss">LOSS</span>':'<span class="tag tag-neutral">BE</span>';
     const noteExcerpt=t.notes?escapeHtml(t.notes):'';
     return '<div class="library-card" onclick="openLibraryImage(\''+t.id+'\')">'
-      +'<div class="library-thumb" id="libthumb-'+t.id+'"><div class="img-upload-spinner">⟳</div><div class="lib-outcome">'+outcomeBadge+'</div></div>'
+      +'<div class="library-thumb" id="libthumb-'+t.id+'"><div class="img-upload-spinner">⟳</div><div class="lib-outcome">'+outcomeBadge+(calcR(t)!==null?'<span class="tag">'+calcR(t)+'R</span>':'')+'</div></div>'
       +'<div class="library-body">'
       +'<div class="library-pair">'+escapeHtml(t.pair||'')+'</div>'
       +'<div class="trade-meta">'+_tradePriorityTagsHtml(t)+'</div>'
@@ -7902,6 +8049,21 @@ function _updateStrategyEmptyBanner(){
   const el=document.getElementById('strategyEmptyBanner');
   if(el) el.style.display = isEmpty ? 'block' : 'none';
 }
+function renderStrategyPerformance(){
+  const scoped=filteredTrades(), wins=scoped.filter(t=>(parseFloat(t.pnl)||0)>0), losses=scoped.filter(t=>(parseFloat(t.pnl)||0)<0);
+  const grossWin=wins.reduce((v,t)=>v+(parseFloat(t.pnl)||0),0),grossLoss=-losses.reduce((v,t)=>v+(parseFloat(t.pnl)||0),0);
+  const pf=grossLoss?(grossWin/grossLoss).toFixed(2):grossWin?'∞':'—';
+  const metrics=[['Win Rate',scoped.length?Math.round(wins.length/scoped.length*100)+'%':'—'],['Profit Factor',pf],['Total Trades',scoped.length]];
+  document.getElementById('strategyPerformance').innerHTML=metrics.map(([label,value])=>'<div><span class="metric-label">'+label+'</span><span class="metric-value">'+value+'</span></div>').join('');
+}
+function renderStrategyRuleChecks(){
+  const el=document.getElementById('strategyRuleChecks');
+  const sections=[['Entry',document.getElementById('stratRules').value],['Exit',document.getElementById('stratInvalid').value]];
+  el.innerHTML=sections.map(([label,text])=>{
+    const lines=text.split('\n').map(v=>v.trim()).filter(Boolean);
+    return lines.length?'<div class="card"><div class="form-label">'+label+' rules</div>'+lines.map(line=>'<label class="rule-check"><input type="checkbox"/> '+escapeHtml(line)+'</label>').join('')+'</div>':'';
+  }).join('');
+}
 function renderStrategyForm(){
   document.getElementById('stratName').value=strategy.name||'';
   document.getElementById('stratThesis').value=strategy.thesis||'';
@@ -7910,6 +8072,7 @@ function renderStrategyForm(){
   document.getElementById('edgeDesc').value=strategy.edgeDesc||'';
   document.getElementById('stratInvalid').value=strategy.invalid||'';
   _updateStrategyEmptyBanner();
+  renderStrategyPerformance(); renderStrategyRuleChecks();
 }
 async function saveStrategy(){
   strategy={
@@ -8463,7 +8626,7 @@ function dayReportHtml(stats){
       </div>
       ${stats.pct!==null?`<div class="${pnlCls}" style="font-size:14px;font-weight:700;margin-top:2px;display:flex;align-items:center;gap:3px;justify-content:flex-end">${_trendArrowSvg(stats.pct>=0)}${stats.pct>=0?'+':''}${stats.pct.toFixed(2)}%</div>`:''}
     </div>
-    <div class="day-report-balance-strip"><div class="day-report-balance-stat"><div class="day-report-balance-label">Start</div><div class="day-report-balance-value">$${stats.startBalance.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div><div class="day-report-balance-stat"><div class="day-report-balance-label">End</div><div class="day-report-balance-value">$${stats.endBalance.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div><div class="day-report-balance-stat"><div class="day-report-balance-label">Net P&L</div><div class="day-report-balance-value ${pnlCls}">${fmtPnl(stats.dayPnl)}</div></div></div>
+    <div class="day-report-balance-strip"><div class="day-report-balance-stat"><div class="day-report-balance-label">Start Balance</div><div class="day-report-balance-value">$${stats.startBalance.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div><div class="day-report-balance-stat"><div class="day-report-balance-label">End Balance</div><div class="day-report-balance-value">$${stats.endBalance.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div></div>
     <div class="chart-title" style="margin-bottom:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Trade Stats</div>
     <div class="cal-summary-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:10px">
       <div class="cal-stat"><div class="cal-stat-label">Longs</div><div class="cal-stat-value" style="color:var(--accent)">${stats.longs}</div></div>
