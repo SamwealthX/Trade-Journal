@@ -307,10 +307,25 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .daily-reflection{font-size:12px;color:var(--text2);line-height:1.4;white-space:pre-wrap;margin:6px 0}
 .daily-trades-ref{font-size:11px;color:var(--text3)}
 /* ── Library grid ── */
-.library-filters{display:flex;gap:8px;margin-bottom:12px}
-.library-filters .form-select{font-size:12px;padding:9px 10px}
-.library-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.library-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer}
+.library-filters{display:flex;justify-content:flex-end;margin-bottom:12px}
+.library-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:12px}
+.library-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;min-width:0}
+.library-card-header{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:13px 13px 0}
+.library-card-header .trade-meta{padding:0;gap:6px;flex-wrap:wrap}
+.library-charts{display:flex;gap:7px;overflow-x:auto;padding:11px 13px 0}
+.library-chart{position:relative;flex:0 0 min(38%,140px);aspect-ratio:4/3;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--surface2);cursor:pointer;padding:0;color:var(--text2)}
+.library-chart img{width:100%;height:100%;object-fit:cover;display:block}
+.library-chart-label{position:absolute;left:5px;bottom:5px;padding:2px 5px;border-radius:3px;background:var(--surface);color:var(--text);font-size:10px;font-weight:700}
+.library-levels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:10px;font:11px var(--mono);color:var(--text2)}
+.library-levels span{min-width:0;overflow-wrap:anywhere}.library-levels strong{display:block;color:var(--text3);font:700 10px var(--font);margin-bottom:3px}
+.library-card .pretrade-checklist-toggle{width:100%;gap:8px;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;font-family:var(--font)}
+.pretrade-checklist-toggle .cl-collapse-summary{margin-left:auto;color:var(--text3);font-size:11px;white-space:nowrap}
+.library-card .info-row{padding:6px 2px}
+.library-chart .img-upload-spinner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+.library-detail-btn{width:100%;margin-top:10px}
+.pretrade-subnav{display:flex;justify-content:flex-end;margin-bottom:12px}
+.pretrade-history-btn{min-width:36px;min-height:36px;display:grid;place-items:center}
+.pretrade-history-btn svg{width:18px;height:18px}
 .library-thumb{width:100%;aspect-ratio:4/3;background:var(--surface2);display:flex;align-items:center;justify-content:center;position:relative}
 .library-thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .library-thumb .lib-outcome{position:absolute;top:6px;right:6px}
@@ -415,7 +430,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
    actually ready to fill it in. ── */
 .checklist-collapse-toggle{display:flex;align-items:center;gap:8px;padding:12px 2px;margin:2px 0 4px;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;border-top:1px solid var(--border);border-bottom:1px solid var(--border);user-select:none;-webkit-user-select:none}
 .checklist-collapse-toggle .cl-collapse-summary{font-size:11px;font-weight:700;color:var(--text3);margin-left:auto}
-.checklist-collapse-toggle .cl-collapse-arrow{color:var(--text3);font-size:12px}
+.cl-collapse-arrow{display:inline-flex;align-items:center;justify-content:center;color:var(--text3);line-height:1;flex-shrink:0}
+.cl-collapse-arrow svg{width:15px;height:15px;display:block;transition:transform .2s ease}
+.cl-collapse-arrow.expanded svg{transform:rotate(180deg)}
+@media(prefers-reduced-motion:reduce){.cl-collapse-arrow svg{transition:none}}
 .checklist-collapse-body{display:none;padding-top:14px}
 .checklist-collapse-body.open{display:block}
 
@@ -474,7 +492,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 /* ── Image lightbox ── */
 .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:900;display:none;align-items:center;justify-content:center}
 .lightbox.open{display:flex}
-.lightbox img{max-width:96vw;max-height:88vh;border-radius:var(--radius-sm);object-fit:contain}
+.lightbox img{max-width:96vw;max-height:88vh;border-radius:var(--radius-sm);object-fit:contain;touch-action:pan-y}
 .lightbox-close{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid rgba(255,255,255,.15)}
 
 /* ── Section divider label ── */
@@ -1094,10 +1112,7 @@ body{min-height:100dvh}
     <button class="btn-sm accent" onclick="openAddPreTrade()">＋ New Setup</button>
   </div>
   <div class="journal-segments" role="tablist" aria-label="Journal sections"><button class="segment" role="tab" data-journal-tab="PreTrade" onclick="switchTab('PreTrade')">Pre-Trade</button><button class="segment" role="tab" data-journal-tab="Journal" onclick="switchTab('Journal')">Trade Log</button><button class="segment" role="tab" data-journal-tab="DailyJournal" onclick="switchTab('DailyJournal')">Daily Journal</button><button class="segment" role="tab" data-journal-tab="Library" onclick="switchTab('Library')">Library</button><button class="segment" role="tab" data-journal-tab="Strategy" onclick="switchTab('Strategy')">Strategy</button></div>
-  <div style="display:flex;gap:8px;margin-bottom:12px">
-    <button class="filter-pill-btn has-filter" id="ptViewActive" onclick="setPreTradeView('active')">Active</button>
-    <button class="filter-pill-btn" id="ptViewHistory" onclick="setPreTradeView('history')">History</button>
-  </div>
+  <div class="pretrade-subnav"><button class="btn-sm pretrade-history-btn" id="ptViewHistory" onclick="setPreTradeView(preTradeView==='history'?'active':'history')" aria-label="View setup history" title="View setup history" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg></button></div>
   <div id="preTradeList"></div>
 </div>
 
@@ -1124,20 +1139,10 @@ body{min-height:100dvh}
     <span class="section-title">Library</span>
   </div>
   <div class="journal-segments" role="tablist" aria-label="Journal sections"><button class="segment" role="tab" data-journal-tab="PreTrade" onclick="switchTab('PreTrade')">Pre-Trade</button><button class="segment" role="tab" data-journal-tab="Journal" onclick="switchTab('Journal')">Trade Log</button><button class="segment" role="tab" data-journal-tab="DailyJournal" onclick="switchTab('DailyJournal')">Daily Journal</button><button class="segment" role="tab" data-journal-tab="Library" onclick="switchTab('Library')">Library</button><button class="segment" role="tab" data-journal-tab="Strategy" onclick="switchTab('Strategy')">Strategy</button></div>
-  <div class="library-filters">
-    <select class="form-select" id="libOutcomeFilter" onchange="renderLibrary()">
-      <option value="">All Outcomes</option>
-      <option value="win">Wins</option>
-      <option value="loss">Losses</option>
-      <option value="be">Breakeven</option>
-    </select>
-    <select class="form-select" id="libPairFilter" onchange="renderLibrary()">
-      <option value="">All Pairs</option>
-    </select>
-    <select class="form-select" id="libSetupFilter" onchange="renderLibrary()">
-      <option value="">All Setups</option>
-    </select>
-  </div>
+  <div class="library-filters"><button class="filter-pill-btn" id="libFilterBtn" onclick="openLibraryFilterModal()" aria-label="Filter Library">Filter <span class="filter-count" id="libFilterCount" style="display:none"></span></button></div>
+  <select id="libOutcomeFilter" hidden><option value="">All Outcomes</option><option value="win">Wins</option><option value="loss">Losses</option><option value="be">Breakeven</option></select>
+  <select id="libPairFilter" hidden><option value="">All Pairs</option></select>
+  <select id="libSetupFilter" hidden><option value="">All Setups</option></select>
   <div id="libraryGrid" class="library-grid"></div>
 </div>
 
@@ -1970,7 +1975,7 @@ body{min-height:100dvh}
     <div class="checklist-collapse-toggle" id="clChecklistToggle" onclick="toggleClChecklistSection()">
       <span>Trade Checklist</span>
       <span class="cl-collapse-summary" id="clChecklistSummary"></span>
-      <span class="cl-collapse-arrow" id="clChecklistArrow">▾</span>
+      <span class="cl-collapse-arrow" id="clChecklistArrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 9 7 7 7-7"/></svg></span>
     </div>
     <div class="checklist-collapse-body" id="clChecklistBody">
 
@@ -2204,7 +2209,7 @@ body{min-height:100dvh}
     <div class="checklist-collapse-toggle" id="ptChecklistToggle" onclick="togglePtChecklistSection()">
       <span>Trade Checklist</span>
       <span class="cl-collapse-summary" id="ptChecklistSummary"></span>
-      <span class="cl-collapse-arrow" id="ptChecklistArrow">▾</span>
+      <span class="cl-collapse-arrow" id="ptChecklistArrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 9 7 7 7-7"/></svg></span>
     </div>
     <div class="checklist-collapse-body" id="ptChecklistBody">
 
@@ -2543,6 +2548,16 @@ body{min-height:100dvh}
 </div>
 
 <!-- ══ Confirm Dialog Modal ══ -->
+<div class="modal-overlay centered" id="libraryFilterModal" onclick="if(event.target===this)closeLibraryFilterModal()">
+  <div class="modal tf-modal" role="dialog" aria-label="Filter Library">
+    <div class="tf-head"><div class="tf-title">Filter Library</div><button class="tf-x" onclick="closeLibraryFilterModal()" aria-label="Close">&times;</button></div>
+    <div class="filter-label">Outcome</div>
+    <select class="form-select" id="lfOutcome"><option value="">All outcomes</option><option value="win">Wins</option><option value="loss">Losses</option><option value="be">Breakeven</option></select>
+    <div class="filter-label">Pair</div><select class="form-select" id="lfPair"><option value="">All pairs</option></select>
+    <div class="filter-label">Setup</div><select class="form-select" id="lfSetup"><option value="">All setups</option></select>
+    <div class="tf-actions"><button class="tf-reset" onclick="resetLibraryFilterModal()">Reset filters</button><button class="tf-apply" onclick="applyLibraryFilterModal()">Apply filters</button></div>
+  </div>
+</div>
 <div class="modal-overlay centered" id="tradeFilterModal" onclick="if(event.target===this)closeTradeFilterModal()">
   <div class="modal tf-modal" role="dialog" aria-label="Filter trades">
     <div class="tf-head"><div class="tf-title">Filter trades</div><button class="tf-x" onclick="closeTradeFilterModal()" aria-label="Close">&times;</button></div>
@@ -2597,9 +2612,9 @@ body{min-height:100dvh}
 </div>
 
 <!-- ══ Image Lightbox ══ -->
-<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+<div class="lightbox" id="lightbox" onclick="closeLightbox()" ontouchstart="lightboxTouchStart(event)" ontouchend="lightboxTouchEnd(event)">
   <div class="lightbox-close">✕</div>
-  <img id="lightboxImg" src="" alt=""/>
+  <img id="lightboxImg" src="" alt="Chart screenshot"/>
 </div>
 
 <!-- ══ Quick-Add Modal ══ -->
@@ -4616,14 +4631,17 @@ async function gdriveFlushAll(){
   _saveLocalCopy(true);
   await gdriveWriteFile(payload);
   if(_gdriveLastWriteOk) _saveLocalCopy(false);
-  _lastDriveSave = payload._saved;
-  _broadcastSave();
+  if(_gdriveLastWriteOk){
+    _lastDriveSave = payload._saved;
+    _broadcastSave();
+  }
+  updateAccountSyncLabels();
 }
 
 async function gdriveForceSave(){
   showToast('Saving to Drive…');
   await gdriveFlushAll();
-  showToast('Saved to Drive ✓');
+  showToast(_gdriveLastWriteOk?'Saved to Drive ✓':'Could not sync to Drive',_gdriveLastWriteOk?'success':'error');
 }
 
 // ─── Active tab / UI state helpers (Telegram CloudStorage) ───
@@ -5569,18 +5587,25 @@ function switchTab(name){
 }
 
 // ─── Account bar ───
+function accountSyncLabel(){return _lastDriveSave?'Synced '+timeAgo(_lastDriveSave):'Not synced';}
+function updateAccountSyncLabels(){
+  const label=accountSyncLabel();
+  document.getElementById('acctSyncStatus')?.replaceChildren(document.createTextNode(label));
+  document.querySelectorAll('#switchAcctList .switch-swipe-wrap .switch-acct-sub').forEach(el=>{el.textContent=label;});
+}
+setInterval(updateAccountSyncLabels,15000);
 function renderAcctBar(){
   const bar=document.getElementById('acctBar');
   const current=activeAcctFilter==='all'?null:accounts.find(a=>a.id===activeAcctFilter);
   const initials=current?current.name.trim().slice(0,2).toUpperCase():'ALL';
   const type=current?((current.type||current.accountType||'Trading')+''):'Portfolio';
   const balanceHtml=`<div class="acct-header-balance" id="acctHeaderBalance"><div class="lbl">Balance</div><div class="val" id="acctHeaderBalanceVal">$0.00</div><div class="acct-header-pnl" id="acctHeaderPnl">+$0.00</div></div>`;
-  bar.innerHTML=`<div class="acct-header-left"><div class="acct-header-icon-wrap"><div class="acct-header-icon">${escapeHtml(initials)}</div><span class="acct-sync-dot" id="acctSyncDot"></span></div><div class="acct-header-mid"><div class="acct-header-name"><span class="acct-header-name-text">${escapeHtml(current?current.name:'All Accounts')}</span><span class="acct-header-chevron"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></span></div><div class="acct-header-meta"><span class="acct-type-chip">${escapeHtml(type)}</span><button class="acct-header-refresh" onclick="event.stopPropagation();refreshAccountHeader(this)" aria-label="Refresh account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button><span class="acct-header-sync-status" id="acctSyncStatus">${_lastDriveSave?'Synced '+timeAgo(_lastDriveSave):'Not synced'}</span></div></div></div><div class="acct-header-right">${balanceHtml}</div>`;
+  bar.innerHTML=`<div class="acct-header-left"><div class="acct-header-icon-wrap"><div class="acct-header-icon">${escapeHtml(initials)}</div><span class="acct-sync-dot" id="acctSyncDot"></span></div><div class="acct-header-mid"><div class="acct-header-name"><span class="acct-header-name-text">${escapeHtml(current?current.name:'All Accounts')}</span><span class="acct-header-chevron"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></span></div><div class="acct-header-meta"><span class="acct-type-chip">${escapeHtml(type)}</span><button class="acct-header-refresh" onclick="event.stopPropagation();refreshAccountHeader(this)" aria-label="Refresh account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button><span class="acct-header-sync-status" id="acctSyncStatus">${accountSyncLabel()}</span></div></div></div><div class="acct-header-right">${balanceHtml}</div>`;
 }
 function refreshAccountHeader(btn){
   btn.classList.add('spinning'); document.getElementById('acctSyncDot')?.classList.add('syncing');
-  const status=document.getElementById('acctSyncStatus'); if(status)status.textContent='Syncing';
-  refreshAcctSync(()=>{renderAcctBar();renderHeader();});
+  updateAccountSyncLabels();
+  refreshAcctSync(()=>{renderAcctBar();renderHeader();updateAccountSyncLabels();});
 }
 
 // ─── Switch Account (bottom sheet) ───
@@ -5618,7 +5643,7 @@ function renderSwitchAcctList(){
       + `<div class="switch-acct-row${active?' active':''}" onclick="selectSwitchAccount('${a.id}',this)" `
       +   `ontouchstart="_swipeStart(event,this)" ontouchmove="_swipeMove(event,this)" ontouchend="_swipeEnd(event,this)" ontouchcancel="_swipeEnd(event,this)">`
       +   `<div class="acct-header-icon">${escapeHtml(initials)}</div>`
-      +   `<div class="switch-acct-mid"><div class="switch-acct-name">${escapeHtml(a.name)}</div><div class="switch-acct-sub">Synced ${timeAgo(_lastDriveSave)}</div></div>`
+      +   `<div class="switch-acct-mid"><div class="switch-acct-name">${escapeHtml(a.name)}</div><div class="switch-acct-sub">${accountSyncLabel()}</div></div>`
       +   `<div class="switch-acct-right"><div class="switch-acct-bal">$${bal.toFixed(2)}</div><div class="switch-acct-pnl ${ap>=0?'positive':'negative'}">${ap>=0?'+':''}$${Math.abs(ap).toFixed(2)}</div></div>`
       + `</div></div>`;
   }).join('');
@@ -5766,7 +5791,7 @@ function renderHeader(){
   if(activeTab==='Journal'){
     const acctName=activeAcctFilter!=='all'?' · '+(accounts.find(a=>a.id===activeAcctFilter)?.name||''):'';
     const shown=applyJournalFilters(ft).length;
-    document.getElementById('headerSub').textContent='Showing '+shown+' of '+ft.length+' trade'+(ft.length!==1?'s':'')+acctName;
+    document.getElementById('headerSub').textContent=(hasActiveFilters()||tradeQuickFilter!=='all'?'Showing '+shown+' of '+ft.length+' trade'+(ft.length!==1?'s':''):ft.length+' trade'+(ft.length!==1?'s':''))+acctName;
   }
   updateJournalBadge(ft.length);
 }
@@ -5935,7 +5960,7 @@ function renderTradeList(){
 
   if(activeTab==='Journal'){
     const acctName=activeAcctFilter!=='all'?' · '+(accounts.find(a=>a.id===activeAcctFilter)?.name||''):'';
-    document.getElementById('headerSub').textContent='Showing '+ft.length+' of '+base.length+' trade'+(base.length!==1?'s':'')+acctName;
+    document.getElementById('headerSub').textContent=(hasActiveFilters()||tradeQuickFilter!=='all'?'Showing '+ft.length+' of '+base.length+' trade'+(base.length!==1?'s':''):base.length+' trade'+(base.length!==1?'s':''))+acctName;
   }
 
   // Update badge with TOTAL filtered account trades (not search-filtered)
@@ -6456,18 +6481,33 @@ async function resolveImageSrc(img){
   catch(e){ console.warn('Could not load image', img.fileId, e); return ''; }
 }
 
-function openLightbox(tradeId, imgIdx){
-  const t=trades.find(x=>x.id===tradeId); if(!t||!t.images)return;
-  const img=t.images[imgIdx]; if(!img)return;
-  document.getElementById('lightboxImg').src='';
+let _lightboxImages=[], _lightboxIndex=0, _lightboxRequest=0, _lightboxTouchX=null, _lightboxSwiped=false;
+function showLightboxImage(index){
+  if(!_lightboxImages.length)return;
+  _lightboxIndex=(index+_lightboxImages.length)%_lightboxImages.length;
+  const request=++_lightboxRequest, image=document.getElementById('lightboxImg');
+  image.src='';
   document.getElementById('lightbox').classList.add('open');
-  resolveImageSrc(img).then(src=>{ document.getElementById('lightboxImg').src=src; });
+  syncScrollLock();
+  resolveImageSrc(_lightboxImages[_lightboxIndex]).then(src=>{if(request===_lightboxRequest)image.src=src;});
 }
+function openLightbox(tradeId, imgIdx){
+  const t=trades.find(x=>x.id===tradeId); if(!t||!t.images?.[imgIdx])return;
+  _lightboxImages=t.images;showLightboxImage(imgIdx);
+}
+function lightboxTouchStart(e){_lightboxTouchX=e.touches[0]?.clientX??null;_lightboxSwiped=false;}
+function lightboxTouchEnd(e){
+  if(_lightboxTouchX===null)return;
+  const delta=(e.changedTouches[0]?.clientX??_lightboxTouchX)-_lightboxTouchX;
+  _lightboxTouchX=null;
+  if(Math.abs(delta)>45 && _lightboxImages.length>1){_lightboxSwiped=true;showLightboxImage(_lightboxIndex+(delta<0?1:-1));setTimeout(()=>_lightboxSwiped=false,350);}
+}
+
 function openLightboxDirect(src){
   document.getElementById('lightboxImg').src=src;
-  document.getElementById('lightbox').classList.add('open');
+  _lightboxImages=[];document.getElementById('lightbox').classList.add('open');syncScrollLock();
 }
-function closeLightbox(){ document.getElementById('lightbox').classList.remove('open'); }
+function closeLightbox(){ if(_lightboxSwiped){_lightboxSwiped=false;return;} ++_lightboxRequest;document.getElementById('lightbox').classList.remove('open');syncScrollLock(); }
 
 // ─── Checklist ───
 const SINGLE_SELECT_KEYS = ['slpl','exit','poi','setup'];
@@ -6504,27 +6544,28 @@ function renderAllChecklists(){ CL_KEYS.forEach(k=>renderChecklistField(k)); }
 // nothing to show yet, auto-expanded when there already is. Decided fresh
 // at open time, not remembered — see collapseClChecklist/expandClChecklist
 // callers in openAddTrade/openEditTrade below.
+function checklistChevronSvg(){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg>';}
 function collapseClChecklist(){
   document.getElementById('clChecklistBody').classList.remove('open');
-  document.getElementById('clChecklistArrow').textContent='▾';
+  document.getElementById('clChecklistArrow').classList.remove('expanded');
   updateClChecklistSummary();
 }
 function expandClChecklist(){
   document.getElementById('clChecklistBody').classList.add('open');
-  document.getElementById('clChecklistArrow').textContent='▴';
+  document.getElementById('clChecklistArrow').classList.add('expanded');
   updateClChecklistSummary();
 }
 function toggleClChecklistSection(){
   const body=document.getElementById('clChecklistBody');
   const arrow=document.getElementById('clChecklistArrow');
   const open=body.classList.toggle('open');
-  arrow.textContent = open ? '▴' : '▾';
+  arrow.classList.toggle('expanded',open);
 }
 function updateClChecklistSummary(){
   const el=document.getElementById('clChecklistSummary');
   if(!el) return;
-  const n=CL_KEYS.reduce((sum,k)=>sum+(clSelections[k]?clSelections[k].length:0),0);
-  el.textContent = n>0 ? n+' selected' : '';
+  const n=CL_KEYS.filter(k=>clSelections[k]?.length).length;
+  el.textContent = n+'/7 selected';
 }
 
 function handleChipClick(e){
@@ -7486,8 +7527,10 @@ let preTradeDir = 'long';
 let preTradeView = 'active'; // 'active' (status==='watching') | 'history' (taken/skipped)
 function setPreTradeView(view){
   preTradeView = view;
-  document.getElementById('ptViewActive').classList.toggle('has-filter', view==='active');
   document.getElementById('ptViewHistory').classList.toggle('has-filter', view==='history');
+  document.getElementById('ptViewHistory').setAttribute('aria-pressed',String(view==='history'));
+  document.getElementById('ptViewHistory').title=view==='history'?'View active setups':'View setup history';
+  document.getElementById('ptViewHistory').setAttribute('aria-label',view==='history'?'View active setups':'View setup history');
   renderPreTradeList();
 }
 
@@ -7513,25 +7556,25 @@ function setPreTradeDir(d){
 // preference — it never carries over between different setups.
 function collapsePtChecklist(){
   document.getElementById('ptChecklistBody').classList.remove('open');
-  document.getElementById('ptChecklistArrow').textContent='▾';
+  document.getElementById('ptChecklistArrow').classList.remove('expanded');
   updatePtChecklistSummary();
 }
 function expandPtChecklist(){
   document.getElementById('ptChecklistBody').classList.add('open');
-  document.getElementById('ptChecklistArrow').textContent='▴';
+  document.getElementById('ptChecklistArrow').classList.add('expanded');
   updatePtChecklistSummary();
 }
 function togglePtChecklistSection(){
   const body=document.getElementById('ptChecklistBody');
   const arrow=document.getElementById('ptChecklistArrow');
   const open=body.classList.toggle('open');
-  arrow.textContent = open ? '▴' : '▾';
+  arrow.classList.toggle('expanded',open);
 }
 function updatePtChecklistSummary(){
   const el=document.getElementById('ptChecklistSummary');
   if(!el) return;
-  const n=CL_KEYS.reduce((sum,k)=>sum+(preTradeSelections[k]?preTradeSelections[k].length:0),0);
-  el.textContent = n>0 ? n+' selected' : '';
+  const n=CL_KEYS.filter(k=>preTradeSelections[k]?.length).length;
+  el.textContent = n+'/7 selected';
 }
 
 function openAddPreTrade(){
@@ -7701,8 +7744,8 @@ function _preTradeCardHtml(pt){
     .map(([label,vals])=>'<div class="info-row"><span class="k">'+label+'</span><span class="v" style="font-family:var(--font);font-size:12px;text-align:right;max-width:58%;color:var(--text)">'+escapeHtml(vals.join(', '))+'</span></div>')
     .join('');
   const checklistHtml = hasChecklist
-    ? '<div class="pretrade-checklist-toggle" onclick="event.stopPropagation();togglePreTradeChecklist(\''+clSectionId+'\')">'
-      +'<span>Checklist</span><span id="'+clSectionId+'-arrow">▾</span></div>'
+    ? '<div class="pretrade-checklist-toggle" role="button" tabindex="0" aria-expanded="false" onkeydown="if(event.keyCode===13||event.keyCode===32){event.preventDefault();this.click()}" onclick="event.stopPropagation();togglePreTradeChecklist(\''+clSectionId+'\')">'
+      +'<span>Trade Checklist</span><span class="cl-collapse-summary">'+CL_KEYS.filter(k=>pt[k]?.length).length+'/7 selected</span><span class="cl-collapse-arrow" id="'+clSectionId+'-arrow">'+checklistChevronSvg()+'</span></div>'
       +'<div class="card" id="'+clSectionId+'" style="display:none;padding:10px 12px;margin:6px 0 2px;background:var(--surface2)">'+clRows+'</div>'
     : '';
 
@@ -7740,7 +7783,8 @@ function togglePreTradeChecklist(sectionId){
   if(!el) return;
   const open=el.style.display!=='none';
   el.style.display = open ? 'none' : 'block';
-  if(arrow) arrow.textContent = open ? '▾' : '▴';
+  if(arrow) arrow.classList.toggle('expanded',!open);
+  el.previousElementSibling?.setAttribute('aria-expanded',String(!open));
 }
 
 function renderPreTradeList(){
@@ -7922,10 +7966,17 @@ function populateLibraryFilters(){
 // image, ticked checklist items, Reasoning/Lesson (existing Reason/Notes
 // fields) — rather than a bare image lightbox, so Library doubles as a
 // proper visual trade review, not just a screenshot grid.
-function openLibraryImage(tradeId){
-  openPeek(tradeId);
+function openLibraryFilterModal(){
+  populateLibraryFilters();
+  ['Outcome','Pair','Setup'].forEach(k=>{
+    const source=document.getElementById('lib'+k+'Filter'),draft=document.getElementById('lf'+k);
+    draft.innerHTML=source.innerHTML;draft.value=source.value;
+  });
+  document.getElementById('libraryFilterModal').classList.add('open');updateNavVisibility();
 }
-
+function closeLibraryFilterModal(){document.getElementById('libraryFilterModal').classList.remove('open');updateNavVisibility();}
+function resetLibraryFilterModal(){['Outcome','Pair','Setup'].forEach(k=>document.getElementById('lf'+k).value='');}
+function applyLibraryFilterModal(){['Outcome','Pair','Setup'].forEach(k=>document.getElementById('lib'+k+'Filter').value=document.getElementById('lf'+k).value);closeLibraryFilterModal();renderLibrary();}
 function renderLibrary(){
   const grid=document.getElementById('libraryGrid');
   if(!grid) return;
@@ -7933,6 +7984,9 @@ function renderLibrary(){
   const outcome=document.getElementById('libOutcomeFilter').value;
   const pair=document.getElementById('libPairFilter').value;
   const setup=document.getElementById('libSetupFilter').value;
+  const n=[outcome,pair,setup].filter(Boolean).length;
+  document.getElementById('libFilterBtn').classList.toggle('has-filter',n>0);
+  const count=document.getElementById('libFilterCount');count.textContent=n;count.style.display=n?'inline-flex':'none';
 
   let list=_libraryQualifyingTrades();
   if(pair)  list=list.filter(t=>t.pair===pair);
@@ -7951,30 +8005,34 @@ function renderLibrary(){
   }
 
   grid.innerHTML=list.map(t=>{
-    const pnl=parseFloat(t.pnl)||0;
+    const pnl=parseFloat(t.pnl)||0, cl=t.checklist||{};
     const outcomeBadge=pnl>0?'<span class="tag tag-win">WIN</span>':pnl<0?'<span class="tag tag-loss">LOSS</span>':'<span class="tag tag-neutral">BE</span>';
-    const noteExcerpt=t.notes?escapeHtml(t.notes):'';
-    return '<div class="library-card" onclick="openLibraryImage(\''+t.id+'\')">'
-      +'<div class="library-thumb" id="libthumb-'+t.id+'"><div class="img-upload-spinner">⟳</div><div class="lib-outcome">'+outcomeBadge+(calcR(t)!==null?'<span class="tag">'+calcR(t)+'R</span>':'')+'</div></div>'
-      +'<div class="library-body">'
-      +'<div class="library-pair">'+escapeHtml(t.pair||'')+'</div>'
-      +'<div class="trade-meta">'+_tradePriorityTagsHtml(t)+'</div>'
-      +(noteExcerpt?'<div class="library-note">'+noteExcerpt+'</div>':'')
-      +'</div></div>';
+    const entry=Number(t.entry),sl=Number(t.sl),tp=Number(t.tp);
+    const rr=t.entry!==''&&t.sl!==''&&t.tp!==''&&[entry,sl,tp].every(Number.isFinite)&&Math.abs(entry-sl)>0?Math.abs((tp-entry)/(entry-sl)):null;
+    const rrPill=rr!==null?'<span class="rr-chip">1:'+rr.toFixed(1)+'</span>':'';
+    const chartNames=['Before','After','Bias'];
+    const images=t.images.map((img,i)=>'<button class="library-chart" type="button" onclick="openLightbox(\''+t.id+'\','+i+')" aria-label="View '+(chartNames[i]||'Chart '+(i+1))+' chart"><span class="img-upload-spinner">⟳</span><span class="library-chart-label">'+escapeHtml(img?.label||chartNames[i]||'Chart '+(i+1))+'</span></button>').join('');
+    const clRows=[['HTF Direction',cl.htf],['Liquidity Taken',cl.liq],['Setup / Model',cl.setup],['Entry (POI)',cl.poi],['Confluence',cl.conf],['SL Placement',cl.slpl],['Exit',cl.exit]]
+      .filter(([,vals])=>vals?.length).map(([label,vals])=>'<div class="info-row"><span class="k">'+label+'</span><span class="v" style="font-family:var(--font);font-size:12px;text-align:right;max-width:58%;color:var(--text)">'+escapeHtml(vals.join(', '))+'</span></div>').join('');
+    const id='libcl-'+t.id;
+    const level=(label,value)=>'<span><strong>'+label+'</strong>'+escapeHtml(String(value??'—'))+'</span>';
+    return '<div class="library-card">'
+      +'<div class="library-card-header"><span class="library-pair">'+escapeHtml(t.pair||'')+'</span><div class="trade-meta"><span class="tag '+(t.dir==='short'?'tag-short':'tag-long')+'">'+(t.dir==='short'?'▼ SHORT':'▲ LONG')+'</span>'+rrPill+outcomeBadge+'</div></div>'
+      +'<div class="library-charts">'+images+'</div>'
+      +'<div class="library-body"><div class="library-levels">'+level('ENTRY',t.entry)+level('SL',t.sl)+level('TP',t.tp)+'</div>'
+      +(t.setup?'<div class="library-note">'+escapeHtml(t.setup)+'</div>':'')
+      +'<button class="pretrade-checklist-toggle" onclick="togglePreTradeChecklist(\''+id+'\')" aria-expanded="false"><span>Trade Checklist</span><span class="cl-collapse-summary">'+CL_KEYS.filter(k=>cl[k]?.length).length+'/7 selected</span><span class="cl-collapse-arrow" id="'+id+'-arrow">'+checklistChevronSvg()+'</span></button>'
+      +'<div id="'+id+'" style="display:none">'+(clRows||'<div class="library-note">No checklist items selected</div>')+'</div>'
+      +'<button class="btn-sm library-detail-btn" onclick="openPeek(\''+t.id+'\')">View Trade Detail</button></div></div>';
   }).join('');
-
-  // Thumbnails resolve async (Drive fetch, cached after first load) — render
-  // the grid immediately with spinners, then fill each thumbnail in as its
-  // image resolves, same pattern as the trade-modal image gallery.
-  list.forEach(t=>{
-    resolveImageSrc(t.images[0]).then(src=>{
-      const el=document.getElementById('libthumb-'+t.id);
-      if(!el || !src) return;
-      const badge=el.querySelector('.lib-outcome');
-      el.innerHTML='<img src="'+src+'" alt="chart"/>';
-      if(badge) el.appendChild(badge);
+  list.forEach(t=>t.images.forEach((img,i)=>{
+    resolveImageSrc(img).then(src=>{
+      const button=document.querySelectorAll('#libraryGrid .library-card')[list.indexOf(t)]?.querySelectorAll('.library-chart')[i];
+      if(!button||!button.isConnected||!src)return;
+      const image=document.createElement('img');image.src=src;image.alt=(img?.label||['Before','After','Bias'][i]||'Chart')+' chart';
+      button.querySelector('.img-upload-spinner')?.remove();button.prepend(image);
     });
-  });
+  }));
 }
 
 // ─── Accounts ───
