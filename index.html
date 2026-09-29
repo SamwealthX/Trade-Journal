@@ -307,7 +307,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .daily-reflection{font-size:12px;color:var(--text2);line-height:1.4;white-space:pre-wrap;margin:6px 0}
 .daily-trades-ref{font-size:11px;color:var(--text3)}
 /* ── Library grid ── */
-.library-filters{display:flex;justify-content:flex-end;margin-bottom:12px}
+.library-filters{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.library-view-toggle{display:inline-flex;gap:2px;padding:3px;border:1px solid var(--border);border-radius:6px;background:var(--surface2)}
+.library-view-toggle button{border:0;background:transparent;color:var(--text3);padding:6px 10px;border-radius:4px;font:700 11px var(--font);cursor:pointer}
+.library-view-toggle button.active{background:var(--surface3);color:var(--accent)}
+.library-study-copy{margin-top:12px;border-top:1px solid var(--border);padding-top:10px}
+.library-study-copy strong{display:block;font-size:10px;text-transform:uppercase;color:var(--text3);margin:0 0 4px}
+.library-study-copy p{font-size:12px;line-height:1.5;color:var(--text2);white-space:pre-wrap;overflow-wrap:anywhere;margin:0 0 10px}
+.library-study-copy p:last-child{margin-bottom:0}
+.library-insight-tag{font-size:10px}
 .library-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:12px}
 .library-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;min-width:0}
 .library-card-header{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:13px 13px 0}
@@ -326,6 +334,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .pretrade-subnav{display:flex;justify-content:flex-end;margin-bottom:12px}
 .pretrade-history-btn{min-width:36px;min-height:36px;display:grid;place-items:center}
 .pretrade-history-btn svg{width:18px;height:18px}
+.pretrade-history-btn.has-filter{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
 .library-thumb{width:100%;aspect-ratio:4/3;background:var(--surface2);display:flex;align-items:center;justify-content:center;position:relative}
 .library-thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .library-thumb .lib-outcome{position:absolute;top:6px;right:6px}
@@ -494,6 +503,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .lightbox.open{display:flex}
 .lightbox img{max-width:96vw;max-height:88vh;border-radius:var(--radius-sm);object-fit:contain;touch-action:pan-y}
 .lightbox-close{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid rgba(255,255,255,.15)}
+.lightbox-arrow{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:52px;border:1px solid rgba(255,255,255,.2);border-radius:6px;background:rgba(0,0,0,.5);color:#fff;font-size:28px;cursor:pointer;opacity:0;transition:opacity .2s;z-index:1}
+.lightbox-arrow.prev{left:12px}.lightbox-arrow.next{right:12px}
+.lightbox:hover .lightbox-arrow,.lightbox-arrow:focus-visible{opacity:1}
+.lightbox-arrow[hidden]{display:none}
+@media(hover:none){.lightbox-arrow{display:none}}
+@media(prefers-reduced-motion:reduce){.lightbox-arrow{transition:none}}
 
 /* ── Section divider label ── */
 .section-divider-label{display:flex;align-items:center;gap:10px;margin:18px 0 14px}
@@ -1139,7 +1154,7 @@ body{min-height:100dvh}
     <span class="section-title">Library</span>
   </div>
   <div class="journal-segments" role="tablist" aria-label="Journal sections"><button class="segment" role="tab" data-journal-tab="PreTrade" onclick="switchTab('PreTrade')">Pre-Trade</button><button class="segment" role="tab" data-journal-tab="Journal" onclick="switchTab('Journal')">Trade Log</button><button class="segment" role="tab" data-journal-tab="DailyJournal" onclick="switchTab('DailyJournal')">Daily Journal</button><button class="segment" role="tab" data-journal-tab="Library" onclick="switchTab('Library')">Library</button><button class="segment" role="tab" data-journal-tab="Strategy" onclick="switchTab('Strategy')">Strategy</button></div>
-  <div class="library-filters"><button class="filter-pill-btn" id="libFilterBtn" onclick="openLibraryFilterModal()" aria-label="Filter Library">Filter <span class="filter-count" id="libFilterCount" style="display:none"></span></button></div>
+  <div class="library-filters"><div class="library-view-toggle" role="group" aria-label="Library view"><button id="libGalleryView" class="active" type="button" aria-pressed="true" onclick="setLibraryView('gallery')">Gallery</button><button id="libStudyView" type="button" aria-pressed="false" onclick="setLibraryView('study')">Study</button></div><button class="filter-pill-btn" id="libFilterBtn" onclick="openLibraryFilterModal()" aria-label="Filter Library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Filter <span class="filter-count" id="libFilterCount" style="display:none"></span></button></div>
   <select id="libOutcomeFilter" hidden><option value="">All Outcomes</option><option value="win">Wins</option><option value="loss">Losses</option><option value="be">Breakeven</option></select>
   <select id="libPairFilter" hidden><option value="">All Pairs</option></select>
   <select id="libSetupFilter" hidden><option value="">All Setups</option></select>
@@ -1380,7 +1395,6 @@ body{min-height:100dvh}
 <div id="tabStrategy" class="tab">
   <div class="section-header">
     <span class="section-title">Strategy & Plan</span>
-    <button class="btn-sm accent" onclick="saveStrategy()">Save</button>
   </div>
   <div class="journal-segments" role="tablist" aria-label="Journal sections"><button class="segment" role="tab" data-journal-tab="PreTrade" onclick="switchTab('PreTrade')">Pre-Trade</button><button class="segment" role="tab" data-journal-tab="Journal" onclick="switchTab('Journal')">Trade Log</button><button class="segment" role="tab" data-journal-tab="DailyJournal" onclick="switchTab('DailyJournal')">Daily Journal</button><button class="segment" role="tab" data-journal-tab="Library" onclick="switchTab('Library')">Library</button><button class="segment" role="tab" data-journal-tab="Strategy" onclick="switchTab('Strategy')">Strategy</button></div>
   <!-- Empty-state CTA (Batch 4) — a nudge banner, not a gate: the form below
@@ -1431,7 +1445,6 @@ body{min-height:100dvh}
       <label class="form-label">Invalidation Criteria</label>
       <textarea class="form-textarea" id="stratInvalid" oninput="renderStrategyRuleChecks()" placeholder="When does your setup become invalid?"></textarea>
     </div>
-    <button class="btn btn-primary" onclick="saveStrategy()">Save Strategy & Edge</button>
   </div>
 </div>
 
@@ -2613,8 +2626,10 @@ body{min-height:100dvh}
 
 <!-- ══ Image Lightbox ══ -->
 <div class="lightbox" id="lightbox" onclick="closeLightbox()" ontouchstart="lightboxTouchStart(event)" ontouchend="lightboxTouchEnd(event)">
-  <div class="lightbox-close">✕</div>
+  <button class="lightbox-close" type="button" aria-label="Close image" onclick="event.stopPropagation();closeLightbox()">✕</button>
+  <button class="lightbox-arrow prev" type="button" aria-label="Previous chart" onclick="event.stopPropagation();showLightboxImage(_lightboxIndex-1)">‹</button>
   <img id="lightboxImg" src="" alt="Chart screenshot"/>
+  <button class="lightbox-arrow next" type="button" aria-label="Next chart" onclick="event.stopPropagation();showLightboxImage(_lightboxIndex+1)">›</button>
 </div>
 
 <!-- ══ Quick-Add Modal ══ -->
@@ -5753,7 +5768,7 @@ function filteredTrades(){
 
 // ─── Render all ───
 function renderAll(){
-  renderAcctBar(); renderHeader(); renderTradeList(); renderPreTradeList(); renderStrategyForm(); renderEdgeTags();
+  renderAcctBar(); renderHeader(); renderTradeList(); renderPreTradeList(); renderStrategyForm(); renderEdgeTags(); renderLibrary();
   // Mark Stats as dirty so the next time the Stats tab is opened it re-renders
   // with fresh data. If Stats is already active, markStatsDirty() will re-render now.
   markStatsDirty();
@@ -6482,18 +6497,24 @@ async function resolveImageSrc(img){
 }
 
 let _lightboxImages=[], _lightboxIndex=0, _lightboxRequest=0, _lightboxTouchX=null, _lightboxSwiped=false;
+function updateLightboxArrows(){
+  document.querySelectorAll('.lightbox-arrow').forEach(button=>button.hidden=_lightboxImages.length<2);
+}
 function showLightboxImage(index){
   if(!_lightboxImages.length)return;
   _lightboxIndex=(index+_lightboxImages.length)%_lightboxImages.length;
   const request=++_lightboxRequest, image=document.getElementById('lightboxImg');
   image.src='';
   document.getElementById('lightbox').classList.add('open');
+  updateLightboxArrows();
   syncScrollLock();
   resolveImageSrc(_lightboxImages[_lightboxIndex]).then(src=>{if(request===_lightboxRequest)image.src=src;});
 }
-function openLightbox(tradeId, imgIdx){
+function openLightbox(tradeId, imgIdx, ordered=false){
   const t=trades.find(x=>x.id===tradeId); if(!t||!t.images?.[imgIdx])return;
-  _lightboxImages=t.images;showLightboxImage(imgIdx);
+  const sequence=ordered?_libraryChartSequence(t.images):t.images.map((img,i)=>({img,index:i}));
+  _lightboxImages=sequence.map(item=>item.img);
+  showLightboxImage(sequence.findIndex(item=>item.index===imgIdx));
 }
 function lightboxTouchStart(e){_lightboxTouchX=e.touches[0]?.clientX??null;_lightboxSwiped=false;}
 function lightboxTouchEnd(e){
@@ -6505,9 +6526,14 @@ function lightboxTouchEnd(e){
 
 function openLightboxDirect(src){
   document.getElementById('lightboxImg').src=src;
-  _lightboxImages=[];document.getElementById('lightbox').classList.add('open');syncScrollLock();
+  _lightboxImages=[];updateLightboxArrows();document.getElementById('lightbox').classList.add('open');syncScrollLock();
 }
 function closeLightbox(){ if(_lightboxSwiped){_lightboxSwiped=false;return;} ++_lightboxRequest;document.getElementById('lightbox').classList.remove('open');syncScrollLock(); }
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('lightbox').classList.contains('open'))return;
+  if(e.key==='Escape'){e.preventDefault();closeLightbox();}
+  else if(_lightboxImages.length>1 && (e.key==='ArrowRight'||e.key==='ArrowLeft')){e.preventDefault();showLightboxImage(_lightboxIndex+(e.key==='ArrowRight'?1:-1));}
+});
 
 // ─── Checklist ───
 const SINGLE_SELECT_KEYS = ['slpl','exit','poi','setup'];
@@ -6772,7 +6798,7 @@ function openEditTrade(t){
   // treat those as an already-known local preview that still needs uploading.)
   pendingImages = (t.images||[]).map(im=>
     typeof im==='string' ? {fileId:null, dataUrl:im, uploading:false, needsUpload:true}
-                         : {fileId:im.fileId, dataUrl:null, uploading:false}
+                         : {fileId:im.fileId, label:im.label, dataUrl:null, uploading:false}
   );
   pendingImagesOriginal = (t.images||[]).map(im=>typeof im==='string' ? {fileId:null} : {fileId:im.fileId});
   removedDuringEdit = [];
@@ -7453,7 +7479,7 @@ function saveTrade(){
   // ultimately failed (a "failed" badge + toast already surfaces that).
   const stillUploading = pendingImages.some(im=>im.uploading);
   if(stillUploading) showToast('Some images are still uploading — saved without them, edit again once done','error');
-  const imageRefs = pendingImages.filter(im=>im.fileId).map(im=>({fileId:im.fileId}));
+  const imageRefs = pendingImages.filter(im=>im.fileId).map(im=>({fileId:im.fileId,...(im.label?{label:im.label}:{})}));
   const trade={
     id:editingTradeId||genId(),
     accountId:document.getElementById('fAccount').value,
@@ -7977,6 +8003,30 @@ function openLibraryFilterModal(){
 function closeLibraryFilterModal(){document.getElementById('libraryFilterModal').classList.remove('open');updateNavVisibility();}
 function resetLibraryFilterModal(){['Outcome','Pair','Setup'].forEach(k=>document.getElementById('lf'+k).value='');}
 function applyLibraryFilterModal(){['Outcome','Pair','Setup'].forEach(k=>document.getElementById('lib'+k+'Filter').value=document.getElementById('lf'+k).value);closeLibraryFilterModal();renderLibrary();}
+let libraryView='gallery';
+function setLibraryView(view){
+  libraryView=view;
+  ['Gallery','Study'].forEach(name=>{
+    const button=document.getElementById('lib'+name+'View');
+    button.classList.toggle('active',view===name.toLowerCase());
+    button.setAttribute('aria-pressed',String(view===name.toLowerCase()));
+  });
+  renderLibrary();
+}
+// Old screenshots were stored without role metadata in Before, After, Bias order.
+// Explicit labels take precedence; unknown roles use the next analytical stage.
+function _libraryChartSequence(images){
+  const roles=['Bias','Setup/POI','Execution/Before','Outcome/After'];
+  const legacy=['Execution/Before','Outcome/After','Bias','Setup/POI'];
+  const rank=label=>/bias|higher.timeframe|htf/i.test(label)?0:/setup|poi|plan/i.test(label)?1:/before|execut|entry/i.test(label)?2:/after|outcome|result|exit/i.test(label)?3:-1;
+  const items=images.map((img,index)=>{
+    const explicit=typeof img==='object' ? String(img?.label||img?.role||'').trim() : '';
+    const stage=rank(explicit);
+    const fallback=legacy[index%legacy.length];
+    return {img,index,label:stage>=0?explicit:(index<4?fallback:roles[index%roles.length]),rank:stage>=0?stage:rank(fallback)};
+  });
+  return items.sort((a,b)=>a.rank-b.rank||a.index-b.index);
+}
 function renderLibrary(){
   const grid=document.getElementById('libraryGrid');
   if(!grid) return;
@@ -8010,16 +8060,20 @@ function renderLibrary(){
     const entry=Number(t.entry),sl=Number(t.sl),tp=Number(t.tp);
     const rr=t.entry!==''&&t.sl!==''&&t.tp!==''&&[entry,sl,tp].every(Number.isFinite)&&Math.abs(entry-sl)>0?Math.abs((tp-entry)/(entry-sl)):null;
     const rrPill=rr!==null?'<span class="rr-chip">1:'+rr.toFixed(1)+'</span>':'';
-    const chartNames=['Before','After','Bias'];
-    const images=t.images.map((img,i)=>'<button class="library-chart" type="button" onclick="openLightbox(\''+t.id+'\','+i+')" aria-label="View '+(chartNames[i]||'Chart '+(i+1))+' chart"><span class="img-upload-spinner">⟳</span><span class="library-chart-label">'+escapeHtml(img?.label||chartNames[i]||'Chart '+(i+1))+'</span></button>').join('');
+    const images=_libraryChartSequence(t.images).map(item=>'<button class="library-chart" type="button" data-image-index="'+item.index+'" onclick="openLightbox(\''+t.id+'\','+item.index+',true)" aria-label="View '+escapeHtml(item.label)+' chart"><span class="img-upload-spinner">⟳</span><span class="library-chart-label">'+escapeHtml(item.label)+'</span></button>').join('');
     const clRows=[['HTF Direction',cl.htf],['Liquidity Taken',cl.liq],['Setup / Model',cl.setup],['Entry (POI)',cl.poi],['Confluence',cl.conf],['SL Placement',cl.slpl],['Exit',cl.exit]]
       .filter(([,vals])=>vals?.length).map(([label,vals])=>'<div class="info-row"><span class="k">'+label+'</span><span class="v" style="font-family:var(--font);font-size:12px;text-align:right;max-width:58%;color:var(--text)">'+escapeHtml(vals.join(', '))+'</span></div>').join('');
     const id='libcl-'+t.id;
     const level=(label,value)=>'<span><strong>'+label+'</strong>'+escapeHtml(String(value??'—'))+'</span>';
-    return '<div class="library-card">'
-      +'<div class="library-card-header"><span class="library-pair">'+escapeHtml(t.pair||'')+'</span><div class="trade-meta"><span class="tag '+(t.dir==='short'?'tag-short':'tag-long')+'">'+(t.dir==='short'?'▼ SHORT':'▲ LONG')+'</span>'+rrPill+outcomeBadge+'</div></div>'
+    const linkedSetup=preTrades.find(p=>p.id===t.linkedPreTradeId);
+    const thesis=linkedSetup?.reasoning||t.thesis||'';
+    const notes=t.reason||'';
+    const lesson=t.notes||t.lesson||'';
+    const studyCopy=libraryView==='study'?'<div class="library-study-copy">'+(thesis?'<strong>Pre-trade thesis</strong><p>'+escapeHtml(thesis)+'</p>':'')+(notes?'<strong>Trade notes</strong><p>'+escapeHtml(notes)+'</p>':'')+(lesson?'<strong>Lessons learned</strong><p>'+escapeHtml(lesson)+'</p>':'')+(!thesis&&!notes&&!lesson?'<p>No study notes yet.</p>':'')+'</div>':'';
+    return '<div class="library-card" data-trade-id="'+escapeHtml(t.id)+'">'
+      +'<div class="library-card-header"><span class="library-pair">'+escapeHtml(t.pair||'')+'</span><div class="trade-meta"><span class="tag '+(t.dir==='short'?'tag-short':'tag-long')+'">'+(t.dir==='short'?'▼ SHORT':'▲ LONG')+'</span>'+rrPill+outcomeBadge+(libraryView==='gallery'&&lesson?'<span class="tag tag-neutral library-insight-tag">💡 Lesson</span>':libraryView==='gallery'&&notes?'<span class="tag tag-neutral library-insight-tag">📝 Notes</span>':'')+'</div></div>'
       +'<div class="library-charts">'+images+'</div>'
-      +'<div class="library-body"><div class="library-levels">'+level('ENTRY',t.entry)+level('SL',t.sl)+level('TP',t.tp)+'</div>'
+      +'<div class="library-body">'+studyCopy+'<div class="library-levels">'+level('ENTRY',t.entry)+level('SL',t.sl)+level('TP',t.tp)+'</div>'
       +(t.setup?'<div class="library-note">'+escapeHtml(t.setup)+'</div>':'')
       +'<button class="pretrade-checklist-toggle" onclick="togglePreTradeChecklist(\''+id+'\')" aria-expanded="false"><span>Trade Checklist</span><span class="cl-collapse-summary">'+CL_KEYS.filter(k=>cl[k]?.length).length+'/7 selected</span><span class="cl-collapse-arrow" id="'+id+'-arrow">'+checklistChevronSvg()+'</span></button>'
       +'<div id="'+id+'" style="display:none">'+(clRows||'<div class="library-note">No checklist items selected</div>')+'</div>'
@@ -8027,9 +8081,10 @@ function renderLibrary(){
   }).join('');
   list.forEach(t=>t.images.forEach((img,i)=>{
     resolveImageSrc(img).then(src=>{
-      const button=document.querySelectorAll('#libraryGrid .library-card')[list.indexOf(t)]?.querySelectorAll('.library-chart')[i];
+      const card=grid.querySelector('.library-card[data-trade-id="'+CSS.escape(t.id)+'"]');
+      const button=card?.querySelector('.library-chart[data-image-index="'+i+'"]');
       if(!button||!button.isConnected||!src)return;
-      const image=document.createElement('img');image.src=src;image.alt=(img?.label||['Before','After','Bias'][i]||'Chart')+' chart';
+      const image=document.createElement('img');image.src=src;image.alt=button.getAttribute('aria-label')||'Chart';
       button.querySelector('.img-upload-spinner')?.remove();button.prepend(image);
     });
   }));
@@ -8141,6 +8196,14 @@ async function saveStrategy(){
   await saveStrategyData(); showToast('Strategy saved ✓');
   renderStrategyForm();
 }
+let _strategyAutoSaveTimer;
+document.getElementById('tabStrategy').addEventListener('input',e=>{
+  if(!['stratName','stratThesis','stratRules','stratRisk','edgeDesc','stratInvalid'].includes(e.target.id))return;
+  strategy={name:document.getElementById('stratName').value,thesis:document.getElementById('stratThesis').value,rules:document.getElementById('stratRules').value,risk:document.getElementById('stratRisk').value,edgeDesc:document.getElementById('edgeDesc').value,invalid:document.getElementById('stratInvalid').value};
+  _updateStrategyEmptyBanner();
+  clearTimeout(_strategyAutoSaveTimer);
+  _strategyAutoSaveTimer=setTimeout(()=>saveStrategyData(),650);
+});
 function renderEdgeTags(){
   document.getElementById('edgeTags').innerHTML=edgeTags.map(tag=>
     `<span class="edge-tag">${escapeHtml(tag)}<span class="remove" onclick="removeEdgeTag('${escapeForInlineHandler(tag)}')">×</span></span>`
