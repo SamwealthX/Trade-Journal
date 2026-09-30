@@ -307,10 +307,32 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .daily-reflection{font-size:12px;color:var(--text2);line-height:1.4;white-space:pre-wrap;margin:6px 0}
 .daily-trades-ref{font-size:11px;color:var(--text3)}
 /* ── Library grid ── */
-.library-filters{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
-.library-view-toggle{display:inline-flex;gap:2px;padding:3px;border:1px solid var(--border);border-radius:6px;background:var(--surface2)}
-.library-view-toggle button{border:0;background:transparent;color:var(--text3);padding:6px 10px;border-radius:4px;font:700 11px var(--font);cursor:pointer}
-.library-view-toggle button.active{background:var(--surface3);color:var(--accent)}
+.library-filters{display:flex;justify-content:flex-start;align-items:center;gap:8px;margin-bottom:12px}
+.library-study-control{position:relative;display:inline-flex}
+.library-study-btn{min-width:36px;min-height:36px;display:grid;place-items:center}
+.library-study-btn svg{width:18px;height:18px}
+.library-study-btn.has-filter{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+.library-study-tip{display:none;position:absolute;top:calc(100% + 8px);left:0;z-index:20;width:min(240px,75vw);padding:9px 11px;background:var(--surface3);color:var(--text);border:1px solid var(--border2);border-radius:6px;font-size:12px;line-height:1.4;box-shadow:var(--shadow-lg);pointer-events:none}
+@media(hover:hover){.library-study-control:hover .library-study-tip,.library-study-control:focus-within .library-study-tip{display:block}}
+.library-study-control.show-tip .library-study-tip{display:block}
+.img-preview-wrap{overflow:visible;margin-bottom:36px}
+.img-preview-wrap img{border-radius:var(--radius-xs)}
+.img-role-chips{position:absolute;top:100%;left:0;right:0;display:flex;gap:2px;overflow-x:auto;padding:4px 0}
+.img-role-chips button{flex:none;padding:3px 5px;border:1px solid var(--border2);background:var(--surface2);color:var(--text3);border-radius:4px;font:700 10px var(--font);cursor:pointer}
+.img-role-chips button.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+.playbook-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px;margin-bottom:20px}
+.playbook-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0;min-width:0;overflow:hidden}
+.playbook-summary{width:100%;display:flex;align-items:center;gap:10px;padding:14px 16px;background:none;border:0;color:var(--text);font-family:var(--font);cursor:pointer;text-align:left}
+.playbook-title{font-size:15px;font-weight:800;overflow-wrap:anywhere;flex:1}
+.playbook-pin-count{font-size:11px;font-weight:800;color:var(--amber);white-space:nowrap}
+.playbook-content{display:none;padding:0 16px 16px;border-top:1px solid var(--border)}
+.playbook-card.expanded .playbook-content{display:block}
+.playbook-stats{display:flex;gap:14px;flex-wrap:wrap;margin:0;padding:12px 16px 14px;font-size:12px;color:var(--text2)}
+.playbook-stats strong{display:block;font:800 16px var(--mono);color:var(--text)}
+.playbook-card textarea{width:100%;min-height:78px;resize:vertical;margin:5px 0 12px}
+.playbook-models{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.playbook-models button{max-width:100%;overflow-wrap:anywhere}
+.playbook-section{margin-top:14px}.playbook-section-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}.playbook-read-list{margin:0;padding-left:18px;color:var(--text2);font-size:12px;line-height:1.6}.playbook-read-empty{font-size:12px;color:var(--text3)}.playbook-editor{display:none}.playbook-card.editing .playbook-editor{display:block}.playbook-card.editing .playbook-read{display:none}
 .library-study-copy{margin-top:12px;border-top:1px solid var(--border);padding-top:10px}
 .library-study-copy strong{display:block;font-size:10px;text-transform:uppercase;color:var(--text3);margin:0 0 4px}
 .library-study-copy p{font-size:12px;line-height:1.5;color:var(--text2);white-space:pre-wrap;overflow-wrap:anywhere;margin:0 0 10px}
@@ -318,12 +340,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .library-insight-tag{font-size:10px}
 .library-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:12px}
 .library-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;min-width:0}
-.library-card-header{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:13px 13px 0}
+.library-card-header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:13px 13px 0}
 .library-card-header .trade-meta{padding:0;gap:6px;flex-wrap:wrap}
+.library-model-control{position:relative;display:inline-flex;margin-left:auto}.library-model-star{width:34px;height:34px;display:grid;place-items:center;border:1px solid var(--border2);border-radius:6px;background:var(--surface2);color:var(--text3);font-size:20px;line-height:1;cursor:pointer}.library-model-star.pinned{color:var(--amber);border-color:var(--amber);background:var(--amber-dim);text-shadow:0 0 9px var(--amber)}.library-model-tip{display:none;position:absolute;right:0;top:calc(100% + 7px);z-index:20;width:max-content;max-width:min(250px,75vw);padding:8px 10px;background:var(--surface3);color:var(--text);border:1px solid var(--border2);border-radius:6px;font-size:12px;line-height:1.35;box-shadow:var(--shadow-lg);pointer-events:none}.library-model-control.show-tip .library-model-tip{display:block}@media(hover:hover){.library-model-control:hover .library-model-tip,.library-model-control:focus-within .library-model-tip{display:block}}
 .library-charts{display:flex;gap:7px;overflow-x:auto;padding:11px 13px 0}
 .library-chart{position:relative;flex:0 0 min(38%,140px);aspect-ratio:4/3;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--surface2);cursor:pointer;padding:0;color:var(--text2)}
 .library-chart img{width:100%;height:100%;object-fit:cover;display:block}
-.library-chart-label{position:absolute;left:5px;bottom:5px;padding:2px 5px;border-radius:3px;background:var(--surface);color:var(--text);font-size:10px;font-weight:700}
+.library-chart-label{position:absolute;left:5px;bottom:0;padding:3px 6px;border-radius:3px 3px 0 0;background:var(--surface);opacity:.88;color:var(--text);font-size:10px;font-weight:700}
 .library-levels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:10px;font:11px var(--mono);color:var(--text2)}
 .library-levels span{min-width:0;overflow-wrap:anywhere}.library-levels strong{display:block;color:var(--text3);font:700 10px var(--font);margin-bottom:3px}
 .library-card .pretrade-checklist-toggle{width:100%;gap:8px;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;font-family:var(--font)}
@@ -501,7 +524,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 /* ── Image lightbox ── */
 .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:900;display:none;align-items:center;justify-content:center}
 .lightbox.open{display:flex}
-.lightbox img{max-width:96vw;max-height:88vh;border-radius:var(--radius-sm);object-fit:contain;touch-action:pan-y}
+.lightbox img{max-width:96vw;max-height:88vh;border-radius:var(--radius-sm);object-fit:contain;touch-action:none;transform-origin:0 0;will-change:transform;cursor:zoom-in}
+.lightbox.zoomed img{cursor:grab}.lightbox.dragging img{cursor:grabbing}
 .lightbox-close{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid rgba(255,255,255,.15)}
 .lightbox-arrow{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:52px;border:1px solid rgba(255,255,255,.2);border-radius:6px;background:rgba(0,0,0,.5);color:#fff;font-size:28px;cursor:pointer;opacity:0;transition:opacity .2s;z-index:1}
 .lightbox-arrow.prev{left:12px}.lightbox-arrow.next{right:12px}
@@ -1154,7 +1178,7 @@ body{min-height:100dvh}
     <span class="section-title">Library</span>
   </div>
   <div class="journal-segments" role="tablist" aria-label="Journal sections"><button class="segment" role="tab" data-journal-tab="PreTrade" onclick="switchTab('PreTrade')">Pre-Trade</button><button class="segment" role="tab" data-journal-tab="Journal" onclick="switchTab('Journal')">Trade Log</button><button class="segment" role="tab" data-journal-tab="DailyJournal" onclick="switchTab('DailyJournal')">Daily Journal</button><button class="segment" role="tab" data-journal-tab="Library" onclick="switchTab('Library')">Library</button><button class="segment" role="tab" data-journal-tab="Strategy" onclick="switchTab('Strategy')">Strategy</button></div>
-  <div class="library-filters"><div class="library-view-toggle" role="group" aria-label="Library view"><button id="libGalleryView" class="active" type="button" aria-pressed="true" onclick="setLibraryView('gallery')">Gallery</button><button id="libStudyView" type="button" aria-pressed="false" onclick="setLibraryView('study')">Study</button></div><button class="filter-pill-btn" id="libFilterBtn" onclick="openLibraryFilterModal()" aria-label="Filter Library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Filter <span class="filter-count" id="libFilterCount" style="display:none"></span></button></div>
+  <div class="library-filters"><button class="filter-pill-btn" id="libFilterBtn" onclick="openLibraryFilterModal()" aria-label="Filter Library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Filter <span class="filter-count" id="libFilterCount" style="display:none"></span></button><span class="library-study-control" id="libraryStudyControl"><button id="libStudyView" class="btn-sm library-study-btn" type="button" aria-label="Toggle Study mode" aria-pressed="false" onclick="toggleLibraryStudy(event)" onpointerdown="startLibraryStudyTip(event)" onpointerup="stopLibraryStudyTip()" onpointercancel="stopLibraryStudyTip()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/><path d="M9 7h7M9 11h5"/></svg></button><span class="library-study-tip" role="tooltip">Study mode shows the pre-trade thesis, notes, and lessons directly on each card. Tap again for Gallery.</span></span></div>
   <select id="libOutcomeFilter" hidden><option value="">All Outcomes</option><option value="win">Wins</option><option value="loss">Losses</option><option value="be">Breakeven</option></select>
   <select id="libPairFilter" hidden><option value="">All Pairs</option></select>
   <select id="libSetupFilter" hidden><option value="">All Setups</option></select>
@@ -1407,6 +1431,8 @@ body{min-height:100dvh}
     <div class="empty-sub">Write down your thesis, entry rules, risk management, and edge — the more specific, the more useful this becomes as a reference.</div>
     <button class="empty-cta-btn" onclick="document.getElementById('stratName').focus();document.getElementById('stratName').scrollIntoView({behavior:'smooth',block:'center'})">Set Up Strategy <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
   </div>
+  <div class="section-header"><span class="section-title">Setup Playbook</span></div>
+  <div id="setupPlaybook" class="playbook-grid"></div>
   <div id="strategyPerformance" class="strategy-ribbon"></div>
   <div class="card">
     <div class="form-group">
@@ -2568,6 +2594,7 @@ body{min-height:100dvh}
     <select class="form-select" id="lfOutcome"><option value="">All outcomes</option><option value="win">Wins</option><option value="loss">Losses</option><option value="be">Breakeven</option></select>
     <div class="filter-label">Pair</div><select class="form-select" id="lfPair"><option value="">All pairs</option></select>
     <div class="filter-label">Setup</div><select class="form-select" id="lfSetup"><option value="">All setups</option></select>
+    <div class="filter-label">Model trades</div><div class="tf-seg" data-lf="model"><button type="button" id="lfModelOnly" aria-pressed="false" onclick="toggleLibraryModelDraft()">★ Model Trades only</button></div>
     <div class="tf-actions"><button class="tf-reset" onclick="resetLibraryFilterModal()">Reset filters</button><button class="tf-apply" onclick="applyLibraryFilterModal()">Apply filters</button></div>
   </div>
 </div>
@@ -2625,7 +2652,7 @@ body{min-height:100dvh}
 </div>
 
 <!-- ══ Image Lightbox ══ -->
-<div class="lightbox" id="lightbox" onclick="closeLightbox()" ontouchstart="lightboxTouchStart(event)" ontouchend="lightboxTouchEnd(event)">
+<div class="lightbox" id="lightbox" onclick="lightboxBackdropClick(event)" onpointerdown="lightboxPointerDown(event)" onpointermove="lightboxPointerMove(event)" onpointerup="lightboxPointerUp(event)" onpointercancel="lightboxPointerUp(event)" ondblclick="lightboxDoubleClick(event)">
   <button class="lightbox-close" type="button" aria-label="Close image" onclick="event.stopPropagation();closeLightbox()">✕</button>
   <button class="lightbox-arrow prev" type="button" aria-label="Previous chart" onclick="event.stopPropagation();showLightboxImage(_lightboxIndex-1)">‹</button>
   <img id="lightboxImg" src="" alt="Chart screenshot"/>
@@ -5566,7 +5593,7 @@ function switchTab(name){
   if(navEl){ navEl.classList.add('active'); syncNavCollapsedIcon(navEl); }
   activeTab=name;
   document.querySelectorAll('.journal-segments .segment').forEach(btn=>{ const selected=btn.dataset.journalTab===name; btn.classList.toggle('active',selected); btn.setAttribute('aria-selected',String(selected)); });
-  if(name==='Strategy') renderStrategyPerformance();
+  if(name==='Strategy'){renderStrategyPerformance();renderSetupPlaybook();}
   // Persist active tab to Telegram CloudStorage (session state)
   CS.set('active_tab', name);
   // Update header title and subtitle to reflect current tab
@@ -5768,7 +5795,7 @@ function filteredTrades(){
 
 // ─── Render all ───
 function renderAll(){
-  renderAcctBar(); renderHeader(); renderTradeList(); renderPreTradeList(); renderStrategyForm(); renderEdgeTags(); renderLibrary();
+  renderAcctBar(); renderHeader(); renderTradeList(); renderPreTradeList(); renderStrategyForm(); renderSetupPlaybook(); renderEdgeTags(); renderLibrary();
   // Mark Stats as dirty so the next time the Stats tab is opened it re-renders
   // with fresh data. If Stats is already active, markStatsDirty() will re-render now.
   markStatsDirty();
@@ -6466,10 +6493,16 @@ function renderImgPreviews(){
       ${(entry.uploading||!entry.dataUrl&&!entry.failed)?'<div class="img-upload-spinner">⟳</div>':''}
       ${entry.failed?'<div class="img-upload-failed" title="Upload failed">⚠</div>':''}
       <div class="img-preview-remove" onclick="removeImg(${i})">✕</div>
+      ${imgUploadTarget==='trade'?`<div class="img-role-chips" role="group" aria-label="Chart role">${['Bias','Setup/POI','Before','After'].map(role=>`<button type="button" class="${entry.label===role?'active':''}" aria-pressed="${entry.label===role}" onclick="setImageRole(${i},'${role}')">${role}</button>`).join('')}</div>`:''}
     </div>
   `).join('');
 }
 
+function setImageRole(i,role){
+  if(imgUploadTarget!=='trade'||!pendingImages[i])return;
+  pendingImages[i].label=pendingImages[i].label===role?'':role;
+  renderImgPreviews();
+}
 function removeImg(i){
   const [removed] = _activePendingImages().splice(i,1);
   renderImgPreviews();
@@ -6496,7 +6529,21 @@ async function resolveImageSrc(img){
   catch(e){ console.warn('Could not load image', img.fileId, e); return ''; }
 }
 
-let _lightboxImages=[], _lightboxIndex=0, _lightboxRequest=0, _lightboxTouchX=null, _lightboxSwiped=false;
+let _lightboxImages=[], _lightboxIndex=0, _lightboxRequest=0, _lightboxSwiped=false,_lightboxTapTimer=null;
+let _lightboxZoom=1,_lightboxPan={x:0,y:0},_lightboxPointers=new Map(),_lightboxGesture=null,_lightboxMoved=false;
+function applyLightboxTransform(){
+  const image=document.getElementById('lightboxImg'),box=document.getElementById('lightbox');
+  image.style.transform='translate('+_lightboxPan.x+'px,'+_lightboxPan.y+'px) scale('+_lightboxZoom+')';
+  box.classList.toggle('zoomed',_lightboxZoom>1);
+}
+function resetLightboxTransform(){_lightboxZoom=1;_lightboxPan={x:0,y:0};_lightboxPointers.clear();_lightboxGesture=null;applyLightboxTransform()}
+function setLightboxZoom(next,cx,cy){
+  const image=document.getElementById('lightboxImg'),rect=image.getBoundingClientRect(),old=_lightboxZoom;
+  next=Math.max(1,Math.min(5,next));
+  if(next===1){_lightboxZoom=1;_lightboxPan={x:0,y:0};applyLightboxTransform();return;}
+  const ox=cx-(rect.left-_lightboxPan.x),oy=cy-(rect.top-_lightboxPan.y),ratio=next/old;
+  _lightboxPan={x:_lightboxPan.x+ox*(1-ratio),y:_lightboxPan.y+oy*(1-ratio)};_lightboxZoom=next;applyLightboxTransform();
+}
 function updateLightboxArrows(){
   document.querySelectorAll('.lightbox-arrow').forEach(button=>button.hidden=_lightboxImages.length<2);
 }
@@ -6504,7 +6551,7 @@ function showLightboxImage(index){
   if(!_lightboxImages.length)return;
   _lightboxIndex=(index+_lightboxImages.length)%_lightboxImages.length;
   const request=++_lightboxRequest, image=document.getElementById('lightboxImg');
-  image.src='';
+  image.src='';resetLightboxTransform();
   document.getElementById('lightbox').classList.add('open');
   updateLightboxArrows();
   syncScrollLock();
@@ -6516,19 +6563,30 @@ function openLightbox(tradeId, imgIdx, ordered=false){
   _lightboxImages=sequence.map(item=>item.img);
   showLightboxImage(sequence.findIndex(item=>item.index===imgIdx));
 }
-function lightboxTouchStart(e){_lightboxTouchX=e.touches[0]?.clientX??null;_lightboxSwiped=false;}
-function lightboxTouchEnd(e){
-  if(_lightboxTouchX===null)return;
-  const delta=(e.changedTouches[0]?.clientX??_lightboxTouchX)-_lightboxTouchX;
-  _lightboxTouchX=null;
-  if(Math.abs(delta)>45 && _lightboxImages.length>1){_lightboxSwiped=true;showLightboxImage(_lightboxIndex+(delta<0?1:-1));setTimeout(()=>_lightboxSwiped=false,350);}
+function lightboxPointerDown(e){
+  if(e.target.closest('button'))return;e.preventDefault();e.currentTarget.setPointerCapture?.(e.pointerId);_lightboxPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});_lightboxMoved=false;
+  if(_lightboxPointers.size===1)_lightboxGesture={x:e.clientX,y:e.clientY,panX:_lightboxPan.x,panY:_lightboxPan.y};
+  else if(_lightboxPointers.size===2){const p=[..._lightboxPointers.values()];_lightboxGesture={distance:Math.hypot(p[1].x-p[0].x,p[1].y-p[0].y),zoom:_lightboxZoom,cx:(p[0].x+p[1].x)/2,cy:(p[0].y+p[1].y)/2};}
 }
+function lightboxPointerMove(e){
+  if(!_lightboxPointers.has(e.pointerId))return;e.preventDefault();_lightboxPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(_lightboxPointers.size===2){const p=[..._lightboxPointers.values()],distance=Math.hypot(p[1].x-p[0].x,p[1].y-p[0].y);if(_lightboxGesture?.distance){setLightboxZoom(_lightboxGesture.zoom*distance/_lightboxGesture.distance,(p[0].x+p[1].x)/2,(p[0].y+p[1].y)/2);_lightboxMoved=true;}}
+  else if(_lightboxZoom>1&&_lightboxGesture?.panX!==undefined){_lightboxPan={x:_lightboxGesture.panX+e.clientX-_lightboxGesture.x,y:_lightboxGesture.panY+e.clientY-_lightboxGesture.y};applyLightboxTransform();document.getElementById('lightbox').classList.add('dragging');_lightboxMoved=true;}
+}
+function lightboxPointerUp(e){
+  const start=_lightboxPointers.get(e.pointerId);_lightboxPointers.delete(e.pointerId);document.getElementById('lightbox').classList.remove('dragging');
+  if(start&&_lightboxZoom===1&&_lightboxPointers.size===0){const dx=e.clientX-_lightboxGesture?.x;if(Math.abs(dx)>45&&_lightboxImages.length>1){_lightboxSwiped=true;showLightboxImage(_lightboxIndex+(dx<0?1:-1));setTimeout(()=>_lightboxSwiped=false,350);}}
+  if(!_lightboxPointers.size)_lightboxGesture=null;
+}
+function lightboxDoubleClick(e){if(e.target.id!=='lightboxImg')return;e.preventDefault();clearTimeout(_lightboxTapTimer);_lightboxMoved=true;setLightboxZoom(_lightboxZoom>1?1:2.5,e.clientX,e.clientY)}
+function lightboxBackdropClick(e){if(_lightboxMoved){_lightboxMoved=false;return}if(e.target===e.currentTarget)return closeLightbox();if(e.target.id==='lightboxImg'&&_lightboxZoom===1){clearTimeout(_lightboxTapTimer);_lightboxTapTimer=setTimeout(closeLightbox,280)}}
 
 function openLightboxDirect(src){
-  document.getElementById('lightboxImg').src=src;
+  resetLightboxTransform();document.getElementById('lightboxImg').src=src;
   _lightboxImages=[];updateLightboxArrows();document.getElementById('lightbox').classList.add('open');syncScrollLock();
 }
-function closeLightbox(){ if(_lightboxSwiped){_lightboxSwiped=false;return;} ++_lightboxRequest;document.getElementById('lightbox').classList.remove('open');syncScrollLock(); }
+function closeLightbox(){ if(_lightboxSwiped){_lightboxSwiped=false;return;} clearTimeout(_lightboxTapTimer);++_lightboxRequest;resetLightboxTransform();document.getElementById('lightbox').classList.remove('open');syncScrollLock(); }
+document.getElementById('lightbox').addEventListener('wheel',e=>{if(!document.getElementById('lightbox').classList.contains('open'))return;e.preventDefault();const dy=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?100:1);setLightboxZoom(_lightboxZoom*Math.exp(-dy*.0015),e.clientX,e.clientY)},{passive:false});
 document.addEventListener('keydown',e=>{
   if(!document.getElementById('lightbox').classList.contains('open'))return;
   if(e.key==='Escape'){e.preventDefault();closeLightbox();}
@@ -7998,32 +8056,46 @@ function openLibraryFilterModal(){
     const source=document.getElementById('lib'+k+'Filter'),draft=document.getElementById('lf'+k);
     draft.innerHTML=source.innerHTML;draft.value=source.value;
   });
+  _libraryModelDraft=libraryModelOnly;paintLibraryModelDraft();
   document.getElementById('libraryFilterModal').classList.add('open');updateNavVisibility();
 }
 function closeLibraryFilterModal(){document.getElementById('libraryFilterModal').classList.remove('open');updateNavVisibility();}
-function resetLibraryFilterModal(){['Outcome','Pair','Setup'].forEach(k=>document.getElementById('lf'+k).value='');}
-function applyLibraryFilterModal(){['Outcome','Pair','Setup'].forEach(k=>document.getElementById('lib'+k+'Filter').value=document.getElementById('lf'+k).value);closeLibraryFilterModal();renderLibrary();}
-let libraryView='gallery';
+let libraryModelOnly=false,_libraryModelDraft=false;
+function paintLibraryModelDraft(){const button=document.getElementById('lfModelOnly');button.classList.toggle('active',_libraryModelDraft);button.setAttribute('aria-pressed',String(_libraryModelDraft))}
+function toggleLibraryModelDraft(){_libraryModelDraft=!_libraryModelDraft;paintLibraryModelDraft()}
+function resetLibraryFilterModal(){['Outcome','Pair','Setup'].forEach(k=>document.getElementById('lf'+k).value='');_libraryModelDraft=false;paintLibraryModelDraft();}
+function applyLibraryFilterModal(){['Outcome','Pair','Setup'].forEach(k=>document.getElementById('lib'+k+'Filter').value=document.getElementById('lf'+k).value);libraryModelOnly=_libraryModelDraft;closeLibraryFilterModal();renderLibrary();}
+function clearLibraryFilters(){['Outcome','Pair','Setup'].forEach(k=>document.getElementById('lib'+k+'Filter').value='');libraryModelOnly=false;renderLibrary()}
+let libraryView=(()=>{try{return localStorage.getItem('dw_library_view')==='study'?'study':'gallery'}catch(e){return 'gallery'}})();
+let _libraryStudyTipTimer;
+let _libraryStudyLongPressed=false;
+function startLibraryStudyTip(e){
+  if(e.pointerType==='mouse')return;
+  clearTimeout(_libraryStudyTipTimer);
+  _libraryStudyLongPressed=false;
+  _libraryStudyTipTimer=setTimeout(()=>{_libraryStudyLongPressed=true;document.getElementById('libraryStudyControl').classList.add('show-tip')},550);
+}
+function stopLibraryStudyTip(){clearTimeout(_libraryStudyTipTimer);setTimeout(()=>document.getElementById('libraryStudyControl')?.classList.remove('show-tip'),1800)}
+function toggleLibraryStudy(e){if(_libraryStudyLongPressed && e.detail){_libraryStudyLongPressed=false;return;}setLibraryView(libraryView==='gallery'?'study':'gallery')}
 function setLibraryView(view){
-  libraryView=view;
-  ['Gallery','Study'].forEach(name=>{
-    const button=document.getElementById('lib'+name+'View');
-    button.classList.toggle('active',view===name.toLowerCase());
-    button.setAttribute('aria-pressed',String(view===name.toLowerCase()));
-  });
+  libraryView=view==='study'?'study':'gallery';
+  try{localStorage.setItem('dw_library_view',libraryView)}catch(e){}
+  const button=document.getElementById('libStudyView');
+  button.classList.toggle('has-filter',libraryView==='study');
+  button.setAttribute('aria-pressed',String(libraryView==='study'));
   renderLibrary();
 }
 // Old screenshots were stored without role metadata in Before, After, Bias order.
 // Explicit labels take precedence; unknown roles use the next analytical stage.
 function _libraryChartSequence(images){
-  const roles=['Bias','Setup/POI','Execution/Before','Outcome/After'];
-  const legacy=['Execution/Before','Outcome/After','Bias','Setup/POI'];
+  const roles=['Bias','Setup/POI','Before','After'];
+  const legacy=['Before','After','Bias','Setup/POI'];
   const rank=label=>/bias|higher.timeframe|htf/i.test(label)?0:/setup|poi|plan/i.test(label)?1:/before|execut|entry/i.test(label)?2:/after|outcome|result|exit/i.test(label)?3:-1;
   const items=images.map((img,index)=>{
     const explicit=typeof img==='object' ? String(img?.label||img?.role||'').trim() : '';
     const stage=rank(explicit);
     const fallback=legacy[index%legacy.length];
-    return {img,index,label:stage>=0?explicit:(index<4?fallback:roles[index%roles.length]),rank:stage>=0?stage:rank(fallback)};
+    return {img,index,label:roles[stage>=0?stage:(index<4?rank(fallback):index%roles.length)],rank:stage>=0?stage:rank(fallback)};
   });
   return items.sort((a,b)=>a.rank-b.rank||a.index-b.index);
 }
@@ -8031,10 +8103,11 @@ function renderLibrary(){
   const grid=document.getElementById('libraryGrid');
   if(!grid) return;
   populateLibraryFilters();
+  const studyBtn=document.getElementById('libStudyView');studyBtn.classList.toggle('has-filter',libraryView==='study');studyBtn.setAttribute('aria-pressed',String(libraryView==='study'));
   const outcome=document.getElementById('libOutcomeFilter').value;
   const pair=document.getElementById('libPairFilter').value;
   const setup=document.getElementById('libSetupFilter').value;
-  const n=[outcome,pair,setup].filter(Boolean).length;
+  const n=[outcome,pair,setup].filter(Boolean).length+(libraryModelOnly?1:0);
   document.getElementById('libFilterBtn').classList.toggle('has-filter',n>0);
   const count=document.getElementById('libFilterCount');count.textContent=n;count.style.display=n?'inline-flex':'none';
 
@@ -8047,10 +8120,12 @@ function renderLibrary(){
       return outcome==='win'?pnl>0:outcome==='loss'?pnl<0:pnl===0;
     });
   }
+  if(libraryModelOnly)list=list.filter(t=>!!t.setup&&(strategy.playbooks?.[t.setup]?.pinned||[]).includes(t.id));
   list=[...list].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
 
   if(!list.length){
-    grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🖼️</div><div class="empty-title">No screenshots yet</div><div class="empty-sub">Trades with an attached chart screenshot show up here for visual review.</div></div>';
+    const filtered=!!n;
+    grid.innerHTML=filtered?'<div class="empty" style="grid-column:1/-1"><div class="empty-title">No trades match this filter</div><div class="empty-sub"><button class="btn-sm" type="button" onclick="clearLibraryFilters()">Clear Filters</button></div></div>':'<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🖼️</div><div class="empty-title">No screenshots yet</div><div class="empty-sub">Trades with an attached chart screenshot show up here for visual review.</div></div>';
     return;
   }
 
@@ -8070,8 +8145,9 @@ function renderLibrary(){
     const notes=t.reason||'';
     const lesson=t.notes||t.lesson||'';
     const studyCopy=libraryView==='study'?'<div class="library-study-copy">'+(thesis?'<strong>Pre-trade thesis</strong><p>'+escapeHtml(thesis)+'</p>':'')+(notes?'<strong>Trade notes</strong><p>'+escapeHtml(notes)+'</p>':'')+(lesson?'<strong>Lessons learned</strong><p>'+escapeHtml(lesson)+'</p>':'')+(!thesis&&!notes&&!lesson?'<p>No study notes yet.</p>':'')+'</div>':'';
+    const isPinned=!!t.setup&&(strategy.playbooks?.[t.setup]?.pinned||[]).includes(t.id),starTip=isPinned?'Unpin model trade':'Pin as model trade to '+(t.setup||'setup');
     return '<div class="library-card" data-trade-id="'+escapeHtml(t.id)+'">'
-      +'<div class="library-card-header"><span class="library-pair">'+escapeHtml(t.pair||'')+'</span><div class="trade-meta"><span class="tag '+(t.dir==='short'?'tag-short':'tag-long')+'">'+(t.dir==='short'?'▼ SHORT':'▲ LONG')+'</span>'+rrPill+outcomeBadge+(libraryView==='gallery'&&lesson?'<span class="tag tag-neutral library-insight-tag">💡 Lesson</span>':libraryView==='gallery'&&notes?'<span class="tag tag-neutral library-insight-tag">📝 Notes</span>':'')+'</div></div>'
+      +'<div class="library-card-header"><span class="library-pair">'+escapeHtml(t.pair||'')+'</span><div class="trade-meta"><span class="tag '+(t.dir==='short'?'tag-short':'tag-long')+'">'+(t.dir==='short'?'▼ SHORT':'▲ LONG')+'</span>'+rrPill+outcomeBadge+(libraryView==='gallery'&&lesson?'<span class="tag tag-neutral library-insight-tag">💡 Lesson</span>':libraryView==='gallery'&&notes?'<span class="tag tag-neutral library-insight-tag">📝 Notes</span>':'')+'</div>'+(t.setup?'<span class="library-model-control" onpointerdown="startLibraryModelTip(event)" onpointerup="stopLibraryModelTip(event)" onpointercancel="stopLibraryModelTip(event)"><button class="library-model-star'+(isPinned?' pinned':'')+'" type="button" aria-label="'+escapeHtml(starTip)+'" onclick="libraryModelStarClick(event,\''+escapeForInlineHandler(t.setup)+'\',\''+t.id+'\')">'+(isPinned?'★':'☆')+'</button><span class="library-model-tip" role="tooltip">'+escapeHtml(starTip)+'</span></span>':'')+'</div>'
       +'<div class="library-charts">'+images+'</div>'
       +'<div class="library-body">'+studyCopy+'<div class="library-levels">'+level('ENTRY',t.entry)+level('SL',t.sl)+level('TP',t.tp)+'</div>'
       +(t.setup?'<div class="library-note">'+escapeHtml(t.setup)+'</div>':'')
@@ -8157,6 +8233,56 @@ function editAccount(id){
 }
 
 // ─── Strategy ───
+function playbookFor(setup){
+  strategy.playbooks ||= {};
+  return strategy.playbooks[setup] ||= {rules:'',criteria:'',pinned:[]};
+}
+function updatePlaybookField(setup,field,value){
+  playbookFor(setup)[field]=value;
+  clearTimeout(_strategyAutoSaveTimer);
+  _strategyAutoSaveTimer=setTimeout(()=>saveStrategyData(),650);
+}
+function togglePlaybookPin(setup,id){
+  const trade=trades.find(t=>t.id===id);
+  if(!trade||trade.setup!==setup||!trade.images?.length)return;
+  const book=playbookFor(setup), pinned=book.pinned||[];
+  const wasPinned=pinned.includes(id);book.pinned=wasPinned?pinned.filter(x=>x!==id):[...pinned,id];
+  saveStrategyData();renderLibrary();renderSetupPlaybook();showToast(wasPinned?'Unpinned model trade':'Pinned as model trade to '+setup);
+}
+let _libraryModelTipTimer,_libraryModelLongPressed=false;
+function startLibraryModelTip(e){if(e.pointerType==='mouse')return;clearTimeout(_libraryModelTipTimer);_libraryModelLongPressed=false;const control=e.currentTarget;_libraryModelTipTimer=setTimeout(()=>{_libraryModelLongPressed=true;control.classList.add('show-tip')},550)}
+function stopLibraryModelTip(e){clearTimeout(_libraryModelTipTimer);const control=e?.currentTarget;setTimeout(()=>control?.classList.remove('show-tip'),1800)}
+function libraryModelStarClick(e,setup,id){e.stopPropagation();if(_libraryModelLongPressed&&e.detail){_libraryModelLongPressed=false;return}togglePlaybookPin(setup,id)}
+const _openPlaybooks=new Set(),_editingPlaybooks=new Set();
+function togglePlaybookAccordion(setup){_openPlaybooks.has(setup)?_openPlaybooks.delete(setup):_openPlaybooks.add(setup);renderSetupPlaybook()}
+function togglePlaybookEdit(e,setup){e.stopPropagation();_editingPlaybooks.has(setup)?_editingPlaybooks.delete(setup):_editingPlaybooks.add(setup);_openPlaybooks.add(setup);renderSetupPlaybook()}
+function _playbookList(text){const lines=String(text||'').split('\n').map(v=>v.trim()).filter(Boolean);return lines.length?'<ul class="playbook-read-list">'+lines.map(line=>'<li>'+escapeHtml(line.replace(/^[-•]\s*/,''))+'</li>').join('')+'</ul>':'<div class="playbook-read-empty">Nothing added yet.</div>'}
+function renderSetupPlaybook(){
+  const el=document.getElementById('setupPlaybook');if(!el)return;
+  const setups=[...new Set([...allOptions('setup'),...trades.map(t=>t.setup).filter(Boolean)])];
+  if(!setups.length){el.innerHTML='<div class="empty">Add a setup to your checklist to start a playbook.</div>';return;}
+  el.innerHTML=setups.map((setup,i)=>{
+    const book=strategy.playbooks?.[setup]||{}, scoped=trades.filter(t=>t.setup===setup);
+    const wins=scoped.filter(t=>Number(t.pnl)>0).length;
+    const ratios=scoped.filter(t=>Number(t.risk)>0 && Number.isFinite(Number(t.pnl))).map(t=>Number(t.pnl)/Number(t.risk));
+    const rate=scoped.length?Math.round(wins/scoped.length*100)+'%':'—';
+    const avg=ratios.length?ratios.reduce((a,b)=>a+b,0)/ratios.length:null;
+    const pinned=(book.pinned||[]).map(id=>trades.find(t=>t.id===id&&t.setup===setup&&t.images?.length)).filter(Boolean);
+    const open=_openPlaybooks.has(setup),editing=_editingPlaybooks.has(setup),safeSetup=escapeForInlineHandler(setup);
+    return '<section class="playbook-card'+(open?' expanded':'')+(editing?' editing':'')+'" data-setup-index="'+i+'"><button class="playbook-summary" type="button" aria-expanded="'+open+'" onclick="togglePlaybookAccordion(\''+safeSetup+'\')"><span class="playbook-title">'+escapeHtml(setup)+'</span><span class="playbook-pin-count">★ '+pinned.length+'</span><span class="cl-collapse-arrow'+(open?' expanded':'')+'">'+checklistChevronSvg()+'</span></button>'
+      +'<div class="playbook-stats"><span><strong>'+rate+'</strong>Win rate</span><span><strong>'+(avg===null?'—':avg.toFixed(1)+'R')+'</strong>Avg R:R</span><span><strong>'+scoped.length+'</strong>Trades</span></div><div class="playbook-content">'
+      +'<div class="playbook-section"><div class="playbook-section-head"><span class="form-label">Execution rules</span><button class="btn-sm" type="button" onclick="togglePlaybookEdit(event,\''+safeSetup+'\')">'+(editing?'Done':'Edit')+'</button></div><div class="playbook-read">'+_playbookList(book.rules)+'</div><div class="playbook-editor"><textarea class="form-textarea" id="playbook-rules-'+i+'" data-playbook-field="rules" data-setup-index="'+i+'" placeholder="One rule per line">'+escapeHtml(book.rules||'')+'</textarea></div></div>'
+      +'<div class="playbook-section"><div class="form-label">Checklist criteria</div><div class="playbook-read">'+_playbookList(book.criteria)+'</div><div class="playbook-editor"><textarea class="form-textarea" id="playbook-criteria-'+i+'" data-playbook-field="criteria" data-setup-index="'+i+'" placeholder="One criterion per line">'+escapeHtml(book.criteria||'')+'</textarea></div></div>'
+      +'<div class="playbook-section"><div class="form-label">Model trades</div><div class="playbook-models">'+(pinned.length?pinned.map(t=>'<button class="btn-sm" type="button" onclick="openPeek(\''+t.id+'\')">'+escapeHtml(t.pair)+' · '+escapeHtml(t.date||'')+'</button>').join(''):'<span class="playbook-read-empty">No model trades pinned yet — tap the star on any Library card.</span>')+'</div></div></div></section>';
+  }).join('');
+}
+document.getElementById('setupPlaybook').addEventListener('input',e=>{
+  const field=e.target.dataset.playbookField;
+  if(!field)return;
+  const setups=[...new Set([...allOptions('setup'),...trades.map(t=>t.setup).filter(Boolean)])];
+  const setup=setups[Number(e.target.dataset.setupIndex)];
+  if(setup)updatePlaybookField(setup,field,e.target.value);
+});
 function _updateStrategyEmptyBanner(){
   const isEmpty = !(strategy.name||strategy.thesis||strategy.rules||strategy.risk||strategy.edgeDesc||strategy.invalid||(edgeTags&&edgeTags.length));
   const el=document.getElementById('strategyEmptyBanner');
@@ -8189,7 +8315,7 @@ function renderStrategyForm(){
 }
 async function saveStrategy(){
   strategy={
-    name:document.getElementById('stratName').value, thesis:document.getElementById('stratThesis').value,
+    playbooks:strategy.playbooks||{}, name:document.getElementById('stratName').value, thesis:document.getElementById('stratThesis').value,
     rules:document.getElementById('stratRules').value, risk:document.getElementById('stratRisk').value,
     edgeDesc:document.getElementById('edgeDesc').value, invalid:document.getElementById('stratInvalid').value,
   };
@@ -8199,7 +8325,7 @@ async function saveStrategy(){
 let _strategyAutoSaveTimer;
 document.getElementById('tabStrategy').addEventListener('input',e=>{
   if(!['stratName','stratThesis','stratRules','stratRisk','edgeDesc','stratInvalid'].includes(e.target.id))return;
-  strategy={name:document.getElementById('stratName').value,thesis:document.getElementById('stratThesis').value,rules:document.getElementById('stratRules').value,risk:document.getElementById('stratRisk').value,edgeDesc:document.getElementById('edgeDesc').value,invalid:document.getElementById('stratInvalid').value};
+  strategy={...strategy,name:document.getElementById('stratName').value,thesis:document.getElementById('stratThesis').value,rules:document.getElementById('stratRules').value,risk:document.getElementById('stratRisk').value,edgeDesc:document.getElementById('edgeDesc').value,invalid:document.getElementById('stratInvalid').value};
   _updateStrategyEmptyBanner();
   clearTimeout(_strategyAutoSaveTimer);
   _strategyAutoSaveTimer=setTimeout(()=>saveStrategyData(),650);
