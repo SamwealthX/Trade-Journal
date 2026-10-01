@@ -307,7 +307,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .daily-reflection{font-size:12px;color:var(--text2);line-height:1.4;white-space:pre-wrap;margin:6px 0}
 .daily-trades-ref{font-size:11px;color:var(--text3)}
 /* ── Library grid ── */
-.library-filters{display:flex;justify-content:flex-start;align-items:center;gap:8px;margin-bottom:12px}
+.library-filters{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:12px}
+.library-star-btn{min-width:36px;min-height:36px;display:grid;place-items:center;font-size:17px;line-height:1;padding:0 9px}
+.library-star-btn.has-filter{background:var(--amber-dim);border-color:var(--amber);color:var(--amber);text-shadow:0 0 9px var(--amber)}
 .library-study-control{position:relative;display:inline-flex}
 .library-study-btn{min-width:36px;min-height:36px;display:grid;place-items:center}
 .library-study-btn svg{width:18px;height:18px}
@@ -341,8 +343,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .library-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:12px}
 .library-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;min-width:0}
 .library-card-header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:13px 13px 0}
-.library-card-header .trade-meta{padding:0;gap:6px;flex-wrap:wrap}
-.library-model-control{position:relative;display:inline-flex;margin-left:auto}.library-model-star{width:34px;height:34px;display:grid;place-items:center;border:1px solid var(--border2);border-radius:6px;background:var(--surface2);color:var(--text3);font-size:20px;line-height:1;cursor:pointer}.library-model-star.pinned{color:var(--amber);border-color:var(--amber);background:var(--amber-dim);text-shadow:0 0 9px var(--amber)}.library-model-tip{display:none;position:absolute;right:0;top:calc(100% + 7px);z-index:20;width:max-content;max-width:min(250px,75vw);padding:8px 10px;background:var(--surface3);color:var(--text);border:1px solid var(--border2);border-radius:6px;font-size:12px;line-height:1.35;box-shadow:var(--shadow-lg);pointer-events:none}.library-model-control.show-tip .library-model-tip{display:block}@media(hover:hover){.library-model-control:hover .library-model-tip,.library-model-control:focus-within .library-model-tip{display:block}}
+.library-card-header .trade-meta{margin-left:auto;padding:0;gap:6px;flex-wrap:wrap}
+.library-model-control{position:relative;display:inline-flex}.library-model-star{width:34px;height:34px;display:grid;place-items:center;border:1px solid var(--border2);border-radius:6px;background:var(--surface2);color:var(--text3);font-size:20px;line-height:1;cursor:pointer}.library-model-star.pinned{color:var(--amber);border-color:var(--amber);background:var(--amber-dim);text-shadow:0 0 9px var(--amber)}.library-model-tip{display:none;position:absolute;right:0;top:calc(100% + 7px);z-index:20;width:max-content;max-width:min(250px,75vw);padding:8px 10px;background:var(--surface3);color:var(--text);border:1px solid var(--border2);border-radius:6px;font-size:12px;line-height:1.35;box-shadow:var(--shadow-lg);pointer-events:none}.library-model-control.show-tip .library-model-tip{display:block}@media(hover:hover){.library-model-control:hover .library-model-tip,.library-model-control:focus-within .library-model-tip{display:block}}
 .library-charts{display:flex;gap:7px;overflow-x:auto;padding:11px 13px 0}
 .library-chart{position:relative;flex:0 0 min(38%,140px);aspect-ratio:4/3;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--surface2);cursor:pointer;padding:0;color:var(--text2)}
 .library-chart img{width:100%;height:100%;object-fit:cover;display:block}
@@ -1178,7 +1180,7 @@ body{min-height:100dvh}
     <span class="section-title">Library</span>
   </div>
   <div class="journal-segments" role="tablist" aria-label="Journal sections"><button class="segment" role="tab" data-journal-tab="PreTrade" onclick="switchTab('PreTrade')">Pre-Trade</button><button class="segment" role="tab" data-journal-tab="Journal" onclick="switchTab('Journal')">Trade Log</button><button class="segment" role="tab" data-journal-tab="DailyJournal" onclick="switchTab('DailyJournal')">Daily Journal</button><button class="segment" role="tab" data-journal-tab="Library" onclick="switchTab('Library')">Library</button><button class="segment" role="tab" data-journal-tab="Strategy" onclick="switchTab('Strategy')">Strategy</button></div>
-  <div class="library-filters"><button class="filter-pill-btn" id="libFilterBtn" onclick="openLibraryFilterModal()" aria-label="Filter Library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Filter <span class="filter-count" id="libFilterCount" style="display:none"></span></button><span class="library-study-control" id="libraryStudyControl"><button id="libStudyView" class="btn-sm library-study-btn" type="button" aria-label="Toggle Study mode" aria-pressed="false" onclick="toggleLibraryStudy(event)" onpointerdown="startLibraryStudyTip(event)" onpointerup="stopLibraryStudyTip()" onpointercancel="stopLibraryStudyTip()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/><path d="M9 7h7M9 11h5"/></svg></button><span class="library-study-tip" role="tooltip">Study mode shows the pre-trade thesis, notes, and lessons directly on each card. Tap again for Gallery.</span></span></div>
+  <div class="library-filters"><button class="filter-pill-btn" id="libFilterBtn" onclick="openLibraryFilterModal()" aria-label="Filter Library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Filter <span class="filter-count" id="libFilterCount" style="display:none"></span></button><button class="filter-pill-btn library-star-btn" id="libModelBtn" type="button" aria-label="Show model trades only" aria-pressed="false" title="Model Trades only" onclick="toggleLibraryModelFilter()">★</button><span class="library-study-control" id="libraryStudyControl"><button id="libStudyView" class="btn-sm library-study-btn" type="button" aria-label="Toggle Study mode" aria-pressed="false" onclick="toggleLibraryStudy(event)" onpointerdown="startLibraryStudyTip(event)" onpointerup="stopLibraryStudyTip()" onpointercancel="stopLibraryStudyTip()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/><path d="M9 7h7M9 11h5"/></svg></button><span class="library-study-tip" role="tooltip">Study mode shows the pre-trade thesis, notes, and lessons directly on each card. Tap again for Gallery.</span></span></div>
   <select id="libOutcomeFilter" hidden><option value="">All Outcomes</option><option value="win">Wins</option><option value="loss">Losses</option><option value="be">Breakeven</option></select>
   <select id="libPairFilter" hidden><option value="">All Pairs</option></select>
   <select id="libSetupFilter" hidden><option value="">All Setups</option></select>
@@ -2594,7 +2596,7 @@ body{min-height:100dvh}
     <select class="form-select" id="lfOutcome"><option value="">All outcomes</option><option value="win">Wins</option><option value="loss">Losses</option><option value="be">Breakeven</option></select>
     <div class="filter-label">Pair</div><select class="form-select" id="lfPair"><option value="">All pairs</option></select>
     <div class="filter-label">Setup</div><select class="form-select" id="lfSetup"><option value="">All setups</option></select>
-    <div class="filter-label">Model trades</div><div class="tf-seg" data-lf="model"><button type="button" id="lfModelOnly" aria-pressed="false" onclick="toggleLibraryModelDraft()">★ Model Trades only</button></div>
+    
     <div class="tf-actions"><button class="tf-reset" onclick="resetLibraryFilterModal()">Reset filters</button><button class="tf-apply" onclick="applyLibraryFilterModal()">Apply filters</button></div>
   </div>
 </div>
@@ -8056,15 +8058,13 @@ function openLibraryFilterModal(){
     const source=document.getElementById('lib'+k+'Filter'),draft=document.getElementById('lf'+k);
     draft.innerHTML=source.innerHTML;draft.value=source.value;
   });
-  _libraryModelDraft=libraryModelOnly;paintLibraryModelDraft();
   document.getElementById('libraryFilterModal').classList.add('open');updateNavVisibility();
 }
 function closeLibraryFilterModal(){document.getElementById('libraryFilterModal').classList.remove('open');updateNavVisibility();}
-let libraryModelOnly=false,_libraryModelDraft=false;
-function paintLibraryModelDraft(){const button=document.getElementById('lfModelOnly');button.classList.toggle('active',_libraryModelDraft);button.setAttribute('aria-pressed',String(_libraryModelDraft))}
-function toggleLibraryModelDraft(){_libraryModelDraft=!_libraryModelDraft;paintLibraryModelDraft()}
-function resetLibraryFilterModal(){['Outcome','Pair','Setup'].forEach(k=>document.getElementById('lf'+k).value='');_libraryModelDraft=false;paintLibraryModelDraft();}
-function applyLibraryFilterModal(){['Outcome','Pair','Setup'].forEach(k=>document.getElementById('lib'+k+'Filter').value=document.getElementById('lf'+k).value);libraryModelOnly=_libraryModelDraft;closeLibraryFilterModal();renderLibrary();}
+let libraryModelOnly=false;
+function toggleLibraryModelFilter(){libraryModelOnly=!libraryModelOnly;renderLibrary()}
+function resetLibraryFilterModal(){['Outcome','Pair','Setup'].forEach(k=>document.getElementById('lf'+k).value='')}
+function applyLibraryFilterModal(){['Outcome','Pair','Setup'].forEach(k=>document.getElementById('lib'+k+'Filter').value=document.getElementById('lf'+k).value);closeLibraryFilterModal();renderLibrary();}
 function clearLibraryFilters(){['Outcome','Pair','Setup'].forEach(k=>document.getElementById('lib'+k+'Filter').value='');libraryModelOnly=false;renderLibrary()}
 let libraryView=(()=>{try{return localStorage.getItem('dw_library_view')==='study'?'study':'gallery'}catch(e){return 'gallery'}})();
 let _libraryStudyTipTimer;
@@ -8107,7 +8107,8 @@ function renderLibrary(){
   const outcome=document.getElementById('libOutcomeFilter').value;
   const pair=document.getElementById('libPairFilter').value;
   const setup=document.getElementById('libSetupFilter').value;
-  const n=[outcome,pair,setup].filter(Boolean).length+(libraryModelOnly?1:0);
+  const n=[outcome,pair,setup].filter(Boolean).length;
+  const modelBtn=document.getElementById('libModelBtn');if(modelBtn){modelBtn.classList.toggle('has-filter',libraryModelOnly);modelBtn.setAttribute('aria-pressed',String(libraryModelOnly))}
   document.getElementById('libFilterBtn').classList.toggle('has-filter',n>0);
   const count=document.getElementById('libFilterCount');count.textContent=n;count.style.display=n?'inline-flex':'none';
 
@@ -8124,8 +8125,11 @@ function renderLibrary(){
   list=[...list].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
 
   if(!list.length){
-    const filtered=!!n;
-    grid.innerHTML=filtered?'<div class="empty" style="grid-column:1/-1"><div class="empty-title">No trades match this filter</div><div class="empty-sub"><button class="btn-sm" type="button" onclick="clearLibraryFilters()">Clear Filters</button></div></div>':'<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🖼️</div><div class="empty-title">No screenshots yet</div><div class="empty-sub">Trades with an attached chart screenshot show up here for visual review.</div></div>';
+    const filtered=n>0||libraryModelOnly;
+    grid.innerHTML=filtered?(libraryModelOnly&&n===0
+      ?'<div class="empty" style="grid-column:1/-1"><div class="empty-title">No model trades pinned yet</div><div class="empty-sub">Tap the star on any Library card to pin a benchmark trade, or <button class="btn-sm" type="button" onclick="clearLibraryFilters()">Clear Filters</button></div></div>'
+      :'<div class="empty" style="grid-column:1/-1"><div class="empty-title">No trades match this filter</div><div class="empty-sub"><button class="btn-sm" type="button" onclick="clearLibraryFilters()">Clear Filters</button></div></div>')
+      :'<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🖼️</div><div class="empty-title">No screenshots yet</div><div class="empty-sub">Trades with an attached chart screenshot show up here for visual review.</div></div>';
     return;
   }
 
@@ -8147,7 +8151,7 @@ function renderLibrary(){
     const studyCopy=libraryView==='study'?'<div class="library-study-copy">'+(thesis?'<strong>Pre-trade thesis</strong><p>'+escapeHtml(thesis)+'</p>':'')+(notes?'<strong>Trade notes</strong><p>'+escapeHtml(notes)+'</p>':'')+(lesson?'<strong>Lessons learned</strong><p>'+escapeHtml(lesson)+'</p>':'')+(!thesis&&!notes&&!lesson?'<p>No study notes yet.</p>':'')+'</div>':'';
     const isPinned=!!t.setup&&(strategy.playbooks?.[t.setup]?.pinned||[]).includes(t.id),starTip=isPinned?'Unpin model trade':'Pin as model trade to '+(t.setup||'setup');
     return '<div class="library-card" data-trade-id="'+escapeHtml(t.id)+'">'
-      +'<div class="library-card-header"><span class="library-pair">'+escapeHtml(t.pair||'')+'</span><div class="trade-meta"><span class="tag '+(t.dir==='short'?'tag-short':'tag-long')+'">'+(t.dir==='short'?'▼ SHORT':'▲ LONG')+'</span>'+rrPill+outcomeBadge+(libraryView==='gallery'&&lesson?'<span class="tag tag-neutral library-insight-tag">💡 Lesson</span>':libraryView==='gallery'&&notes?'<span class="tag tag-neutral library-insight-tag">📝 Notes</span>':'')+'</div>'+(t.setup?'<span class="library-model-control" onpointerdown="startLibraryModelTip(event)" onpointerup="stopLibraryModelTip(event)" onpointercancel="stopLibraryModelTip(event)"><button class="library-model-star'+(isPinned?' pinned':'')+'" type="button" aria-label="'+escapeHtml(starTip)+'" onclick="libraryModelStarClick(event,\''+escapeForInlineHandler(t.setup)+'\',\''+t.id+'\')">'+(isPinned?'★':'☆')+'</button><span class="library-model-tip" role="tooltip">'+escapeHtml(starTip)+'</span></span>':'')+'</div>'
+      +'<div class="library-card-header"><span class="library-pair">'+escapeHtml(t.pair||'')+'</span><div class="trade-meta"><span class="tag '+(t.dir==='short'?'tag-short':'tag-long')+'">'+(t.dir==='short'?'▼ SHORT':'▲ LONG')+'</span>'+rrPill+outcomeBadge+(libraryView==='gallery'&&lesson?'<span class="tag tag-neutral library-insight-tag">💡 Lesson</span>':libraryView==='gallery'&&notes?'<span class="tag tag-neutral library-insight-tag">📝 Notes</span>':'')+(t.setup?'<span class="library-model-control" onpointerdown="startLibraryModelTip(event)" onpointerup="stopLibraryModelTip(event)" onpointercancel="stopLibraryModelTip(event)"><button class="library-model-star'+(isPinned?' pinned':'')+'" type="button" aria-label="'+escapeHtml(starTip)+'" onclick="libraryModelStarClick(event,\''+escapeForInlineHandler(t.setup)+'\',\''+t.id+'\')">'+(isPinned?'★':'☆')+'</button><span class="library-model-tip" role="tooltip">'+escapeHtml(starTip)+'</span></span>':'')+'</div></div>'
       +'<div class="library-charts">'+images+'</div>'
       +'<div class="library-body">'+studyCopy+'<div class="library-levels">'+level('ENTRY',t.entry)+level('SL',t.sl)+level('TP',t.tp)+'</div>'
       +(t.setup?'<div class="library-note">'+escapeHtml(t.setup)+'</div>':'')
@@ -8247,7 +8251,7 @@ function togglePlaybookPin(setup,id){
   if(!trade||trade.setup!==setup||!trade.images?.length)return;
   const book=playbookFor(setup), pinned=book.pinned||[];
   const wasPinned=pinned.includes(id);book.pinned=wasPinned?pinned.filter(x=>x!==id):[...pinned,id];
-  saveStrategyData();renderLibrary();renderSetupPlaybook();showToast(wasPinned?'Unpinned model trade':'Pinned as model trade to '+setup);
+  saveStrategyData();renderLibrary();renderSetupPlaybook();showToast(wasPinned?'Unpinned':'★ Pinned');
 }
 let _libraryModelTipTimer,_libraryModelLongPressed=false;
 function startLibraryModelTip(e){if(e.pointerType==='mouse')return;clearTimeout(_libraryModelTipTimer);_libraryModelLongPressed=false;const control=e.currentTarget;_libraryModelTipTimer=setTimeout(()=>{_libraryModelLongPressed=true;control.classList.add('show-tip')},550)}
