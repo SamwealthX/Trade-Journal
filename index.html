@@ -306,6 +306,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .daily-date{font-weight:800;font-size:14px}
 .daily-reflection{font-size:12px;color:var(--text2);line-height:1.4;white-space:pre-wrap;margin:6px 0}
 .daily-trades-ref{font-size:11px;color:var(--text3)}
+
+.daily-date-picker{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}.daily-date-picker label{font-size:12px;font-weight:700;color:var(--text2)}.daily-date-picker input{width:auto;max-width:175px}.daily-date-picker button{margin-left:auto}
+.daily-summary{padding:14px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}.daily-summary-title{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:12px}.daily-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.daily-metric{min-width:0}.daily-metric span{display:block;color:var(--text3);font-size:10px;text-transform:uppercase}.daily-metric strong{display:block;font:700 15px var(--mono);overflow-wrap:anywhere;margin-top:4px}.daily-trade-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.daily-trade-list button{font-size:11px}.daily-rating{display:flex;gap:3px}.daily-rating button{border:0;background:none;color:var(--text3);font-size:27px;cursor:pointer;padding:2px 5px}.daily-rating button.selected{color:var(--amber)}.daily-prompts details{border-top:1px solid var(--border);padding:10px 0}.daily-prompts summary{cursor:pointer;font-weight:700;font-size:12px;color:var(--text2)}.daily-prompts textarea{margin-top:10px;width:100%}.daily-card-actions{display:flex;align-items:center;justify-content:space-between;gap:8px}.daily-card-actions button{flex:none}.settings-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}.settings-row:last-child{border-bottom:0}.settings-row label{font-size:12px;color:var(--text2)}.settings-row select{width:auto;max-width:60%}.settings-section{margin:18px 0 0}.settings-section h3{font-size:13px;margin:0 0 9px}.settings-actions{display:flex;flex-wrap:wrap;gap:8px}.settings-actions button{flex:1 1 135px}.settings-danger{border-color:var(--red)}
+@media(max-width:380px){.daily-metrics{gap:4px}.daily-metric strong{font-size:12px}.daily-date-picker button{margin-left:0}}
 /* ── Library grid ── */
 .library-filters{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:12px}
 .library-star-btn{min-width:36px;min-height:36px;display:grid;place-items:center;font-size:17px;line-height:1;padding:0 9px}
@@ -314,7 +318,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .library-study-btn{min-width:36px;min-height:36px;display:grid;place-items:center}
 .library-study-btn svg{width:18px;height:18px}
 .library-study-btn.has-filter{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
-.library-study-tip{display:none;position:absolute;top:calc(100% + 8px);left:0;z-index:20;width:min(240px,75vw);padding:9px 11px;background:var(--surface3);color:var(--text);border:1px solid var(--border2);border-radius:6px;font-size:12px;line-height:1.4;box-shadow:var(--shadow-lg);pointer-events:none}
+.library-study-tip{display:none;position:absolute;top:calc(100% + 8px);right:0;left:auto;z-index:20;width:min(240px,75vw);padding:9px 11px;background:var(--surface3);color:var(--text);border:1px solid var(--border2);border-radius:6px;font-size:12px;line-height:1.4;box-shadow:var(--shadow-lg);pointer-events:none}
 @media(hover:hover){.library-study-control:hover .library-study-tip,.library-study-control:focus-within .library-study-tip{display:block}}
 .library-study-control.show-tip .library-study-tip{display:block}
 .img-preview-wrap{overflow:visible;margin-bottom:36px}
@@ -342,13 +346,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .library-insight-tag{font-size:10px}
 .library-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:12px}
 .library-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;min-width:0}
-.library-card-header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:13px 13px 0}
-.library-card-header .trade-meta{margin-left:auto;padding:0;gap:6px;flex-wrap:wrap}
+.library-card-header{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:13px 13px 0}.library-pair{font-weight:800;flex-shrink:0}.library-card-header .trade-meta .tag,.library-card-header .trade-meta .rr-chip{height:24px;min-height:24px;display:inline-flex;align-items:center;justify-content:center;padding:0 7px;border:1px solid var(--border2);border-radius:5px;line-height:1}.library-card-header .trade-meta{align-items:center;justify-content:flex-end}.library-card-header .library-model-star{width:24px;height:24px;font-size:17px;border-radius:5px}
+.library-card-header .trade-meta{margin-left:auto;padding:0;gap:5px;flex-wrap:wrap;min-width:0;overflow:visible}
 .library-model-control{position:relative;display:inline-flex}.library-model-star{width:34px;height:34px;display:grid;place-items:center;border:1px solid var(--border2);border-radius:6px;background:var(--surface2);color:var(--text3);font-size:20px;line-height:1;cursor:pointer}.library-model-star.pinned{color:var(--amber);border-color:var(--amber);background:var(--amber-dim);text-shadow:0 0 9px var(--amber)}.library-model-tip{display:none;position:absolute;right:0;top:calc(100% + 7px);z-index:20;width:max-content;max-width:min(250px,75vw);padding:8px 10px;background:var(--surface3);color:var(--text);border:1px solid var(--border2);border-radius:6px;font-size:12px;line-height:1.35;box-shadow:var(--shadow-lg);pointer-events:none}.library-model-control.show-tip .library-model-tip{display:block}@media(hover:hover){.library-model-control:hover .library-model-tip,.library-model-control:focus-within .library-model-tip{display:block}}
 .library-charts{display:flex;gap:7px;overflow-x:auto;padding:11px 13px 0}
 .library-chart{position:relative;flex:0 0 min(38%,140px);aspect-ratio:4/3;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--surface2);cursor:pointer;padding:0;color:var(--text2)}
 .library-chart img{width:100%;height:100%;object-fit:cover;display:block}
-.library-chart-label{position:absolute;left:5px;bottom:0;padding:3px 6px;border-radius:3px 3px 0 0;background:var(--surface);opacity:.88;color:var(--text);font-size:10px;font-weight:700}
+.library-chart-label{display:none}
 .library-levels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:10px;font:11px var(--mono);color:var(--text2)}
 .library-levels span{min-width:0;overflow-wrap:anywhere}.library-levels strong{display:block;color:var(--text3);font:700 10px var(--font);margin-bottom:3px}
 .library-card .pretrade-checklist-toggle{width:100%;gap:8px;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;font-family:var(--font)}
@@ -1171,6 +1175,9 @@ body{min-height:100dvh}
     <button class="filter-pill-btn" data-tag="Revenge Trade" onclick="setDailyTagFilter('Revenge Trade')">Revenge Trade</button>
     <button class="filter-pill-btn" data-tag="Clean Session" onclick="setDailyTagFilter('Clean Session')">Clean Session</button>
   </div>
+  <div class="daily-date-picker"><label for="dailySelectedDate">Trading day</label><input class="form-input" id="dailySelectedDate" type="date" onchange="renderDailyJournalList()"/><button class="btn-sm" onclick="openDailySelectedEntry()">Reflect on day</button></div>
+  <div id="dailySelectedSummary"></div>
+  <div class="section-header" style="margin-top:18px"><span class="section-title">Past reflections</span></div>
   <div id="dailyJournalList"></div>
 </div>
 
@@ -1788,69 +1795,36 @@ body{min-height:100dvh}
 
 <!-- ══ TAB: Settings ══ -->
 <div id="tabSettings" class="tab">
-  <div class="section-header"><span class="section-title">Data</span></div>
-  <div class="card" style="padding:12px">
-    <div class="info-row"><span class="k">Total Trades</span><span class="v" id="settingsTrades">0</span></div>
-    <div class="info-row"><span class="k">Accounts</span><span class="v" id="settingsAccts">0</span></div>
-    <div class="info-row" style="border:none"><span class="k">Storage</span><span class="v" style="color:var(--accent)" id="storageStatusLabel">Google Drive</span></div>
-  </div>
-
-  <div class="section-header" style="margin-top:4px"><span class="section-title">Google Drive Sync</span></div>
-  <div class="card" style="padding:12px">
-    <div id="gdrive-signed-out" style="display:none">
-      <div style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.6">Sign in to save your journal data to Google Drive. Data is stored in your personal Drive app folder.</div>
-      <button class="btn btn-primary" onclick="gdriveSignIn()" id="gdriveSignInBtn" style="display:flex;align-items:center;justify-content:center;gap:10px">
-        <svg width="17" height="17" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.59-13.46-8.66l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
-        Sign in with Google
-      </button>
-    </div>
-    <div id="gdrive-signed-in" style="display:none">
-      <div style="font-size:13px;color:var(--text2);margin-bottom:10px;line-height:1.6">Synced to your Google Drive app folder.</div>
-      <div class="info-row" style="border:none;padding:4px 0 10px"><span class="k">Account</span><span class="v" style="font-size:12px;color:var(--accent);font-family:var(--font)" id="gdriveEmail">—</span></div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost" onclick="gdriveForceSave()" style="flex:1;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-          Save Now
-        </button>
-        <button class="btn btn-ghost" onclick="gdriveSignOut()" style="flex:1;font-size:13px;color:var(--red)">Sign Out</button>
-      </div>
-    </div>
-    <div id="gdrive-loading" style="text-align:center;padding:12px 0;font-size:13px;color:var(--text3)">Connecting to Google…</div>
-  </div>
-
-  <div class="section-header" style="margin-top:4px"><span class="section-title">Export</span></div>
-  <div class="card" style="padding:12px">
-    <div style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.6">Download your trades for use in Excel, Google Sheets, or other tools.</div>
-    <button class="btn btn-ghost" onclick="exportCSV()" style="margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Export Trades as CSV
-    </button>
-  </div>
-
-  <div class="section-header" style="margin-top:4px"><span class="section-title">Import</span></div>
-  <div class="card" style="padding:12px">
-    <div style="font-size:13px;color:var(--text2);margin-bottom:6px;line-height:1.6">Import trades from a CSV file. Must match the export format. Duplicate IDs are skipped.</div>
-    <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Required columns: <span style="font-family:var(--mono);color:var(--text2)">pair, dir, pnl, date</span></div>
-    <button class="btn btn-ghost" onclick="document.getElementById('csvFileInput').click()" style="display:flex;align-items:center;justify-content:center;gap:8px">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      Import Trades from CSV
-    </button>
-    <input type="file" id="csvFileInput" accept=".csv,text/csv" style="display:none" onchange="importCSV(this)"/>
-  </div>
-
-  <div class="section-header" style="margin-top:4px"><span class="section-title">Backup & Restore</span></div>
-  <div class="card" style="padding:12px">
-    <div style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.6">Full backup includes trades, accounts, strategy, and custom checklist options.</div>
-    <button class="btn btn-ghost" onclick="exportJSON()" style="margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Download Backup (JSON)
-    </button>
-    <button class="btn btn-ghost" onclick="document.getElementById('jsonFileInput').click()" style="display:flex;align-items:center;justify-content:center;gap:8px">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      Restore from Backup (JSON)
-    </button>
+  <div class="section-header"><span class="section-title">Settings</span></div>
+  <section class="settings-section"><h3>Cloud &amp; Sync</h3><div class="card" style="padding:14px">
+    <div class="settings-row"><label>Connection</label><span id="settingsConnectionStatus">○ Not connected</span></div>
+    <div class="settings-row"><label>Google account</label><span id="gdriveEmail">—</span></div>
+    <div class="settings-row"><label>Last sync</label><span id="settingsSyncTime">Not synced</span></div>
+    <div class="settings-row"><label for="settingsAutoBackup">Automatic local backup</label><input id="settingsAutoBackup" type="checkbox" onchange="setSettingsAutoBackup(this.checked)"/></div>
+    <div id="gdrive-loading" style="font-size:12px;color:var(--text3)">Connecting to Google…</div>
+    <div id="gdrive-signed-out" style="display:none"><button class="btn btn-ghost" onclick="gdriveSignIn()" id="gdriveSignInBtn">Connect Google Drive</button></div>
+    <div id="gdrive-signed-in" class="settings-actions" style="display:none;margin-top:12px"><button class="btn btn-ghost" onclick="gdriveForceSave()">Sync now</button><button class="btn btn-ghost" onclick="gdriveSignOut()">Disconnect</button></div>
+    <span id="storageStatusLabel" style="display:none">Not connected</span>
+  </div></section>
+  <section class="settings-section"><h3>Account summary</h3><div class="card" style="padding:14px">
+    <div class="settings-row"><label>Selected account</label><strong id="settingsSelectedAccount">All Accounts</strong></div>
+    <div class="settings-row"><label>Accounts</label><strong id="settingsAccts">0</strong></div>
+    <div class="settings-row"><label>Trades</label><strong id="settingsTrades">0</strong></div>
+  </div></section>
+  <section class="settings-section"><h3>App preferences</h3><div class="card" style="padding:14px">
+    <div class="settings-row"><label for="settingsTheme">Theme</label><select class="form-select" id="settingsTheme" onchange="applyTheme(this.value)"><option value="dark">Dark</option><option value="light">Light</option></select></div>
+    <div class="settings-row"><label for="settingsLanding">Default landing tab</label><select class="form-select" id="settingsLanding" onchange="saveAppPreference('landing',this.value)"><option value="Journal">Trade Log</option><option value="Stats">Metrics</option><option value="DailyJournal">Daily Journal</option><option value="Library">Library</option><option value="TradingAccounts">Accounts</option></select></div>
+    <div class="settings-row"><label for="settingsDateFormat">Date format</label><select class="form-select" id="settingsDateFormat" onchange="saveAppPreference('date',this.value)"><option value="day">Day / Month / Year</option><option value="month">Month / Day / Year</option></select></div>
+    <div class="settings-row"><label for="settingsTimeFormat">Time format</label><select class="form-select" id="settingsTimeFormat" onchange="saveAppPreference('time',this.value)"><option value="24">24-hour</option><option value="12">12-hour</option></select></div>
+  </div></section>
+  <section class="settings-section"><h3>Data management</h3><div class="card" style="padding:14px">
+    <div class="settings-row"><label>Local cache</label><span id="settingsCacheStatus">—</span></div>
+    <div class="settings-actions" style="margin-top:12px"><button class="btn btn-ghost" onclick="exportJSON()">Export full JSON</button><button class="btn btn-ghost" onclick="document.getElementById('jsonFileInput').click()">Import JSON</button></div>
     <input type="file" id="jsonFileInput" accept=".json,application/json" style="display:none" onchange="importJSON(this)"/>
-  </div>
+    <div class="settings-actions" style="margin-top:8px"><button class="btn btn-ghost" onclick="exportCSV()">Export trades CSV</button><button class="btn btn-ghost" onclick="document.getElementById('csvFileInput').click()">Import trades CSV</button></div>
+    <input type="file" id="csvFileInput" accept=".csv,text/csv" style="display:none" onchange="importCSV(this)"/>
+  </div></section>
+  <section class="settings-section"><h3>Danger zone</h3><div class="card settings-danger" style="padding:14px"><div style="font-size:12px;color:var(--text2);margin-bottom:10px">Clear this device's local copy. Google Drive data stays untouched.</div><button class="btn btn-danger" onclick="resetLocalJournalCache()">Clear local data</button></div></section>
 
   <!-- Powered by Decipher Wealth -->
   <div style="text-align:center;padding:28px 0 16px;display:flex;flex-direction:column;align-items:center;gap:8px">
@@ -2440,6 +2414,13 @@ body{min-height:100dvh}
       <label class="form-label">Reflection</label>
       <textarea class="form-input" id="deReflection" rows="5" placeholder="How did today go — discipline, emotions, what to repeat or change..."></textarea>
     </div>
+    <div class="form-group"><label class="form-label">Discipline &amp; execution</label><div class="daily-rating" id="dailyRating" role="group" aria-label="Discipline rating"></div></div>
+    <div class="daily-prompts">
+      <details open><summary>Pre-session mindset &amp; plan</summary><textarea class="form-input" id="deMindset" rows="3" placeholder="What was your plan before the session?"></textarea></details>
+      <details><summary>Market conditions</summary><textarea class="form-input" id="deMarket" rows="3" placeholder="What did the market give you?"></textarea></details>
+      <details><summary>Mistakes &amp; lessons learned</summary><textarea class="form-input" id="deLessons" rows="3" placeholder="What will you change next time?"></textarea></details>
+      <details><summary>Post-session review</summary><textarea class="form-input" id="deReview" rows="3" placeholder="What worked well today?"></textarea></details>
+    </div>
     <!-- That day's trades are pulled read-only from Trade Log, never re-entered here (Priority 3). -->
     <div class="form-group">
       <label class="form-label">Trades that day</label>
@@ -3014,10 +2995,17 @@ let tokenClient = null;
 // Primary session/UI store. Falls back to localStorage only when running
 // outside Telegram (e.g. browser dev/testing). localStorage is never used
 // as a data store for trades/accounts — that lives exclusively in Drive.
+const SESSION_KEYS = new Set(['gdrive_token','gdrive_email','gdrive_file_id','gdrive_refresh_token','gdrive_token_expiry']);
+const sessionMirrorKey = key => 'tj_session_' + (tg?.initDataUnsafe?.user?.id || 'browser') + '_' + key;
+const sessionMirror = {
+  get(key){ try{ return localStorage.getItem(sessionMirrorKey(key)); }catch{ return null; } },
+  set(key,value){ try{ localStorage.setItem(sessionMirrorKey(key),value); }catch{} },
+  remove(key){ try{ localStorage.removeItem(sessionMirrorKey(key)); }catch{} },
+};
 const CS = {
   get(key){ return new Promise(resolve=>{
     let settled = false;
-    const done = (v)=>{ if(settled) return; settled = true; resolve(v); };
+    const done = (v)=>{ if(settled) return; settled = true; resolve(v || (SESSION_KEYS.has(key)?sessionMirror.get(key):null)); };
     if(tg?.CloudStorage){
       // Some Telegram client versions/platforms (observed on iOS) have been
       // known to silently never invoke the CloudStorage callback in certain
@@ -3036,6 +3024,7 @@ const CS = {
   set(key,value){ return new Promise(resolve=>{
     let settled = false;
     const done = ()=>{ if(settled) return; settled = true; resolve(); };
+    if(SESSION_KEYS.has(key)) sessionMirror.set(key,value);
     if(tg?.CloudStorage){
       setTimeout(done, 4000);
       try{
@@ -3048,6 +3037,7 @@ const CS = {
   remove(key){ return new Promise(resolve=>{
     let settled = false;
     const done = ()=>{ if(settled) return; settled = true; resolve(); };
+    if(SESSION_KEYS.has(key)) sessionMirror.remove(key);
     if(tg?.CloudStorage){
       setTimeout(done, 4000);
       try{
@@ -3085,6 +3075,7 @@ function applyTheme(mode, save = true){
   // var(...) values through chartOpts()/themeColors() at construction time.
   if(activeTab==='Stats') renderStats();
   if(save) CS.set('theme', mode);
+  const themeSelect=document.getElementById('settingsTheme');if(themeSelect)themeSelect.value=mode;
 }
 
 function toggleTheme(){
@@ -3266,21 +3257,6 @@ async function gdriveInit(){
     return; // Never reach the GSI wait-loop / _initTokenClient() in this tab.
   }
 
-  // ── Safari boot guard ──
-  // If there's no Telegram context and we didn't already return above (i.e.
-  // the hash had no fresh token and no bridge marker was set), this is
-  // almost certainly the Safari tab that tg.openLink() opened BEFORE the
-  // user completed Google sign-in (e.g. they backgrounded Safari and
-  // returned to it, or they refreshed). The savedToken check below would
-  // otherwise find the token previously persisted to localStorage (via CS
-  // fallback, same origin) and silently boot the full trading journal in
-  // Safari — bypassing the relay entirely. Prevent that unconditionally.
-  if(!tg){
-    document.body.style.cssText = 'margin:0;padding:0;background:#0a0d12';
-    document.body.innerHTML = '<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif;gap:20px;color:#e8edf3"><div style="font-size:56px">📱</div><div><div style="font-size:21px;font-weight:700;margin-bottom:10px">Open in Telegram</div><div style="font-size:14px;color:#8896a8;line-height:1.6">This journal runs inside Telegram.<br>Sign in there to continue.</div></div><a href="https://t.me/' + TG_BOT_USERNAME + '/' + TG_MINIAPP_SHORTNAME + '" style="margin-top:8px;padding:14px 32px;background:#00e5a0;color:#000;border-radius:14px;font-weight:700;font-size:15px;text-decoration:none">Open in Telegram</a></div>';
-    return;
-  }
-
   // Restore session state from Telegram CloudStorage / localStorage
   const [savedToken, savedEmail, savedFileId, savedRefreshToken, savedExpiry] = await Promise.all([
     CS.get('gdrive_token'),
@@ -3308,21 +3284,9 @@ async function gdriveInit(){
     if(_needsRefresh){
       const ok = await _refreshGdriveToken();
       if(!ok){
-        // Refresh failed — revoked by the user, stale from long inactivity,
-        // or (per Phase 5) the OAuth consent screen is still in Google
-        // Cloud Console's "Testing" mode, where refresh tokens expire after
-        // 7 days regardless of activity. Clear everything and fall through
-        // to the standard sign-in screen below rather than proceeding with
-        // a dead token — must degrade gracefully, not surface a stuck state.
-        gdriveToken = null;
-        gdriveRefreshToken = null;
-        gdriveTokenExpiry = null;
-        gdriveFileId = null;
-        await Promise.all([
-          CS.remove('gdrive_token'),
-          CS.remove('gdrive_refresh_token'),
-          CS.remove('gdrive_token_expiry'),
-        ]);
+        // Network/relay interruptions are not proof of revoked consent.
+        // Keep the saved session; gdriveRequest can retry refresh on a 401.
+        console.warn('Google refresh unavailable; keeping saved session for retry');
       }
     }
   }
@@ -4168,7 +4132,7 @@ function gdriveSignOut(){
     if(gdriveToken && window.google?.accounts?.oauth2){
       google.accounts.oauth2.revoke(gdriveToken, ()=>{});
     }
-    gdriveToken=null; gdriveFileId=null; gdriveEmail=null;
+    gdriveToken=null; gdriveFileId=null; gdriveEmail=null; gdriveRefreshToken=null; gdriveTokenExpiry=null;
     // Reset the singleton so the next sign-in performs a fresh lookup rather
     // than resolving to the previous session's (now invalid) file ID.
     _gdriveFindPromise = null;
@@ -4177,12 +4141,14 @@ function gdriveSignOut(){
       CS.remove('gdrive_token'),
       CS.remove('gdrive_email'),
       CS.remove('gdrive_file_id'),
+      CS.remove('gdrive_refresh_token'),
+      CS.remove('gdrive_token_expiry'),
     ]);
     // Clear in-memory state
     trades=[]; accounts=[]; strategy={}; edgeTags=[]; customOptions={}; monthlyGoals={}; preTrades=[]; dailyJournal=[]; tradesVersion++;
     _setSignInSkipped(false);
     try{ localStorage.removeItem(LOCAL_DATA_KEY); localStorage.removeItem(LOCAL_UNSYNCED_KEY); }catch(e){}
-    _lastDriveSave='';
+    _lastDriveSave=''; updateAccountSyncLabels();
     gdriveImageCache.clear(); gdriveImageFetches.clear();
     gdriveShowSignedOut();
     // Show sign-in screen so user can sign back in (or skip to first-launch)
@@ -4197,7 +4163,9 @@ function gdriveShowSignedIn(){
   document.getElementById('gdrive-signed-out').style.display='none';
   document.getElementById('gdrive-signed-in').style.display='block';
   document.getElementById('gdriveEmail').textContent = (gdriveEmail && gdriveEmail.includes('@')) ? gdriveEmail : (gdriveEmail || 'Google account connected');
-  document.getElementById('storageStatusLabel').textContent='Google Drive ✓';
+  document.getElementById('storageStatusLabel').textContent='Connected';
+  document.getElementById('settingsConnectionStatus')?.replaceChildren(document.createTextNode('● Connected'));
+  updateAccountSyncLabels();
   document.getElementById('storageStatusLabel').style.color='var(--accent)';
 }
 
@@ -4205,7 +4173,8 @@ function gdriveShowSignedOut(){
   document.getElementById('gdrive-loading').style.display='none';
   document.getElementById('gdrive-signed-in').style.display='none';
   document.getElementById('gdrive-signed-out').style.display='block';
-  document.getElementById('storageStatusLabel').textContent='Not synced';
+  document.getElementById('storageStatusLabel').textContent='Not connected';
+  document.getElementById('settingsConnectionStatus')?.replaceChildren(document.createTextNode('○ Not connected'));
   document.getElementById('storageStatusLabel').style.color='var(--amber)';
 }
 
@@ -4674,7 +4643,7 @@ async function gdriveFlushAll(){
   const payload = { _version:1, _saved:new Date().toISOString(), trades, accounts, strategy, edgeTags, customOptions, monthlyGoals, propFirms, preTrades, dailyJournal };
   _saveLocalCopy(true);
   await gdriveWriteFile(payload);
-  if(_gdriveLastWriteOk) _saveLocalCopy(false);
+  if(_gdriveLastWriteOk){ if(settingsAutoBackup()) _saveLocalCopy(false); else { try{localStorage.removeItem(LOCAL_DATA_KEY);localStorage.removeItem(LOCAL_UNSYNCED_KEY)}catch(e){} } }
   if(_gdriveLastWriteOk){
     _lastDriveSave = payload._saved;
     _broadcastSave();
@@ -4702,7 +4671,8 @@ async function loadUIState(){
     CS.get('active_tab'),
   ]);
   if(acct) activeAcctFilter = acct;
-  if(tab)  activeTab = tab;
+  if(tab) activeTab = tab;
+  else {const landing=localStorage.getItem('tj_pref_landing'); if(['Journal','Stats','DailyJournal','Library','TradingAccounts'].includes(landing)) activeTab=landing;}
 }
 
 // ─── Save helpers — Drive is the sole persistent store ───
@@ -4715,9 +4685,9 @@ const saveGoals        = ()=>{ gdriveScheduleSave(); return Promise.resolve(); }
 
 // ─── Load all data from Drive (primary), no localStorage fallback ───
 async function loadAll(){
-  if(!gdriveToken && !accounts.length){
+  if(!accounts.length){
     const local=_readLocalCopy();
-    if(local) _applyData(local);
+    if(local){ _applyData(local); if(gdriveToken && !_hasUnsynced()) _lastDriveSave=local._saved||''; }
   }
   if(gdriveToken){
     try{
@@ -5600,7 +5570,7 @@ function switchTab(name){
   CS.set('active_tab', name);
   // Update header title and subtitle to reflect current tab
   const tabLabels={Journal:'Trade Journal',PreTrade:'Pre-Trade',DailyJournal:'Daily Journal',Library:'Library',Calendar:'Calendar',Stats:'Metrics',Prop:'Prop Firm Tracker',TradingAccounts:'Trading Accounts',Strategy:'Strategy & Edge',Settings:'Settings'};
-  const tabSubs={PreTrade:'Planned Setups',DailyJournal:'Daily Reflections',Library:'Screenshot Review',Calendar:'P&L Overview',Stats:'Performance & Analytics',Prop:'Phases & Payouts',TradingAccounts:'Manage Accounts',Strategy:'Plan & Rules',Settings:'Accounts & Data'};
+  const tabSubs={PreTrade:'Planned Setups',DailyJournal:'Daily Reflections',Library:'Screenshot Review',Calendar:'P&L Overview',Stats:'Performance & Analytics',Prop:'Phases & Payouts',TradingAccounts:'Manage Accounts',Strategy:'Plan & Rules',Settings:'Preferences & Data'};
   document.getElementById('headerTitle').textContent=tabLabels[name]||name;
   const subEl=document.getElementById('headerSub');
   subEl.style.opacity='0';
@@ -5635,6 +5605,7 @@ function accountSyncLabel(){return _lastDriveSave?'Synced '+timeAgo(_lastDriveSa
 function updateAccountSyncLabels(){
   const label=accountSyncLabel();
   document.getElementById('acctSyncStatus')?.replaceChildren(document.createTextNode(label));
+  document.getElementById('settingsSyncTime')?.replaceChildren(document.createTextNode(label));
   document.querySelectorAll('#switchAcctList .switch-swipe-wrap .switch-acct-sub').forEach(el=>{el.textContent=label;});
 }
 setInterval(updateAccountSyncLabels,15000);
@@ -5704,6 +5675,7 @@ function selectSwitchAccount(id, rowEl){
     return;
   }
   setAcctFilter(id);
+  renderLibrary();
   closeSwitchAcctModal();
 }
 
@@ -5757,6 +5729,8 @@ function setAcctFilter(id){
   renderAcctBar();
   renderHeader();
   if(activeTab==='Journal')  renderTradeList();
+  if(activeTab==='Library')  renderLibrary();
+  if(activeTab==='DailyJournal') renderDailyJournalList();
   if(activeTab==='Stats'){
     // Re-apply button highlight for the current statPeriod before re-rendering,
     // since renderStats() alone doesn't touch button styles.
@@ -5804,6 +5778,7 @@ function renderAll(){
   // Re-render Prop tab if visible; mark Calendar dirty so switchTab re-renders it.
   if(activeTab==='Prop') renderPropFirms();
   if(activeTab==='TradingAccounts') renderAcctList();
+  if(activeTab==='DailyJournal') renderDailyJournalList();
   if(activeTab==='Settings') renderSettings();
   if(activeTab==='Calendar'){
     if(calFilter==='month') renderCalendar();
@@ -7937,6 +7912,7 @@ function onDailyEntryDateChange(){
   document.getElementById('deTag').value = existing ? (existing.tag||'') : document.getElementById('deTag').value;
   document.getElementById('deReflection').value = existing ? (existing.reflection||'') : document.getElementById('deReflection').value;
   restoreDailyMeta();
+  loadDailyPromptFields(existing);
   document.getElementById('dailyEntryDeleteBtn').style.display = existing ? 'block' : 'none';
   document.getElementById('dailyEntryModalTitle').textContent = existing ? 'Edit Entry' : 'New Entry';
 }
@@ -7963,6 +7939,7 @@ function openEditDailyEntry(id){
   document.getElementById('deTag').value=e.tag||'';
   document.getElementById('deReflection').value=e.reflection||'';
   restoreDailyMeta();
+  loadDailyPromptFields(e);
   document.getElementById('deTradesForDay').innerHTML=_dailyEntryTradesRefHtml(e.date);
   document.getElementById('dailyEntryModal').classList.add('open');
   updateNavVisibility();
@@ -7980,6 +7957,11 @@ function saveDailyEntry(){
     date,
     tag: document.getElementById('deTag').value||'',
     reflection: document.getElementById('deReflection').value.trim(),
+    rating: dailyRating,
+    mindset: document.getElementById('deMindset').value.trim(),
+    market: document.getElementById('deMarket').value.trim(),
+    lessons: document.getElementById('deLessons').value.trim(),
+    review: document.getElementById('deReview').value.trim(),
     createdAt: existing ? existing.createdAt : new Date().toISOString(),
   };
   if(existing){ const idx=dailyJournal.findIndex(e=>e.id===existing.id); dailyJournal[idx]=entry; }
@@ -7999,31 +7981,51 @@ function deleteDailyEntry(){
   showToast('Entry deleted');
 }
 
+let dailyRating=0;
+function paintDailyRating(){
+  document.getElementById('dailyRating').innerHTML=Array.from({length:5},(_,i)=>'<button type="button" class="'+(i<dailyRating?'selected':'')+'" aria-label="Rate '+(i+1)+' out of 5" aria-pressed="'+(dailyRating===i+1)+'" onclick="dailyRating='+(i+1)+';paintDailyRating()">★</button>').join('');
+}
+function loadDailyPromptFields(entry){
+  dailyRating=Number(entry?.rating)||0; paintDailyRating();
+  for(const key of ['mindset','market','lessons','review']) document.getElementById('de'+key[0].toUpperCase()+key.slice(1)).value=entry?.[key]||'';
+}
+function openDailySelectedEntry(){
+  const date=document.getElementById('dailySelectedDate').value;
+  const entry=dailyJournal.find(e=>e.date===date);
+  if(entry){openEditDailyEntry(entry.id);return;}
+  openAddDailyEntry();
+  document.getElementById('deDate').value=date;
+  onDailyEntryDateChange();
+}
+function _dailyTradesHtml(day){
+  return day.length?'<div class="daily-trade-list">'+day.map(t=>'<button type="button" class="btn-sm" onclick="openPeek(\''+escapeForInlineHandler(t.id)+'\')">'+escapeHtml(t.pair||'Trade')+' · '+fmtPnl(parseFloat(t.pnl)||0)+'</button>').join('')+'</div>':'<div class="daily-trades-ref">No trades logged that day</div>';
+}
+function _dailyMetricsHtml(day){
+  const pnl=day.reduce((sum,t)=>sum+(parseFloat(t.pnl)||0),0);
+  const wins=day.filter(t=>(parseFloat(t.pnl)||0)>0).length,losses=day.filter(t=>(parseFloat(t.pnl)||0)<0).length;
+  const netR=day.reduce((sum,t)=>sum+(Number(calcR(t))||0),0);
+  return '<div class="daily-metrics"><div class="daily-metric"><span>Daily P&amp;L</span><strong class="'+(pnl>=0?'positive':'negative')+'">'+fmtPnl(pnl)+'</strong></div><div class="daily-metric"><span>Win / Loss</span><strong>'+wins+' / '+losses+'</strong></div><div class="daily-metric"><span>Net R</span><strong>'+netR.toFixed(2)+'R</strong></div><div class="daily-metric"><span>Trades</span><strong>'+day.length+'</strong></div></div>';
+}
 function _dailyEntryCardHtml(e){
   const dateLabel=new Date(e.date+'T00:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
-  const day=tradesOnDate(e.date), dayPnl=day.reduce((sum,t)=>sum+(parseFloat(t.pnl)||0),0);
-  const wins=day.filter(t=>(parseFloat(t.pnl)||0)>0).length,losses=day.filter(t=>(parseFloat(t.pnl)||0)<0).length;
-  return '<div class="daily-item" onclick="openEditDailyEntry(\''+e.id+'\')">'
-    +'<div class="daily-top">'
-    +'<span class="daily-date">'+escapeHtml(dateLabel)+'</span>'
+  const prompts=[['Pre-session mindset & plan','mindset'],['Market conditions','market'],['Mistakes & lessons learned','lessons'],['Post-session review','review']];
+  return '<div class="daily-item"><div class="daily-card-actions"><span class="daily-date">'+escapeHtml(dateLabel)+'</span><button type="button" class="btn-sm" onclick="openEditDailyEntry(\''+escapeForInlineHandler(e.id)+'\')">Edit</button></div>'
     +(e.tag?'<span class="tag tag-neutral">'+escapeHtml(e.tag)+'</span>':'')
-    +'</div>'
-    +'<div class="day-performance"><div><span class="metric-label">Day P&L</span><span class="metric-value '+(dayPnl>=0?'positive':'negative')+'">'+fmtPnl(dayPnl)+'</span></div><div><span class="metric-label">Trades</span><span class="metric-value">'+day.length+'</span></div><div><span class="metric-label">W / L</span><span class="metric-value">'+wins+' / '+losses+'</span></div></div>'
-    +(e.reflection?'<div class="daily-reflection">'+escapeHtml(e.reflection)+'</div>':'')
-    +'<div class="daily-trades-ref">'+_dailyEntryTradesRefHtml(e.date)+'</div>'
-    +'</div>';
+    +'<div class="daily-summary">'+_dailyMetricsHtml(tradesOnDate(e.date))+'</div>'
+    +(e.rating?'<div class="daily-reflection">Discipline &amp; execution <span style="color:var(--amber)">'+('★'.repeat(e.rating))+'</span> '+e.rating+'/5</div>':'')
+    +prompts.filter(([,key])=>e[key]).map(([label,key])=>'<details class="daily-prompts"><summary>'+label+'</summary><p class="daily-reflection">'+escapeHtml(e[key])+'</p></details>').join('')
+    +(e.reflection?'<details class="daily-prompts"><summary>Reflection</summary><p class="daily-reflection">'+escapeHtml(e.reflection)+'</p></details>':'')
+    +_dailyTradesHtml(tradesOnDate(e.date))+'</div>';
 }
-
 function renderDailyJournalList(){
   const list=document.getElementById('dailyJournalList');
   if(!list) return;
-  const filtered = dailyTagFilter ? dailyJournal.filter(e=>e.tag===dailyTagFilter) : dailyJournal;
-  if(!filtered.length){
-    list.innerHTML='<div class="empty"><div class="empty-icon">📓</div><div class="empty-title">No entries yet</div><div class="empty-sub">Tap <strong style="color:var(--accent)">+ New Entry</strong> to reflect on your trading day.</div></div>';
-    return;
-  }
-  const sorted=[...filtered].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  list.innerHTML=sorted.map(_dailyEntryCardHtml).join('');
+  const dateInput=document.getElementById('dailySelectedDate');
+  if(!dateInput.value){const now=new Date();dateInput.value=new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,10)}
+  const date=dateInput.value, day=tradesOnDate(date), entry=dailyJournal.find(e=>e.date===date);
+  document.getElementById('dailySelectedSummary').innerHTML='<div class="daily-summary"><div class="daily-summary-title">'+escapeHtml(date)+'</div>'+_dailyMetricsHtml(day)+_dailyTradesHtml(day)+(entry?.rating?'<div class="daily-reflection">Discipline &amp; execution · '+entry.rating+'/5</div>':'')+'</div>';
+  const filtered=dailyTagFilter?dailyJournal.filter(e=>e.tag===dailyTagFilter):dailyJournal;
+  list.innerHTML=filtered.length?[...filtered].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(_dailyEntryCardHtml).join(''):'<div class="empty"><div class="empty-title">No reflections yet</div></div>';
 }
 
 // ─── Library (Priority 4) ───
@@ -8097,7 +8099,7 @@ function _libraryChartSequence(images){
     const fallback=legacy[index%legacy.length];
     return {img,index,label:roles[stage>=0?stage:(index<4?rank(fallback):index%roles.length)],rank:stage>=0?stage:rank(fallback)};
   });
-  return items.sort((a,b)=>a.rank-b.rank||a.index-b.index);
+  return items.sort((a,b)=>a.index-b.index);
 }
 function renderLibrary(){
   const grid=document.getElementById('libraryGrid');
@@ -8139,7 +8141,7 @@ function renderLibrary(){
     const entry=Number(t.entry),sl=Number(t.sl),tp=Number(t.tp);
     const rr=t.entry!==''&&t.sl!==''&&t.tp!==''&&[entry,sl,tp].every(Number.isFinite)&&Math.abs(entry-sl)>0?Math.abs((tp-entry)/(entry-sl)):null;
     const rrPill=rr!==null?'<span class="rr-chip">1:'+rr.toFixed(1)+'</span>':'';
-    const images=_libraryChartSequence(t.images).map(item=>'<button class="library-chart" type="button" data-image-index="'+item.index+'" onclick="openLightbox(\''+t.id+'\','+item.index+',true)" aria-label="View '+escapeHtml(item.label)+' chart"><span class="img-upload-spinner">⟳</span><span class="library-chart-label">'+escapeHtml(item.label)+'</span></button>').join('');
+    const images=_libraryChartSequence(t.images).map(item=>'<button class="library-chart" type="button" data-image-index="'+item.index+'" onclick="openLightbox(\''+t.id+'\','+item.index+',true)" aria-label="View chart '+(item.index+1)+'"><span class="img-upload-spinner">⟳</span></button>').join('');
     const clRows=[['HTF Direction',cl.htf],['Liquidity Taken',cl.liq],['Setup / Model',cl.setup],['Entry (POI)',cl.poi],['Confluence',cl.conf],['SL Placement',cl.slpl],['Exit',cl.exit]]
       .filter(([,vals])=>vals?.length).map(([label,vals])=>'<div class="info-row"><span class="k">'+label+'</span><span class="v" style="font-family:var(--font);font-size:12px;text-align:right;max-width:58%;color:var(--text)">'+escapeHtml(vals.join(', '))+'</span></div>').join('');
     const id='libcl-'+t.id;
@@ -8218,9 +8220,29 @@ function renderAcctList(){
     </div><button class="btn-sm" onclick="editAccount('${a.id}')">Edit</button></div>`;
   }).join('');
 }
+function settingsAutoBackup(){return localStorage.getItem('tj_autoBackup')!=='0'}
+function setSettingsAutoBackup(enabled){localStorage.setItem('tj_autoBackup',enabled?'1':'0');showToast(enabled?'Local backup on':'Local backup off');renderSettings()}
+function saveAppPreference(key,value){localStorage.setItem('tj_pref_'+key,value);showToast('Preference saved')}
+function resetLocalJournalCache(){
+  showConfirm('Clear local data?', 'This clears only this device’s journal cache. Google Drive data and your connection stay intact. Unsynced changes on this device cannot be recovered.', ()=>{
+    localStorage.removeItem(LOCAL_DATA_KEY);localStorage.removeItem(LOCAL_UNSYNCED_KEY);
+    gdriveImageCache.clear();gdriveImageFetches.clear();renderSettings();showToast('Local cache cleared');
+  });
+}
 function renderSettings(){
   document.getElementById('settingsTrades').textContent=trades.length;
   document.getElementById('settingsAccts').textContent=accounts.length;
+  const selected=accounts.find(a=>a.id===activeAcctFilter);
+  document.getElementById('settingsSelectedAccount').textContent=selected?.name||'All Accounts';
+  document.getElementById('settingsSyncTime').textContent=accountSyncLabel();
+  document.getElementById('settingsAutoBackup').checked=settingsAutoBackup();
+  document.getElementById('settingsTheme').value=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';
+  for(const [id,key] of [['settingsLanding','landing'],['settingsDateFormat','date'],['settingsTimeFormat','time']]){
+    const el=document.getElementById(id),saved=localStorage.getItem('tj_pref_'+key);
+    if(saved&&[...el.options].some(o=>o.value===saved))el.value=saved;
+  }
+  const local=localStorage.getItem(LOCAL_DATA_KEY);
+  document.getElementById('settingsCacheStatus').textContent=local?((new Blob([local]).size/1024).toFixed(0)+' KB'+(_hasUnsynced()?' · pending sync':' · saved')):'Empty';
   // Refresh Drive panel state
   // Always resolve the card based on token presence, not gdriveReady.
   // On iOS, GSI never loads so gdriveReady stays false — the card would
@@ -11028,6 +11050,8 @@ async function exportJSON(){
     customOptions,
     monthlyGoals,
     propFirms,
+    preTrades,
+    dailyJournal,
   };
   const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
   const ts = new Date().toISOString().slice(0,10);
