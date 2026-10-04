@@ -1012,7 +1012,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
 .dj-wl svg{flex:none;color:var(--text2)}.dj-wl span{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .dj-strip{display:flex;gap:3px;margin:0 0 14px}
 .dj-day{flex:1;min-width:0;text-align:center;padding:8px 0 7px;border-radius:var(--radius-sm);border:1px solid transparent;background:transparent;color:var(--text);cursor:pointer;font-family:var(--font)}
-.dj-day small{display:block;font-size:11px;color:var(--text3)}.dj-day b{display:block;font-size:16px;margin:2px 0 5px}
+.dj-day small{display:block;font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--text3);white-space:nowrap;overflow:hidden}.dj-day b{display:block;font-size:16px;margin:2px 0 5px}
 .dj-dots{display:flex;gap:3px;justify-content:center;height:6px}.dj-dots i{width:6px;height:6px;border-radius:50%;background:var(--surface3)}.dj-dots i.r{background:transparent;border:1.5px solid var(--accent)}
 .dj-day.today{box-shadow:inset 0 0 0 1px var(--accent)}.dj-day.sel{outline:2px solid var(--text);outline-offset:-2px}.dj-day.sel b{color:var(--accent)}.dj-day:disabled{opacity:.3;pointer-events:none}
 .h-un{border-style:dashed!important;border-color:var(--amber)!important}
@@ -1053,7 +1053,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
 .dj-sh-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-top:10px}.dj-sh-chips::-webkit-scrollbar{display:none}
 .dj-menu{position:absolute;right:16px;bottom:68px;background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:6px;min-width:190px;display:none;z-index:2}.dj-menu.on{display:block}
 .dj-menu button{display:block;width:100%;min-height:44px;padding:0 12px;background:none;border:0;border-radius:8px;font:700 13px var(--font);color:var(--text2);text-align:left;cursor:pointer}.dj-menu .danger{color:var(--red)}
-.dj-cg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.dj-cgh{text-align:center;font-size:11px;font-weight:700;color:var(--text3);padding:4px 0}
+.dj-cg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.dj-cgh{text-align:center;font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--text3);padding:4px 0;min-width:0;white-space:nowrap;overflow:hidden}
 .dj-cc{aspect-ratio:1;min-height:44px;border-radius:var(--radius-sm);border:1px solid var(--border);background:transparent;color:var(--text);font:700 14px var(--font);position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .dj-cc:active{transform:scale(.94)}.dj-cc:disabled{opacity:.22;pointer-events:none}.dj-cc.today{box-shadow:inset 0 0 0 1px var(--accent)}.dj-cc.sel{outline:2px solid var(--text);outline-offset:1px}
 .dj-cd{position:absolute;bottom:5px;left:0;right:0;display:flex;justify-content:center;gap:3px;pointer-events:none}.dj-cd i{display:block;width:6px;height:6px;border-radius:50%}.dj-cd i.ring{border:1.5px solid var(--accent)}.dj-cd i.amb{background:var(--amber)}
@@ -7909,6 +7909,7 @@ function tradesOnDate(dateStr){
 const DJ_PROMPTS=[['mindset','Pre-session mindset & plan','What was your plan before the session?'],['market','Market conditions','What did the market give you?'],['lessons','Mistakes & lessons learned','What will you change next time?'],['review','Post-session review','What worked well today?'],['reflection','Free notes','Anything else worth remembering?']];
 const DJ_MOODS=['Calm','Confident','Anxious','FOMO','Frustrated','Tired'];
 const DJ_RULES=[['plan','Followed plan'],['risk','Respected risk']];
+const DJ_DOW=['SUN','MON','TUE','WED','THU','FRI','SAT'];
 const DJ_IC={cl:'M15 6l-6 6 6 6',cr:'M9 6l6 6-6 6',ck:'M5 12l5 5L20 7',pl:'M12 5v14M5 12h14',cal:'M5 6h14v14H5zM5 10h14M9 3v4M15 3v4'};
 const djIc=(n,s)=>'<svg viewBox="0 0 24 24" width="'+(s||16)+'" height="'+(s||16)+'" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+DJ_IC[n]+'"/></svg>';
 let djSel='',djWeek='',djPastCap=5,djOpenKey={},djFilterOpen=false,djReveal=false,djDraft=null,djDraftKey=null,djCalMonth='',djCalMode='pl',djCalView='m',_djMapKey='',_djMap={},_djMax=0;
@@ -8009,7 +8010,7 @@ function djRenderWeek(){
   let h='';
   for(let i=0;i<7;i++){
     const d=djAdd(djWeek,i),m=mp[d],c=m&&m.n?(m.pnl>=0?'var(--green)':'var(--red)'):'';
-    h+='<button class="dj-day '+djHeat(d)+(d===djSel?' sel':'')+(d===today?' today':'')+'" '+(d>today?'disabled ':'')+'onclick="djGo(\''+d+'\')" aria-label="'+escapeHtml(djFmt(d))+'"><small>'+djFmt(d,{weekday:'narrow'})+'</small><b>'+djD(d).getDate()+'</b><div class="dj-dots"><i'+(c?' style="background:'+c+'"':'')+'></i>'+(em[d]?'<i class="r"></i>':'')+'</div></button>';
+    h+='<button class="dj-day '+djHeat(d)+(d===djSel?' sel':'')+(d===today?' today':'')+'" '+(d>today?'disabled ':'')+'onclick="djGo(\''+d+'\')" aria-label="'+escapeHtml(djFmt(d))+'"><small>'+DJ_DOW[djD(d).getDay()]+'</small><b>'+djD(d).getDate()+'</b><div class="dj-dots"><i'+(c?' style="background:'+c+'"':'')+'></i>'+(em[d]?'<i class="r"></i>':'')+'</div></button>';
   }
   document.getElementById('djStrip').innerHTML=h;
 }
@@ -8173,7 +8174,7 @@ function djCalDraw(){
   for(let mm=(mv==='m'?m:1);mm<=(mv==='m'?m:12);mm++){const nd=new Date(y,mm,0).getDate();for(let d=1;d<=nd;d++){const k=key(y,mm,d);if(k>today)break;const x=mp[k];if(x&&x.n){td++;net+=x.pnl;if(em[k])rf++;}}}
   let body;
   if(mv==='m'){
-    body='<div class="dj-cg">'+['M','T','W','T','F','S','S'].map(x=>'<div class="dj-cgh">'+x+'</div>').join('')+Array(off).fill('<div></div>').join('');
+    body='<div class="dj-cg">'+['MON','TUE','WED','THU','FRI','SAT','SUN'].map(x=>'<div class="dj-cgh">'+x+'</div>').join('')+Array(off).fill('<div></div>').join('');
     for(let d=1;d<=dim;d++){
       const k=key(y,m,d),x=mp[k],dots=mode==='pl'?(x&&x.n?'<i style="background:'+(x.pnl>=0?'var(--green)':'var(--red)')+'"></i>':'')+(em[k]?'<i class="ring"></i>':''):(x&&x.n&&!em[k]?'<i class="amb"></i>':''),dot=dots?'<span class="dj-cd">'+dots+'</span>':'';
       body+='<button class="dj-cc '+djHeatCls(k,mode,em)+(k===djSel?' sel':'')+(k===today?' today':'')+'" '+(k>today?'disabled ':'')+'onclick="djCalPick(\''+k+'\')" aria-label="'+escapeHtml(djFmt(k))+'">'+d+dot+'</button>';
