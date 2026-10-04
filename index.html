@@ -300,16 +300,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .status-badge.watching{background:var(--amber-dim);color:var(--amber)}
 .status-badge.taken{background:var(--green-dim);color:var(--green)}
 .status-badge.skipped{background:var(--surface2);color:var(--text3);border:1px solid var(--border2)}
-/* ── Daily Journal cards ── */
-.daily-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px;margin-bottom:9px}
-.daily-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-.daily-date{font-weight:800;font-size:14px}
-.daily-reflection{font-size:12px;color:var(--text2);line-height:1.4;white-space:pre-wrap;margin:6px 0}
-.daily-trades-ref{font-size:11px;color:var(--text3)}
-
-.daily-date-picker{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}.daily-date-picker label{font-size:12px;font-weight:700;color:var(--text2)}.daily-date-picker input{width:auto;max-width:175px}.daily-date-picker button{margin-left:auto}
-.daily-summary{padding:14px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}.daily-summary-title{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:12px}.daily-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.daily-metric{min-width:0}.daily-metric span{display:block;color:var(--text3);font-size:10px;text-transform:uppercase}.daily-metric strong{display:block;font:700 15px var(--mono);overflow-wrap:anywhere;margin-top:4px}.daily-trade-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.daily-trade-list button{font-size:11px}.daily-rating{display:flex;gap:3px}.daily-rating button{border:0;background:none;color:var(--text3);font-size:27px;cursor:pointer;padding:2px 5px}.daily-rating button.selected{color:var(--amber)}.daily-prompts details{border-top:1px solid var(--border);padding:10px 0}.daily-prompts summary{cursor:pointer;font-weight:700;font-size:12px;color:var(--text2)}.daily-prompts textarea{margin-top:10px;width:100%}.daily-card-actions{display:flex;align-items:center;justify-content:space-between;gap:8px}.daily-card-actions button{flex:none}.settings-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}.settings-row:last-child{border-bottom:0}.settings-row label{font-size:12px;color:var(--text2)}.settings-row select{width:auto;max-width:60%}.settings-section{margin:18px 0 0}.settings-section h3{font-size:13px;margin:0 0 9px}.settings-actions{display:flex;flex-wrap:wrap;gap:8px}.settings-actions button{flex:1 1 135px}.settings-danger{border-color:var(--red)}
-@media(max-width:380px){.daily-metrics{gap:4px}.daily-metric strong{font-size:12px}.daily-date-picker button{margin-left:0}}
 /* ── Library grid ── */
 .library-filters{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:12px}
 .library-star-btn{min-width:36px;min-height:36px;display:grid;place-items:center;font-size:17px;line-height:1;padding:0 9px}
@@ -1012,8 +1002,72 @@ html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
 .day-performance,.strategy-ribbon{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:9px 0;border:1px solid var(--border);border-radius:6px;background:var(--surface2)}
 .day-performance>div,.strategy-ribbon>div{min-width:0;padding:9px 6px;border-right:1px solid var(--border);text-align:center}.day-performance>div:last-child,.strategy-ribbon>div:last-child{border:0}
 .metric-label{display:block;color:var(--text3);font-size:9px;text-transform:uppercase;font-weight:700}.metric-value{display:block;font:700 12px var(--mono);margin-top:4px;white-space:nowrap}
-.quick-mood{display:flex;gap:5px;overflow-x:auto;margin:7px 0 14px}.quick-mood .filter-pill-btn{flex:none}
 .rule-check{display:flex;gap:9px;align-items:center;padding:8px 0;color:var(--text2);font-size:12px}.rule-check input{accent-color:var(--accent);width:16px;height:16px}
+/* ── Daily Journal (redesign): week strip, cards, reflection sheet, heat-map picker ── */
+.dj-arrow{width:40px;height:44px;flex:none;display:flex;align-items:center;justify-content:center;background:none;border:0;color:var(--text2);cursor:pointer}.dj-arrow:disabled{opacity:.3;pointer-events:none}
+.dj-week{margin-bottom:8px}
+.dj-hit{position:relative;font-family:inherit}.dj-hit:after{content:'';position:absolute;inset:-5px}.dj-hit:disabled,.dj-hit.dj-off{opacity:.3;pointer-events:none}
+.dj-mid{display:flex;align-items:center;gap:8px;min-width:0}
+.dj-wl{display:flex;align-items:center;gap:7px;min-width:0;min-height:44px;background:none;border:0;color:var(--text);font:800 16px var(--font);letter-spacing:-.3px;white-space:nowrap;cursor:pointer}
+.dj-wl svg{flex:none;color:var(--text2)}.dj-wl span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.dj-strip{display:flex;gap:3px;margin:0 0 14px}
+.dj-day{flex:1;min-width:0;text-align:center;padding:8px 0 7px;border-radius:var(--radius-sm);border:1px solid transparent;background:transparent;color:var(--text);cursor:pointer;font-family:var(--font)}
+.dj-day small{display:block;font-size:11px;color:var(--text3)}.dj-day b{display:block;font-size:16px;margin:2px 0 5px}
+.dj-dots{display:flex;gap:3px;justify-content:center;height:6px}.dj-dots i{width:6px;height:6px;border-radius:50%;background:var(--surface3)}.dj-dots i.r{background:transparent;border:1.5px solid var(--accent)}
+.dj-day.today{box-shadow:inset 0 0 0 1px var(--accent)}.dj-day.sel{outline:2px solid var(--text);outline-offset:-2px}.dj-day.sel b{color:var(--accent)}.dj-day:disabled{opacity:.3;pointer-events:none}
+.h-un{border-style:dashed!important;border-color:var(--amber)!important}
+.dj-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px}
+.dj-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.dj-day-title{font-weight:800;font-size:16px}.dj-sub{font-size:12px;color:var(--text2)}
+.dj-pill{font-size:11px;font-weight:700;border-radius:999px;padding:3px 10px;border:1px solid var(--border2);color:var(--text2);white-space:nowrap}.dj-pill.ok{color:var(--accent);border-color:var(--accent)}.dj-pill.warn{color:var(--amber);border-color:var(--amber)}
+.dj-pnl-row{display:flex;align-items:baseline;gap:10px;margin:12px 0}.dj-pnl{font:800 30px var(--mono);letter-spacing:-1px}.dj-pct{font:700 13px var(--mono)}
+.dj-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 14px}.dj-stats>div{background:var(--surface2);border-radius:var(--radius-sm);padding:10px 6px;text-align:center}.dj-stats span{display:block;font-size:10px;color:var(--text3);text-transform:uppercase;font-weight:700}.dj-stats strong{display:block;font:700 15px var(--mono);margin-top:3px;white-space:nowrap}
+.dj-rest{background:var(--surface2);border:1px dashed var(--border2);border-radius:var(--radius-sm);padding:12px;margin:12px 0 14px;font-size:13px;color:var(--text2)}
+.dj-prog{height:3px;border-radius:2px;background:var(--surface3);margin:10px 0 4px;overflow:hidden}.dj-prog div{height:100%;background:var(--accent);transition:width .3s}
+.dj-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:10px 0 4px}
+.dj-chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);color:var(--text2)}.dj-chip.on{background:var(--accent-dim);border-color:rgba(0,229,160,.35);color:var(--accent)}
+.dj-stars{color:var(--amber);letter-spacing:2px;margin-left:auto}.dj-dim{color:var(--surface3)}
+.dj-pr{border-top:1px solid var(--border)}
+.dj-ph{display:flex;align-items:flex-start;gap:12px;width:100%;min-height:52px;padding:13px 0;background:none;border:0;color:var(--text);text-align:left;cursor:pointer;font-family:var(--font);font-size:14px}
+.dj-ck{width:22px;height:22px;border-radius:50%;flex:none;margin-top:1px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;color:#04120c}.dj-ck.f{background:var(--accent);border-color:var(--accent)}
+.dj-pt{flex:1;min-width:0}.dj-pt b{display:block;font-weight:700}.dj-sn{display:block;font-size:12.5px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}.dj-sn.mut{color:var(--text3)}
+.dj-chev{color:var(--text3);margin-top:3px;transition:transform .2s;display:flex}.dj-pr.open .dj-chev{transform:rotate(90deg)}
+.dj-body{display:none;padding:0 0 14px 34px}.dj-pr.open .dj-body{display:block;animation:dj-rv .2s}.dj-pr.open .dj-sn{display:none}
+.dj-body p{margin:0 0 8px;font-size:14px;line-height:1.6;white-space:pre-wrap}
+.dj-edit{background:none;border:0;color:var(--accent);font:700 12px var(--font);padding:8px 0;cursor:pointer}
+.dj-rv{animation:dj-rv .45s ease both}@keyframes dj-rv{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.dj-trade{display:flex;align-items:center;gap:10px;width:100%;min-height:56px;padding:12px 0;background:none;border:0;border-top:1px solid var(--border);color:var(--text);text-align:left;cursor:pointer;font-family:var(--font)}.dj-trade:first-of-type{border-top:0}
+.dj-trade .dj-tl{flex:1;min-width:0}.dj-trade .dj-tr{text-align:right}
+.dj-past{display:flex;align-items:center;gap:10px;width:100%;padding:12px 10px;border-radius:var(--radius-sm);background:none;border:0;border-top:1px solid var(--border);color:var(--text);text-align:left;cursor:pointer;font-family:var(--font)}.dj-past:first-of-type{border-top:0}
+.dj-past.cur{background:var(--accent-dim)}
+.dj-link{display:flex;align-items:center;justify-content:center;width:100%;min-height:48px;background:none;border:0;border-top:1px solid var(--border);color:var(--accent);font:700 13px var(--font);cursor:pointer}
+.dj-filter{display:none;gap:6px;flex-wrap:wrap;margin:0 0 10px}.dj-filter.on{display:flex}
+#dailyEntryModal .modal{display:flex;flex-direction:column;padding:0;overflow:hidden;max-height:min(93vh,93dvh)}
+.dj-sh{padding:10px 16px 12px;border-bottom:1px solid var(--border);flex:none}
+.dj-sb{flex:1;overflow-y:auto;padding:0 16px 8px;overscroll-behavior:contain}
+.dj-foot{flex:none;display:flex;gap:10px;padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--border);background:var(--surface);position:relative}
+.dj-more{width:52px;flex:none;padding:0;display:flex;align-items:center;justify-content:center}
+.dj-lbl{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.9px;margin:16px 0 8px}.dj-lbl em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:600;margin-left:6px}
+.dj-chips{display:flex;gap:6px;flex-wrap:wrap}.dj-chips .filter-pill-btn{min-height:44px;flex:none;padding:0 15px;font-size:13px}.dj-chips .dj-sug{border-style:dashed}
+.dj-starbtn{background:none;border:0;font-size:34px;line-height:1;color:var(--surface3);padding:4px 6px 4px 0;cursor:pointer}.dj-starbtn.on{color:var(--amber)}
+.dj-sh-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-top:10px}.dj-sh-chips::-webkit-scrollbar{display:none}
+.dj-menu{position:absolute;right:16px;bottom:68px;background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:6px;min-width:190px;display:none;z-index:2}.dj-menu.on{display:block}
+.dj-menu button{display:block;width:100%;min-height:44px;padding:0 12px;background:none;border:0;border-radius:8px;font:700 13px var(--font);color:var(--text2);text-align:left;cursor:pointer}.dj-menu .danger{color:var(--red)}
+.dj-cg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.dj-cgh{text-align:center;font-size:11px;font-weight:700;color:var(--text3);padding:4px 0}
+.dj-cc{aspect-ratio:1;min-height:44px;border-radius:var(--radius-sm);border:1px solid var(--border);background:transparent;color:var(--text);font:700 14px var(--font);position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.dj-cc:active{transform:scale(.94)}.dj-cc:disabled{opacity:.22;pointer-events:none}.dj-cc.today{box-shadow:inset 0 0 0 1px var(--accent)}.dj-cc.sel{outline:2px solid var(--text);outline-offset:1px}
+.dj-cd{position:absolute;bottom:5px;left:0;right:0;display:flex;justify-content:center;gap:3px;pointer-events:none}.dj-cd i{display:block;width:6px;height:6px;border-radius:50%}.dj-cd i.ring{border:1.5px solid var(--accent)}.dj-cd i.amb{background:var(--amber)}
+.dj-yg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.dj-mt{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:9px;width:100%;color:var(--text);text-align:left;cursor:pointer;font-family:var(--font)}.dj-mt.cur{border-color:var(--accent)}.dj-mt:disabled{opacity:.3;pointer-events:none}.dj-mt b{font-size:12px;display:block;margin-bottom:6px}
+.dj-mm{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}.dj-mm u{display:block;aspect-ratio:1;border-radius:2px;background:var(--surface3);border:1px solid transparent}
+.dj-lg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);flex-wrap:wrap;margin:14px 0 4px}.dj-lg i{display:inline-block;width:14px;height:14px;border-radius:4px;border:1px solid var(--border);background:var(--surface2)}
+.dj-calnav{display:flex;align-items:center;justify-content:space-between;margin:10px 0 2px}
+.dj-seg{display:flex;gap:6px;margin:8px 0 12px}.dj-seg .filter-pill-btn{flex:1;justify-content:center;min-height:40px}
+/* Heat tint lives last and uses .hx.hx so .dj-cc / .dj-mm u / .dj-lg i (single-class, defined above) can't override it */
+.hx.hx{background:color-mix(in srgb,var(--hc) var(--ha),transparent);border-color:color-mix(in srgb,var(--hc) var(--hb),transparent)}
+.h-w1,.h-w2,.h-w3{--hc:var(--green)}.h-l1,.h-l2,.h-l3{--hc:var(--red)}.h-r1,.h-r2,.h-r3{--hc:var(--accent)}
+.h-w1,.h-l1,.h-r1{--ha:13%;--hb:32%}.h-w2,.h-l2,.h-r2{--ha:28%;--hb:52%}.h-w3,.h-l3,.h-r3{--ha:46%;--hb:78%}
+@media(min-width:640px){#dailyCalModal{align-items:center;justify-content:center;padding:20px}#dailyCalModal .modal{border-radius:var(--radius);max-width:440px;max-height:85vh;padding-bottom:18px;animation:pop-in .18s cubic-bezier(.32,.72,0,1)}#dailyCalModal .modal-handle{display:none}}
 @media(max-width:380px){.journal-segments .segment{font-size:10px;padding:7px 6px}.trade-scan-right .trade-pnl{font-size:14px}}
 
 /* Session 23: compact interaction refinements */
@@ -1163,21 +1217,25 @@ body{min-height:100dvh}
 
 <!-- ══ TAB: Daily Journal ══ -->
 <div id="tabDailyJournal" class="tab">
-  <div class="section-header">
-    <span class="section-title">Daily Journal</span>
-    <button class="btn-sm accent" onclick="openAddDailyEntry()">＋ New Entry</button>
-  </div>
   <div class="journal-segments" role="tablist" aria-label="Journal sections"><button class="segment" role="tab" data-journal-tab="PreTrade" onclick="switchTab('PreTrade')">Pre-Trade</button><button class="segment" role="tab" data-journal-tab="Journal" onclick="switchTab('Journal')">Trade Log</button><button class="segment" role="tab" data-journal-tab="DailyJournal" onclick="switchTab('DailyJournal')">Daily Journal</button><button class="segment" role="tab" data-journal-tab="Library" onclick="switchTab('Library')">Library</button><button class="segment" role="tab" data-journal-tab="Strategy" onclick="switchTab('Strategy')">Strategy</button></div>
-  <div class="filter-pills" id="dailyTagFilterRow" style="display:flex;gap:6px;overflow-x:auto;margin-bottom:10px">
+  <div class="cal-nav dj-week">
+    <button class="cal-nav-btn dj-hit" onclick="djShiftWeek(-1)" aria-label="Previous week">‹</button>
+    <div class="dj-mid">
+      <button class="dj-wl" id="djWeekLabel" onclick="openDailyCal('pl')" aria-label="Pick a date"></button>
+      <button class="cal-nav-btn dj-hit" id="djTodayBtn" onclick="djGoToday()" title="Go to today" style="font-size:11px;font-weight:700;width:auto;padding:0 9px;color:var(--accent);border-color:rgba(0,229,160,0.3);display:none">Today</button>
+    </div>
+    <button class="cal-nav-btn dj-hit" id="djNextWk" onclick="djShiftWeek(1)" aria-label="Next week">›</button>
+  </div>
+  <div class="dj-strip" id="djStrip"></div>
+  <div id="dailySelectedSummary"></div>
+  <div class="section-header" style="margin-top:18px"><span class="section-title" id="djPastTitle">Past reflections</span><button class="filter-pill-btn" id="djFilterBtn" onclick="djToggleFilter()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg><span id="djFilterLbl">Filter</span></button></div>
+  <div class="dj-filter" id="djFilterRow">
     <button class="filter-pill-btn has-filter" data-tag="" onclick="setDailyTagFilter('')">All</button>
     <button class="filter-pill-btn" data-tag="Disciplined" onclick="setDailyTagFilter('Disciplined')">Disciplined</button>
     <button class="filter-pill-btn" data-tag="Overtraded" onclick="setDailyTagFilter('Overtraded')">Overtraded</button>
     <button class="filter-pill-btn" data-tag="Revenge Trade" onclick="setDailyTagFilter('Revenge Trade')">Revenge Trade</button>
     <button class="filter-pill-btn" data-tag="Clean Session" onclick="setDailyTagFilter('Clean Session')">Clean Session</button>
   </div>
-  <div class="daily-date-picker"><label for="dailySelectedDate">Trading day</label><input class="form-input" id="dailySelectedDate" type="date" onchange="renderDailyJournalList()"/><button class="btn-sm" onclick="openDailySelectedEntry()">Reflect on day</button></div>
-  <div id="dailySelectedSummary"></div>
-  <div class="section-header" style="margin-top:18px"><span class="section-title">Past reflections</span></div>
   <div id="dailyJournalList"></div>
 </div>
 
@@ -2390,49 +2448,26 @@ body{min-height:100dvh}
 </div>
 
 <!-- ══ Daily Journal Entry Modal ══ -->
+<!-- Daily Journal: reflection sheet (long form → stays a bottom sheet, per the app's modal convention) -->
 <div class="modal-overlay" id="dailyEntryModal" onclick="closeOnOverlay(event)">
   <div class="modal">
+    <div class="modal-handle" style="margin:8px auto 0"></div>
+    <div class="dj-sh" id="djSheetHead"></div>
+    <div class="dj-sb" id="djSheetBody"></div>
+    <div class="dj-foot">
+      <button class="btn btn-primary" style="flex:1" onclick="saveDailyEntry()">Save reflection</button>
+      <button class="btn btn-ghost dj-more" onclick="djSheetMenu()" aria-label="More options"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 12h.01M12 12h.01M19 12h.01"/></svg></button>
+      <div class="dj-menu" id="djSheetMenuBox"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Daily Journal: heat-map day picker (bottom sheet on phones, centered dialog >= 640px) -->
+<div class="modal-overlay" id="dailyCalModal" onclick="closeOnOverlay(event)">
+  <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="dailyEntryModalTitle">New Entry</div>
-    <div class="form-group">
-      <label class="form-label">Date</label>
-      <input class="form-input" id="deDate" type="date" oninput="onDailyEntryDateChange()"/>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Day Tag</label>
-      <select class="form-select" id="deTag">
-        <option value="">— None —</option>
-        <option value="Disciplined">Disciplined</option>
-        <option value="Overtraded">Overtraded</option>
-        <option value="Revenge Trade">Revenge Trade</option>
-        <option value="Clean Session">Clean Session</option>
-      </select>
-    </div>
-    <div class="form-group"><label class="form-label">Mood</label><div class="quick-mood" id="dailyMoodChips"><button class="filter-pill-btn" type="button" data-mood="Calm" onclick="setDailyMood('Calm')">Calm</button><button class="filter-pill-btn" type="button" data-mood="Disciplined" onclick="setDailyMood('Disciplined')">Disciplined</button><button class="filter-pill-btn" type="button" data-mood="Anxious" onclick="setDailyMood('Anxious')">Anxious</button><button class="filter-pill-btn" type="button" data-mood="FOMO" onclick="setDailyMood('FOMO')">FOMO</button></div></div>
-    <div class="form-group"><label class="form-label">Rule adherence</label><label class="rule-check"><input type="checkbox" id="deRulePlan" onchange="syncDailyReflectionMeta()"/> Followed trading plan</label><label class="rule-check"><input type="checkbox" id="deRuleRisk" onchange="syncDailyReflectionMeta()"/> Respected risk limit</label></div>
-    <div class="form-group">
-      <label class="form-label">Reflection</label>
-      <textarea class="form-input" id="deReflection" rows="5" placeholder="How did today go — discipline, emotions, what to repeat or change..."></textarea>
-    </div>
-    <div class="form-group"><label class="form-label">Discipline &amp; execution</label><div class="daily-rating" id="dailyRating" role="group" aria-label="Discipline rating"></div></div>
-    <div class="daily-prompts">
-      <details open><summary>Pre-session mindset &amp; plan</summary><textarea class="form-input" id="deMindset" rows="3" placeholder="What was your plan before the session?"></textarea></details>
-      <details><summary>Market conditions</summary><textarea class="form-input" id="deMarket" rows="3" placeholder="What did the market give you?"></textarea></details>
-      <details><summary>Mistakes &amp; lessons learned</summary><textarea class="form-input" id="deLessons" rows="3" placeholder="What will you change next time?"></textarea></details>
-      <details><summary>Post-session review</summary><textarea class="form-input" id="deReview" rows="3" placeholder="What worked well today?"></textarea></details>
-    </div>
-    <!-- That day's trades are pulled read-only from Trade Log, never re-entered here (Priority 3). -->
-    <div class="form-group">
-      <label class="form-label">Trades that day</label>
-      <div id="deTradesForDay" style="font-size:12px;color:var(--text3)"></div>
-    </div>
-    <div style="display:flex;gap:10px;margin-top:4px">
-      <button class="btn btn-primary" onclick="saveDailyEntry()" style="flex:2">Save Entry</button>
-      <button class="btn btn-ghost" onclick="document.getElementById('dailyEntryModal').classList.remove('open');updateNavVisibility()" style="flex:1">Cancel</button>
-    </div>
-    <div id="dailyEntryDeleteBtn" style="display:none;margin-top:10px">
-      <button class="btn btn-danger" onclick="deleteDailyEntry()">Delete Entry</button>
-    </div>
+    <div class="dj-row"><div><div class="modal-title" style="margin:0">Select day</div><div class="dj-sub" id="djCalSub"></div></div><button class="dj-arrow" onclick="closeDailyCal()" aria-label="Close"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div id="djCalBody"></div>
   </div>
 </div>
 
@@ -7862,170 +7897,309 @@ function renderPreTradeList(){
   list.innerHTML=sorted.map(_preTradeCardHtml).join('');
 }
 
-// ─── Daily Journal (Priority 3) ───
-// Reflection entries, separate from per-trade notes. One entry per date is
-// enforced here in the UI (upsert-by-date on save) rather than in the data
-// shape. That day's trades are pulled read-only from the existing `trades`
-// array for cross-reference — never re-entered or duplicated into this
-// entry, per the roadmap.
+// ─── Daily Journal (Priority 3, redesigned) ───
+// One entry per date (upsert-by-date). Trades come read-only from `trades` via
+// tradesOnDate() and open the shared Trade Detail (openPeek). Entry schema v2:
+// {id,date,tag,rating,mood,rules[],mindset,market,lessons,review,reflection(=Free notes),v:2}
+// v1 entries stored Mood/Rules as text lines inside `reflection`; migrateDailyJournalV2()
+// lifts them into real fields once and keeps the original text in `legacyReflection`.
 function tradesOnDate(dateStr){
   return filteredTrades().filter(t=>t.date===dateStr);
 }
+const DJ_PROMPTS=[['mindset','Pre-session mindset & plan','What was your plan before the session?'],['market','Market conditions','What did the market give you?'],['lessons','Mistakes & lessons learned','What will you change next time?'],['review','Post-session review','What worked well today?'],['reflection','Free notes','Anything else worth remembering?']];
+const DJ_MOODS=['Calm','Confident','Anxious','FOMO','Frustrated','Tired'];
+const DJ_RULES=[['plan','Followed plan'],['risk','Respected risk']];
+const DJ_IC={cl:'M15 6l-6 6 6 6',cr:'M9 6l6 6-6 6',ck:'M5 12l5 5L20 7',pl:'M12 5v14M5 12h14',cal:'M5 6h14v14H5zM5 10h14M9 3v4M15 3v4'};
+const djIc=(n,s)=>'<svg viewBox="0 0 24 24" width="'+(s||16)+'" height="'+(s||16)+'" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+DJ_IC[n]+'"/></svg>';
+let djSel='',djWeek='',djPastCap=5,djOpenKey={},djFilterOpen=false,djReveal=false,djDraft=null,djDraftKey=null,djCalMonth='',djCalMode='pl',djCalView='m',_djMapKey='',_djMap={},_djMax=0;
 
-function setDailyTagFilter(tag){
-  dailyTagFilter=tag;
-  document.querySelectorAll('#dailyTagFilterRow .filter-pill-btn').forEach(btn=>{
-    btn.classList.toggle('has-filter', btn.dataset.tag===tag);
+// ── date helpers (local dates, noon-anchored to dodge DST edges) ──
+const djIso=d=>new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+const djToday=()=>djIso(new Date());
+const djD=s=>new Date(s+'T12:00:00');
+const djAdd=(s,n)=>{const d=djD(s);d.setDate(d.getDate()+n);return djIso(d)};
+const djMon=s=>djAdd(s,-((djD(s).getDay()+6)%7));
+const djFmt=(s,o)=>djD(s).toLocaleDateString('en-GB',o||{weekday:'short',day:'numeric',month:'short'});
+const djEntry=d=>dailyJournal.find(e=>e&&e.date===d);
+const djEntryMap=()=>{const m={};dailyJournal.forEach(e=>{if(e&&e.date)m[e.date]=e});return m};
+const djTxt=(e,k)=>String((e&&e[k])||'').trim();
+const djCnt=e=>DJ_PROMPTS.filter(([k])=>djTxt(e,k)).length;
+const djRulesOf=e=>Array.isArray(e&&e.rules)?e.rules:[];
+const djStars=n=>'★'.repeat(n)+'<span class="dj-dim">'+'★'.repeat(5-n)+'</span>';
+
+// ── one-time, idempotent schema v1 → v2 migration ──
+function migrateDailyJournalV2(){
+  let changed=0;
+  (Array.isArray(dailyJournal)?dailyJournal:[]).forEach(e=>{
+    if(!e||e.v>=2) return;
+    const text=String(e.reflection||'');
+    const mood=(text.match(/^Mood: (Calm|Disciplined|Anxious|FOMO)$/m)||[])[1]||'';
+    const rl=(text.match(/^Rules: ([^\n]*)$/m)||[])[1]||'';
+    const rules=[];if(rl.includes('Followed plan'))rules.push('plan');if(rl.includes('Respected risk'))rules.push('risk');
+    if(mood||rules.length){
+      e.legacyReflection=text;
+      const lines=text.split('\n');
+      while(lines.length&&/^(Mood: (Calm|Disciplined|Anxious|FOMO)|Rules: .*)$/.test(lines[0])) lines.shift();
+      e.reflection=lines.join('\n').trimStart();
+    }
+    if(!e.mood) e.mood=mood;
+    if(!Array.isArray(e.rules)) e.rules=rules;
+    e.v=2; changed++;
   });
+  return changed;
+}
+
+// ── per-day aggregates, cached on the same keys as filteredTrades() ──
+function djMap(){
+  const k=tradesVersion+'|'+activeAcctFilter;
+  if(k!==_djMapKey){
+    _djMapKey=k;_djMap={};_djMax=0;
+    filteredTrades().forEach(t=>{if(!t.date)return;const m=_djMap[t.date]||(_djMap[t.date]={n:0,pnl:0});m.n++;m.pnl+=parseFloat(t.pnl)||0;});
+    const cut=djAdd(djToday(),-90);
+    Object.keys(_djMap).forEach(d=>{if(d>=cut)_djMax=Math.max(_djMax,Math.abs(_djMap[d].pnl))});
+  }
+  return _djMap;
+}
+// Heat scale is a fixed % of STARTING balance (same basis as the per-trade % in Trade Log):
+// <0.5% light · 0.5–1.5% medium · ≥1.5% strong. No balance set → thirds of the biggest recent day.
+function djBase(){
+  const cur=activeAcctFilter==='all'?null:accounts.find(a=>a.id===activeAcctFilter);
+  const b=cur?Number(cur.balance):accounts.reduce((s,a)=>s+(Number(a.balance)||0),0);
+  return b>0?b:0;
+}
+function djHeat(d){
+  const m=djMap()[d];if(!m||!m.n) return '';
+  const a=Math.abs(m.pnl),b=djBase();let l;
+  if(b){const p=a/b*100;l=p<.5?1:p<1.5?2:3;}else{const r=_djMax?a/_djMax:0;l=r<.34?1:r<.67?2:3;}
+  return 'hx h-'+(m.pnl>=0?'w':'l')+l;
+}
+function djHeatCls(d,mode,em){
+  if(mode!=='jr') return djHeat(d);
+  const e=em[d];if(e){const c=djCnt(e);return 'hx h-r'+(c<=1?1:c<=3?2:3);}
+  const m=djMap()[d];return m&&m.n?'h-un':'';
+}
+
+// ── navigation ──
+function djGo(date){
+  djSel=date;djWeek=djMon(date);djOpenKey={};
+  const e=djEntry(date),fk=e&&DJ_PROMPTS.find(([k])=>djTxt(e,k));if(fk) djOpenKey[fk[0]]=1;
   renderDailyJournalList();
 }
+function djGoToday(){djGo(djToday());}
+function djShiftWeek(n){const w=djAdd(djWeek,7*n);if(w>djToday())return;djWeek=w;renderDailyJournalList();}
+function djPick(date){djGo(date);window.scrollTo({top:0,behavior:'smooth'});}
+function djTogglePrompt(k){djOpenKey[k]=!djOpenKey[k];renderDailyJournalList();}
 
-function _dailyEntryTradesRefHtml(dateStr){
-  const dayTrades=tradesOnDate(dateStr);
-  if(!dayTrades.length) return '<span>No trades logged that day</span>';
-  const pnl=dayTrades.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
-  return '<span>'+dayTrades.length+' trade'+(dayTrades.length===1?'':'s')+' · '+fmtPnl(pnl)+'</span>';
-}
-
-let dailyMood='';
-function setDailyMood(mood){dailyMood=dailyMood===mood?'':mood;document.querySelectorAll('#dailyMoodChips [data-mood]').forEach(b=>b.classList.toggle('has-filter',b.dataset.mood===dailyMood));syncDailyReflectionMeta();}
-function syncDailyReflectionMeta(){
-  const field=document.getElementById('deReflection');
-  const body=field.value.replace(/^(?:Mood: (?:Calm|Disciplined|Anxious|FOMO)\n|Rules: [^\n]*\n)*/,'').trimStart();
-  field.value=(dailyMood?'Mood: '+dailyMood+'\n':'')+((document.getElementById('deRulePlan').checked||document.getElementById('deRuleRisk').checked)?'Rules: '+[document.getElementById('deRulePlan').checked?'Followed plan':null,document.getElementById('deRuleRisk').checked?'Respected risk':null].filter(Boolean).join(', ')+'\n':'')+body;
-}
-function restoreDailyMeta(){
-  const text=document.getElementById('deReflection').value;
-  dailyMood=(text.match(/^Mood: (Calm|Disciplined|Anxious|FOMO)$/m)||[])[1]||'';
-  document.querySelectorAll('#dailyMoodChips [data-mood]').forEach(b=>b.classList.toggle('has-filter',b.dataset.mood===dailyMood));
-  const rules=(text.match(/^Rules: ([^\n]*)$/m)||[])[1]||'';
-  document.getElementById('deRulePlan').checked=rules.includes('Followed plan');
-  document.getElementById('deRuleRisk').checked=rules.includes('Respected risk');
-}
-function onDailyEntryDateChange(){
-  const dateStr=document.getElementById('deDate').value;
-  document.getElementById('deTradesForDay').innerHTML=_dailyEntryTradesRefHtml(dateStr);
-  // If an entry already exists for this date, switch into editing it instead
-  // of silently creating a second entry for the same day on save.
-  const existing=dailyJournal.find(e=>e.date===dateStr);
-  editingDailyEntryId = existing ? existing.id : null;
-  document.getElementById('deTag').value = existing ? (existing.tag||'') : document.getElementById('deTag').value;
-  document.getElementById('deReflection').value = existing ? (existing.reflection||'') : document.getElementById('deReflection').value;
-  restoreDailyMeta();
-  loadDailyPromptFields(existing);
-  document.getElementById('dailyEntryDeleteBtn').style.display = existing ? 'block' : 'none';
-  document.getElementById('dailyEntryModalTitle').textContent = existing ? 'Edit Entry' : 'New Entry';
-}
-
-function openAddDailyEntry(){
-  editingDailyEntryId=null;
-  document.getElementById('dailyEntryModalTitle').textContent='New Entry';
-  document.getElementById('dailyEntryDeleteBtn').style.display='none';
-  document.getElementById('deDate').value=new Date().toISOString().slice(0,10);
-  document.getElementById('deTag').value='';
-  document.getElementById('deReflection').value='';
-  onDailyEntryDateChange();
-  document.getElementById('dailyEntryModal').classList.add('open');
-  updateNavVisibility();
-}
-
-function openEditDailyEntry(id){
-  const e=dailyJournal.find(x=>x.id===id);
-  if(!e) return;
-  editingDailyEntryId=id;
-  document.getElementById('dailyEntryModalTitle').textContent='Edit Entry';
-  document.getElementById('dailyEntryDeleteBtn').style.display='block';
-  document.getElementById('deDate').value=e.date;
-  document.getElementById('deTag').value=e.tag||'';
-  document.getElementById('deReflection').value=e.reflection||'';
-  restoreDailyMeta();
-  loadDailyPromptFields(e);
-  document.getElementById('deTradesForDay').innerHTML=_dailyEntryTradesRefHtml(e.date);
-  document.getElementById('dailyEntryModal').classList.add('open');
-  updateNavVisibility();
-}
-
-function saveDailyEntry(){
-  const date=document.getElementById('deDate').value;
-  if(!date){ showToast('Pick a date','error'); return; }
-  // Upsert by date — editingDailyEntryId may already have been set by
-  // onDailyEntryDateChange() if the chosen date collides with an existing
-  // entry, even if the modal was opened via "+ New Entry".
-  const existing = editingDailyEntryId ? dailyJournal.find(e=>e.id===editingDailyEntryId) : dailyJournal.find(e=>e.date===date);
-  const entry={
-    id: existing ? existing.id : genId(),
-    date,
-    tag: document.getElementById('deTag').value||'',
-    reflection: document.getElementById('deReflection').value.trim(),
-    rating: dailyRating,
-    mindset: document.getElementById('deMindset').value.trim(),
-    market: document.getElementById('deMarket').value.trim(),
-    lessons: document.getElementById('deLessons').value.trim(),
-    review: document.getElementById('deReview').value.trim(),
-    createdAt: existing ? existing.createdAt : new Date().toISOString(),
-  };
-  if(existing){ const idx=dailyJournal.findIndex(e=>e.id===existing.id); dailyJournal[idx]=entry; }
-  else dailyJournal.push(entry);
-  gdriveScheduleSave();
-  document.getElementById('dailyEntryModal').classList.remove('open'); updateNavVisibility();
-  renderDailyJournalList();
-  showToast(existing?'Entry updated ✓':'Entry saved ✓');
-}
-
-function deleteDailyEntry(){
-  if(!editingDailyEntryId) return;
-  dailyJournal=dailyJournal.filter(e=>e.id!==editingDailyEntryId);
-  gdriveScheduleSave();
-  document.getElementById('dailyEntryModal').classList.remove('open'); updateNavVisibility();
-  renderDailyJournalList();
-  showToast('Entry deleted');
-}
-
-let dailyRating=0;
-function paintDailyRating(){
-  document.getElementById('dailyRating').innerHTML=Array.from({length:5},(_,i)=>'<button type="button" class="'+(i<dailyRating?'selected':'')+'" aria-label="Rate '+(i+1)+' out of 5" aria-pressed="'+(dailyRating===i+1)+'" onclick="dailyRating='+(i+1)+';paintDailyRating()">★</button>').join('');
-}
-function loadDailyPromptFields(entry){
-  dailyRating=Number(entry?.rating)||0; paintDailyRating();
-  for(const key of ['mindset','market','lessons','review']) document.getElementById('de'+key[0].toUpperCase()+key.slice(1)).value=entry?.[key]||'';
-}
-function openDailySelectedEntry(){
-  const date=document.getElementById('dailySelectedDate').value;
-  const entry=dailyJournal.find(e=>e.date===date);
-  if(entry){openEditDailyEntry(entry.id);return;}
-  openAddDailyEntry();
-  document.getElementById('deDate').value=date;
-  onDailyEntryDateChange();
-}
-function _dailyTradesHtml(day){
-  return day.length?'<div class="daily-trade-list">'+day.map(t=>'<button type="button" class="btn-sm" onclick="openPeek(\''+escapeForInlineHandler(t.id)+'\')">'+escapeHtml(t.pair||'Trade')+' · '+fmtPnl(parseFloat(t.pnl)||0)+'</button>').join('')+'</div>':'<div class="daily-trades-ref">No trades logged that day</div>';
-}
-function _dailyMetricsHtml(day){
-  const pnl=day.reduce((sum,t)=>sum+(parseFloat(t.pnl)||0),0);
-  const wins=day.filter(t=>(parseFloat(t.pnl)||0)>0).length,losses=day.filter(t=>(parseFloat(t.pnl)||0)<0).length;
-  const netR=day.reduce((sum,t)=>sum+(Number(calcR(t))||0),0);
-  return '<div class="daily-metrics"><div class="daily-metric"><span>Daily P&amp;L</span><strong class="'+(pnl>=0?'positive':'negative')+'">'+fmtPnl(pnl)+'</strong></div><div class="daily-metric"><span>Win / Loss</span><strong>'+wins+' / '+losses+'</strong></div><div class="daily-metric"><span>Net R</span><strong>'+netR.toFixed(2)+'R</strong></div><div class="daily-metric"><span>Trades</span><strong>'+day.length+'</strong></div></div>';
-}
-function _dailyEntryCardHtml(e){
-  const dateLabel=new Date(e.date+'T00:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
-  const prompts=[['Pre-session mindset & plan','mindset'],['Market conditions','market'],['Mistakes & lessons learned','lessons'],['Post-session review','review']];
-  return '<div class="daily-item"><div class="daily-card-actions"><span class="daily-date">'+escapeHtml(dateLabel)+'</span><button type="button" class="btn-sm" onclick="openEditDailyEntry(\''+escapeForInlineHandler(e.id)+'\')">Edit</button></div>'
-    +(e.tag?'<span class="tag tag-neutral">'+escapeHtml(e.tag)+'</span>':'')
-    +'<div class="daily-summary">'+_dailyMetricsHtml(tradesOnDate(e.date))+'</div>'
-    +(e.rating?'<div class="daily-reflection">Discipline &amp; execution <span style="color:var(--amber)">'+('★'.repeat(e.rating))+'</span> '+e.rating+'/5</div>':'')
-    +prompts.filter(([,key])=>e[key]).map(([label,key])=>'<details class="daily-prompts"><summary>'+label+'</summary><p class="daily-reflection">'+escapeHtml(e[key])+'</p></details>').join('')
-    +(e.reflection?'<details class="daily-prompts"><summary>Reflection</summary><p class="daily-reflection">'+escapeHtml(e.reflection)+'</p></details>':'')
-    +_dailyTradesHtml(tradesOnDate(e.date))+'</div>';
-}
+// ── main render ──
 function renderDailyJournalList(){
-  const list=document.getElementById('dailyJournalList');
-  if(!list) return;
-  const dateInput=document.getElementById('dailySelectedDate');
-  if(!dateInput.value){const now=new Date();dateInput.value=new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,10)}
-  const date=dateInput.value, day=tradesOnDate(date), entry=dailyJournal.find(e=>e.date===date);
-  document.getElementById('dailySelectedSummary').innerHTML='<div class="daily-summary"><div class="daily-summary-title">'+escapeHtml(date)+'</div>'+_dailyMetricsHtml(day)+_dailyTradesHtml(day)+(entry?.rating?'<div class="daily-reflection">Discipline &amp; execution · '+entry.rating+'/5</div>':'')+'</div>';
-  const filtered=dailyTagFilter?dailyJournal.filter(e=>e.tag===dailyTagFilter):dailyJournal;
-  list.innerHTML=filtered.length?[...filtered].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(_dailyEntryCardHtml).join(''):'<div class="empty"><div class="empty-title">No reflections yet</div></div>';
+  const root=document.getElementById('dailySelectedSummary');
+  if(!root) return;
+  migrateDailyJournalV2();
+  if(!djSel) djSel=djToday();
+  if(!djWeek) djWeek=djMon(djSel);
+  djRenderWeek();
+  root.innerHTML=djDayHtml(djSel);
+  djRenderPast();
+}
+function djRenderWeek(){
+  const today=djToday(),em=djEntryMap(),mp=djMap();
+  document.getElementById('djWeekLabel').innerHTML=djIc('cal',15)+'<span>'+djFmt(djWeek,{day:'numeric',month:'short'})+' – '+djFmt(djAdd(djWeek,6),{day:'numeric',month:'short'})+'</span>';
+  document.getElementById('djNextWk').classList.toggle('dj-off',djAdd(djWeek,7)>today);
+  document.getElementById('djTodayBtn').style.display=djSel===today?'none':'flex';
+  let h='';
+  for(let i=0;i<7;i++){
+    const d=djAdd(djWeek,i),m=mp[d],c=m&&m.n?(m.pnl>=0?'var(--green)':'var(--red)'):'';
+    h+='<button class="dj-day '+djHeat(d)+(d===djSel?' sel':'')+(d===today?' today':'')+'" '+(d>today?'disabled ':'')+'onclick="djGo(\''+d+'\')" aria-label="'+escapeHtml(djFmt(d))+'"><small>'+djFmt(d,{weekday:'narrow'})+'</small><b>'+djD(d).getDate()+'</b><div class="dj-dots"><i'+(c?' style="background:'+c+'"':'')+'></i>'+(em[d]?'<i class="r"></i>':'')+'</div></button>';
+  }
+  document.getElementById('djStrip').innerHTML=h;
+}
+function djDayHtml(date){
+  const day=tradesOnDate(date),n=day.length,e=djEntry(date),today=djToday();
+  const pnl=day.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
+  const w=day.filter(t=>(parseFloat(t.pnl)||0)>0).length,l=day.filter(t=>(parseFloat(t.pnl)||0)<0).length;
+  const netR=day.reduce((s,t)=>s+(Number(calcR(t))||0),0),b=djBase(),pct=b?pnl/b*100:null;
+  const wkd=[0,6].includes(djD(date).getDay());
+  // Trade-driven: weekend trades behave exactly like weekday trades. Only zero-trade days get a rest label.
+  const sub=n?n+' trade'+(n===1?'':'s'):date===today?'No trades yet today':wkd?'Weekend · No trades taken':'Rest day · Market watch';
+  let h='<div class="dj-card"><div class="dj-row"><div style="min-width:0"><div class="dj-day-title">'+escapeHtml(djFmt(date))+(date===today?' · Today':'')+'</div><div class="dj-sub">'+sub+'</div></div>'+(e?'<span class="dj-pill ok">Reflected</span>':n?'<span class="dj-pill warn">Not reflected yet</span>':'')+'</div>';
+  if(n){
+    const cls=pnl>=0?'positive':'negative';
+    h+='<div class="dj-pnl-row"><span class="dj-pnl '+cls+'">'+fmtPnl(pnl)+'</span>'+(pct!==null?'<span class="dj-pct '+cls+'">'+(pnl>=0?'+':'')+pct.toFixed(2)+'%</span>':'')+'</div>'
+     +'<div class="dj-stats"><div><span>Win / loss</span><strong>'+w+' / '+l+'</strong></div><div><span>Net R</span><strong class="'+(netR>=0?'positive':'negative')+'">'+(netR>=0?'+':'')+netR.toFixed(2)+'R</strong></div><div><span>Discipline</span><strong>'+(e&&e.rating?e.rating+'/5':'–')+'</strong></div></div>';
+  }else h+='<div class="dj-rest">'+(date===today?'Plan your session or note what you are watching.':wkd?'Nothing traded. Add a note if you watched the markets or planned ahead.':'Sitting out is a decision. Note what you saw and why you stayed flat.')+'</div>';
+  h+='<button class="btn btn-primary" onclick="djOpenSheet()">'+(e?'Edit reflection':'Reflect on day')+'</button></div>';
+
+  // Reflection card: always on traded days; on no-trade days only once something is logged.
+  if(n||e){
+    const c=djCnt(e),rules=djRulesOf(e);
+    h+='<div class="dj-card'+(djReveal?' dj-rv':'')+'"><div class="dj-row"><span class="section-title">Reflection</span><span class="dj-sub">'+c+' of 5</span></div><div class="dj-prog"><div style="width:'+c*20+'%"></div></div>';
+    djReveal=false;
+    if(e&&(e.mood||e.rating||e.tag||rules.length)){
+      h+='<div class="dj-meta">'+(e.mood?'<span class="dj-chip on">'+escapeHtml(e.mood)+'</span>':'')
+        +DJ_RULES.filter(([id])=>rules.includes(id)).map(([,lb])=>'<span class="dj-chip on">'+djIc('ck',12)+lb+'</span>').join('')
+        +(e.tag?'<span class="tag tag-neutral">'+escapeHtml(e.tag)+'</span>':'')
+        +(e.rating?'<span class="dj-stars">'+djStars(e.rating)+'</span>':'')+'</div>';
+    }
+    DJ_PROMPTS.forEach(([k,title])=>{
+      const v=djTxt(e,k),q=escapeForInlineHandler(k);
+      h+=v?'<div class="dj-pr'+(djOpenKey[k]?' open':'')+'"><button class="dj-ph" onclick="djTogglePrompt(\''+q+'\')"><span class="dj-ck f">'+djIc('ck',13)+'</span><span class="dj-pt"><b>'+title+'</b><span class="dj-sn">'+escapeHtml(v.split('\n')[0])+'</span></span><span class="dj-chev">'+djIc('cr',18)+'</span></button><div class="dj-body"><p>'+escapeHtml(v)+'</p><button class="dj-edit" onclick="djOpenSheet(\''+q+'\')">Edit</button></div></div>'
+        :'<div class="dj-pr"><button class="dj-ph" onclick="djOpenSheet(\''+q+'\')"><span class="dj-ck"></span><span class="dj-pt"><b style="color:var(--text2)">'+title+'</b><span class="dj-sn mut">Add</span></span><span class="dj-chev">'+djIc('pl',18)+'</span></button></div>';
+    });
+    h+='</div>';
+  }
+  if(n){
+    h+='<div class="dj-card" style="padding-bottom:4px"><div class="dj-row" style="margin-bottom:2px"><span class="section-title">Trades that day</span><span class="dj-sub">'+n+'</span></div>'
+      +[...day].sort((a,b)=>String(a.time||'').localeCompare(String(b.time||''))).map(t=>{
+        const p=parseFloat(t.pnl)||0,r=calcR(t),acct=accounts.find(a=>a.id===t.accountId),bal=Number(acct&&acct.balance)||0;
+        const ret=[r!==null?(Number(r)>0?'+':'')+r+'R':'',bal?(p>=0?'+':'')+(p/bal*100).toFixed(2)+'%':''].filter(Boolean).join(' · ')||'—';
+        return '<button class="dj-trade" onclick="openPeek(\''+escapeForInlineHandler(t.id)+'\')"><span class="dj-tl"><span class="trade-pair">'+escapeHtml(t.pair||'Trade')+'</span><div class="trade-scan-meta"><span class="tag '+(t.dir==='long'?'tag-long':'tag-short')+'">'+(t.dir||'').toUpperCase()+'</span>'+(t.session?'<span>'+escapeHtml(t.session)+'</span>':'')+(t.time?'<span>'+escapeHtml(t.time)+'</span>':'')+(t.setup?'<span>'+escapeHtml(t.setup)+'</span>':'')+'</div></span><span class="dj-tr"><span class="trade-pnl '+(p>=0?'positive':'negative')+'">'+fmtPnl(p)+'</span><span class="trade-scan-return">'+ret+'</span></span></button>';
+      }).join('')+'</div>';
+  }
+  return h;
+}
+
+// ── past reflections: filtered, capped, with a path into the heat-map picker ──
+function setDailyTagFilter(tag){
+  dailyTagFilter=tag;djPastCap=5;djFilterOpen=false;
+  document.querySelectorAll('#djFilterRow .filter-pill-btn').forEach(b=>b.classList.toggle('has-filter',b.dataset.tag===tag));
+  renderDailyJournalList();
+}
+function djToggleFilter(){djFilterOpen=!djFilterOpen;renderDailyJournalList();}
+function djMorePast(){const t=djPastTotal();djPastCap=djPastCap>=t?5:djPastCap+5;renderDailyJournalList();}
+function djPastTotal(){return dailyJournal.filter(e=>e&&(!dailyTagFilter||e.tag===dailyTagFilter)).length;}
+function djRenderPast(){
+  const all=dailyJournal.filter(e=>e&&e.date&&(!dailyTagFilter||e.tag===dailyTagFilter)).sort((a,b)=>b.date.localeCompare(a.date));
+  const list=document.getElementById('dailyJournalList'),mp=djMap();
+  document.getElementById('djPastTitle').textContent='Past reflections · '+all.length;
+  document.getElementById('djFilterLbl').textContent=dailyTagFilter||'Filter';
+  document.getElementById('djFilterBtn').classList.toggle('has-filter',!!dailyTagFilter);
+  document.getElementById('djFilterRow').classList.toggle('on',djFilterOpen);
+  if(!all.length){list.innerHTML='<div class="empty"><div class="empty-title">'+(dailyTagFilter?'No reflections with that tag':'No reflections yet')+'</div></div>';return;}
+  const shown=all.slice(0,djPastCap);
+  list.innerHTML='<div class="dj-card" style="padding:2px 4px">'+shown.map(e=>{
+    const m=mp[e.date],snip=(['review','lessons','mindset','market','reflection'].map(k=>djTxt(e,k)).find(Boolean)||'').split('\n')[0];
+    return '<button class="dj-past'+(e.date===djSel?' cur':'')+'" onclick="djPick(\''+e.date+'\')"><span style="min-width:0;flex:1"><span class="dj-row" style="justify-content:flex-start;gap:7px"><b>'+escapeHtml(djFmt(e.date))+'</b>'+(e.tag?'<span class="dj-pill" style="padding:1px 8px">'+escapeHtml(e.tag)+'</span>':'')+'</span><span class="dj-sn">'+escapeHtml(snip)+'</span></span><span style="text-align:right;flex:none"><span class="trade-pnl '+(m&&m.n?(m.pnl>=0?'positive':'negative'):'')+'" style="display:block;'+(m&&m.n?'':'color:var(--text3)')+'">'+(m&&m.n?fmtPnl(m.pnl):'No trades')+'</span>'+(e.rating?'<span class="dj-stars" style="font-size:11px;letter-spacing:1px">'+djStars(e.rating)+'</span>':'')+'</span></button>';
+  }).join('')
+  +(all.length>5?'<button class="dj-link" onclick="djMorePast()">'+(djPastCap>=all.length?'Show less':'Show '+Math.min(5,all.length-djPastCap)+' more')+'</button>':'')
+  +'<button class="dj-link" onclick="openDailyCal(\'jr\')">Browse all in calendar</button></div>';
+}
+
+// ── reflection sheet ──
+function djOpenSheet(key){
+  const e=djEntry(djSel)||{};editingDailyEntryId=e.id||null;
+  djDraft={mood:e.mood||'',rating:Number(e.rating)||0,rules:djRulesOf(e).slice(),tag:e.tag||''};
+  DJ_PROMPTS.forEach(([k])=>djDraft[k]=e[k]||'');
+  djDraftKey=key||(DJ_PROMPTS.find(([k])=>!djTxt(djDraft,k))||[null])[0];
+  djKbReset();djSheetDraw();
+  document.getElementById('dailyEntryModal').classList.add('open');updateNavVisibility();
+  if(key) setTimeout(()=>{const t=document.getElementById('djTa-'+key);if(t)t.focus();},320);
+}
+function djCloseSheet(){document.getElementById('dailyEntryModal').classList.remove('open');djKbReset();updateNavVisibility();}
+function djSheetDraw(){
+  const d=djDraft,day=tradesOnDate(djSel),n=day.length,pnl=day.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
+  const w=day.filter(t=>(parseFloat(t.pnl)||0)>0).length,l=day.filter(t=>(parseFloat(t.pnl)||0)<0).length;
+  document.getElementById('djSheetHead').innerHTML='<div class="dj-day-title" style="font-size:17px">'+escapeHtml(djFmt(djSel))+'</div><div class="dj-sub">'+(n?'<span class="'+(pnl>=0?'positive':'negative')+'" style="font-family:var(--mono);font-weight:700">'+fmtPnl(pnl)+'</span> · '+n+' trade'+(n===1?'':'s')+' · '+w+'W '+l+'L':'No trades logged')+'</div>'
+    +(n?'<div class="dj-sh-chips">'+day.map(t=>{const r=calcR(t);return '<span class="dj-chip">'+escapeHtml(t.pair||'Trade')+(r!==null?' <span class="'+(parseFloat(r)>=0?'positive':'negative')+'">'+(parseFloat(r)>=0?'+':'')+r+'R</span>':'')+'</span>';}).join('')+'</div>':'');
+  const moods=DJ_MOODS.includes(d.mood)||!d.mood?DJ_MOODS:DJ_MOODS.concat([d.mood]);   // keep a legacy mood (e.g. "Disciplined") visible
+  const q=escapeForInlineHandler,sug=!d.tag&&d.rating>=4&&DJ_RULES.every(([id])=>d.rules.includes(id));
+  const old=document.getElementById('djSheetBody'),top=old.scrollTop;
+  old.innerHTML='<div class="dj-lbl" style="margin-top:14px">Mood</div><div class="dj-chips">'+moods.map(m=>'<button type="button" class="filter-pill-btn'+(d.mood===m?' has-filter':'')+'" onclick="djSetMood(\''+q(m)+'\')">'+escapeHtml(m)+'</button>').join('')+'</div>'
+    +'<div class="dj-lbl">Discipline &amp; execution</div><div class="dj-row"><div>'+[1,2,3,4,5].map(i=>'<button type="button" class="dj-starbtn'+(i<=d.rating?' on':'')+'" aria-label="Rate '+i+' out of 5" onclick="djSetRating('+i+')">★</button>').join('')+'</div><span class="dj-sub">'+(d.rating?d.rating+' of 5':'Not rated')+'</span></div>'
+    +'<div class="dj-lbl">Rules</div><div class="dj-chips">'+DJ_RULES.map(([id,lb])=>'<button type="button" class="filter-pill-btn'+(d.rules.includes(id)?' has-filter':'')+'" onclick="djToggleRule(\''+id+'\')">'+(d.rules.includes(id)?djIc('ck',14):djIc('pl',14))+lb+'</button>').join('')+'</div>'
+    +'<div class="dj-lbl">Day tag<em>optional</em></div><div class="dj-chips">'+['Disciplined','Overtraded','Revenge Trade','Clean Session'].map(t=>'<button type="button" class="filter-pill-btn'+(d.tag===t?' has-filter':'')+'" onclick="djSetTag(\''+t+'\')">'+t+'</button>').join('')+(sug?'<button type="button" class="filter-pill-btn dj-sug" onclick="djSetTag(\'Disciplined\')">Tag as Disciplined?</button>':'')+'</div>'
+    +'<div class="dj-lbl">Prompts</div>'+DJ_PROMPTS.map(([k,title,ph])=>{
+      const open=djDraftKey===k,f=djTxt(d,k);
+      return '<div class="dj-pr'+(open?' open':'')+'"><button type="button" class="dj-ph" onclick="djSheetPrompt(\''+k+'\')"><span class="dj-ck'+(f?' f':'')+'">'+(f?djIc('ck',13):'')+'</span><span class="dj-pt"><b>'+title+'</b>'+(open?'':'<span class="dj-sn'+(f?'':' mut')+'">'+(f?escapeHtml(f.split('\n')[0]):'Add')+'</span>')+'</span><span class="dj-chev">'+djIc('cr',18)+'</span></button>'
+        +(open?'<textarea class="form-input" id="djTa-'+k+'" rows="5" placeholder="'+escapeHtml(ph)+'" oninput="djDraft[\''+k+'\']=this.value" style="margin:0 0 14px">'+escapeHtml(d[k]||'')+'</textarea>':'')+'</div>';
+    }).join('')+'<div style="height:6px"></div>';
+  old.scrollTop=top;
+  document.getElementById('djSheetMenuBox').innerHTML=djEntry(djSel)?'<button class="danger" onclick="deleteDailyEntry()">Delete reflection</button>':'<button onclick="djClearDraft()">Clear all fields</button>';
+}
+function djSetMood(m){djDraft.mood=djDraft.mood===m?'':m;djSheetDraw();}
+function djSetRating(i){djDraft.rating=djDraft.rating===i?0:i;djSheetDraw();}
+function djToggleRule(id){const r=djDraft.rules,i=r.indexOf(id);if(i>=0)r.splice(i,1);else r.push(id);djSheetDraw();}
+function djSetTag(t){djDraft.tag=djDraft.tag===t?'':t;djSheetDraw();}
+function djSheetPrompt(k){djDraftKey=djDraftKey===k?null:k;djSheetDraw();if(djDraftKey){const t=document.getElementById('djTa-'+k);if(t)t.focus();}}
+function djSheetMenu(){document.getElementById('djSheetMenuBox').classList.toggle('on');}
+function djClearDraft(){djDraft={mood:'',rating:0,rules:[],tag:''};DJ_PROMPTS.forEach(([k])=>djDraft[k]='');document.getElementById('djSheetMenuBox').classList.remove('on');djSheetDraw();}
+function saveDailyEntry(){
+  const d=djDraft;if(!d) return;
+  const txt={};DJ_PROMPTS.forEach(([k])=>txt[k]=djTxt(d,k));
+  if(!(d.mood||d.rating||d.rules.length||d.tag||DJ_PROMPTS.some(([k])=>txt[k]))){showToast('Add a mood, rating or note first','error');return;}
+  const existing=djEntry(djSel);
+  const entry=Object.assign({},existing||{},{id:existing?existing.id:genId(),date:djSel,tag:d.tag||'',rating:d.rating||0,mood:d.mood||'',rules:d.rules.slice(),
+    mindset:txt.mindset,market:txt.market,lessons:txt.lessons,review:txt.review,reflection:txt.reflection,
+    createdAt:existing?existing.createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),v:2});
+  if(existing) dailyJournal[dailyJournal.findIndex(e=>e.id===existing.id)]=entry; else dailyJournal.push(entry);
+  djReveal=!existing;
+  gdriveScheduleSave();djCloseSheet();renderDailyJournalList();
+  showToast(existing?'Reflection updated ✓':'Reflection saved ✓');
+}
+function deleteDailyEntry(){
+  const e=djEntry(djSel);if(!e) return;
+  dailyJournal=dailyJournal.filter(x=>x.id!==e.id);
+  gdriveScheduleSave();djCloseSheet();renderDailyJournalList();showToast('Reflection deleted');
+}
+// Keep the sheet (and Save bar) above the software keyboard on browsers that don't resize the layout viewport (iOS).
+function djKb(){const ov=document.getElementById('dailyEntryModal');if(!ov||!ov.classList.contains('open')||!window.visualViewport)return;const v=window.visualViewport;ov.style.height=v.height+'px';ov.style.top=v.offsetTop+'px';ov.style.bottom='auto';}
+function djKbReset(){const ov=document.getElementById('dailyEntryModal');if(ov){ov.style.height='';ov.style.top='';ov.style.bottom='';}}
+if(window.visualViewport){window.visualViewport.addEventListener('resize',djKb);window.visualViewport.addEventListener('scroll',djKb);}
+document.addEventListener('focusin',e=>{if(e.target.matches&&e.target.matches('#dailyEntryModal textarea'))setTimeout(()=>e.target.scrollIntoView({block:'center',behavior:'smooth'}),300);});
+
+// ── heat-map day picker ──
+function openDailyCal(mode){djCalMode=mode||'pl';djCalView='m';djCalMonth=djSel.slice(0,7);djCalDraw();document.getElementById('dailyCalModal').classList.add('open');updateNavVisibility();}
+function closeDailyCal(){document.getElementById('dailyCalModal').classList.remove('open');updateNavVisibility();}
+function djCalPick(k){closeDailyCal();djPick(k);}
+function djCalShift(n){
+  const[y,m]=djCalMonth.split('-').map(Number);let nc;
+  if(djCalView==='y') nc=(y+n)+'-'+String(m).padStart(2,'0');
+  else{const d=new Date(y,m-1+n,1);nc=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+  if(nc>djToday().slice(0,7)) return;
+  djCalMonth=nc;djCalDraw();
+}
+function djCalView_(v){djCalView=v;djCalDraw();}
+function djCalSetMode(m){djCalMode=m;djCalDraw();}
+function djCalMonthPick(k){djCalMonth=k;djCalView='m';djCalDraw();}
+function djCalToday(){closeDailyCal();djPick(djToday());}
+function djCalUnreflected(){
+  const em=djEntryMap(),mp=djMap(),u=Object.keys(mp).filter(d=>mp[d].n&&!em[d]).sort().pop();
+  if(u){closeDailyCal();djPick(u);}else showToast('Every trading day is reflected');
+}
+function djCalDraw(){
+  const[y,m]=djCalMonth.split('-').map(Number),today=djToday(),mx=today.slice(0,7),em=djEntryMap(),mp=djMap(),mode=djCalMode,mv=djCalView;
+  const key=(yy,mm,dd)=>yy+'-'+String(mm).padStart(2,'0')+'-'+String(dd).padStart(2,'0');
+  const dim=new Date(y,m,0).getDate(),off=(new Date(y,m-1,1).getDay()+6)%7;
+  let net=0,td=0,rf=0;
+  for(let mm=(mv==='m'?m:1);mm<=(mv==='m'?m:12);mm++){const nd=new Date(y,mm,0).getDate();for(let d=1;d<=nd;d++){const k=key(y,mm,d);if(k>today)break;const x=mp[k];if(x&&x.n){td++;net+=x.pnl;if(em[k])rf++;}}}
+  let body;
+  if(mv==='m'){
+    body='<div class="dj-cg">'+['M','T','W','T','F','S','S'].map(x=>'<div class="dj-cgh">'+x+'</div>').join('')+Array(off).fill('<div></div>').join('');
+    for(let d=1;d<=dim;d++){
+      const k=key(y,m,d),x=mp[k],dots=mode==='pl'?(x&&x.n?'<i style="background:'+(x.pnl>=0?'var(--green)':'var(--red)')+'"></i>':'')+(em[k]?'<i class="ring"></i>':''):(x&&x.n&&!em[k]?'<i class="amb"></i>':''),dot=dots?'<span class="dj-cd">'+dots+'</span>':'';
+      body+='<button class="dj-cc '+djHeatCls(k,mode,em)+(k===djSel?' sel':'')+(k===today?' today':'')+'" '+(k>today?'disabled ':'')+'onclick="djCalPick(\''+k+'\')" aria-label="'+escapeHtml(djFmt(k))+'">'+d+dot+'</button>';
+    }
+    body+='</div>';
+  }else{
+    body='<div class="dj-yg">';
+    for(let mm=1;mm<=12;mm++){
+      const mk=y+'-'+String(mm).padStart(2,'0'),nd=new Date(y,mm,0).getDate(),o=(new Date(y,mm-1,1).getDay()+6)%7;
+      body+='<button class="dj-mt'+(mk===djCalMonth?' cur':'')+'" '+(mk>mx?'disabled ':'')+'onclick="djCalMonthPick(\''+mk+'\')"><b>'+new Date(y,mm-1,1).toLocaleDateString('en-GB',{month:'short'})+'</b><div class="dj-mm">'+Array(o).fill('<span></span>').join('')+Array.from({length:nd},(_,i)=>'<u class="'+djHeatCls(key(y,mm,i+1),mode,em)+'"></u>').join('')+'</div></button>';
+    }
+    body+='</div>';
+  }
+  const sq=c=>'<i class="hx '+c+'"></i>';
+  const lg=mode==='pl'
+    ?'<div class="dj-lg">Loss '+sq('h-l3')+sq('h-l2')+sq('h-l1')+'<span style="width:6px"></span>'+sq('h-w1')+sq('h-w2')+sq('h-w3')+' Profit</div><div class="dj-lg" style="margin:0">'+(djBase()?'Darker = larger % of account':'Darker = larger vs your recent days')+' · <i style="width:9px;height:9px;border-radius:50%;border:1.5px solid var(--accent);background:none"></i> Reflected</div>'
+    :'<div class="dj-lg">Fewer prompts '+sq('h-r1')+sq('h-r2')+sq('h-r3')+' All 5</div><div class="dj-lg" style="margin:0"><i style="border:1px dashed var(--amber)"></i> Traded, not reflected yet</div>';
+  const ok=mv==='m'?djCalMonth<mx:y<Number(mx.slice(0,4));
+  document.getElementById('djCalSub').textContent=djFmt(djSel,{weekday:'long',day:'numeric',month:'short',year:'numeric'});
+  document.getElementById('djCalBody').innerHTML='<div class="dj-calnav"><button class="dj-arrow" onclick="djCalShift(-1)" aria-label="Previous">'+djIc('cl',18)+'</button><div class="dj-row" style="gap:6px">'
+    +(mv==='m'?'<button class="filter-pill-btn" onclick="djCalView_(\'y\')">'+new Date(y,m-1,1).toLocaleDateString('en-GB',{month:'long'})+'</button>':'')
+    +'<button class="filter-pill-btn" onclick="djCalView_(\''+(mv==='m'?'y':'m')+'\')">'+y+'</button></div><button class="dj-arrow" '+(ok?'':'disabled ')+'onclick="djCalShift(1)" aria-label="Next">'+djIc('cr',18)+'</button></div>'
+    +'<div class="dj-seg"><button class="filter-pill-btn'+(mode==='pl'?' has-filter':'')+'" onclick="djCalSetMode(\'pl\')">P&amp;L heat</button><button class="filter-pill-btn'+(mode==='jr'?' has-filter':'')+'" onclick="djCalSetMode(\'jr\')">Reflection activity</button></div>'
+    +'<div class="dj-stats"><div><span>Net P&amp;L</span><strong class="'+(net>=0?'positive':'negative')+'">'+fmtPnl(net)+'</strong></div><div><span>Trading days</span><strong>'+td+'</strong></div><div><span>Reflected</span><strong>'+rf+'/'+td+'</strong></div></div>'
+    +body+lg
+    +'<div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-ghost" onclick="djCalToday()">Today</button><button class="btn btn-ghost" onclick="djCalUnreflected()">Latest unreflected</button></div>';
 }
 
 // ─── Library (Priority 4) ───
