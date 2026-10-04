@@ -1156,6 +1156,60 @@ body{min-height:100dvh}
 .modal-overlay.centered .modal{padding:20px!important;max-height:calc(100dvh - 40px)!important;overflow-y:auto;overscroll-behavior:contain}
 .peek-panel{padding-bottom:20px;max-height:calc(100dvh - 40px)}
 @media(max-width:380px){.modal-overlay.centered{padding:16px}.modal-overlay.centered .modal{padding:16px!important;max-height:calc(100dvh - 32px)!important}}
+
+/* ── Journal sub-nav row + icons ── */
+.ic{width:14px;height:14px;flex-shrink:0}
+.jnav-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 14px}
+.jnav-row .jnav{margin:0}
+.jrow-actions{display:flex;gap:6px;align-items:center}
+.jnav-label{display:inline-flex;align-items:center;gap:7px}
+.jnav-trigger .ic,.jnav-item .ic{width:15px;height:15px}
+.jnav-item .ic{margin-right:6px;vertical-align:-2px}
+.btn-sm{min-height:36px;position:relative}
+.btn-sm::after{content:'';position:absolute;inset:-4px 0}
+/* ── Settings ── */
+.st-h{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin:22px 4px 8px}
+.st-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.st-sync{padding:16px}
+.st-sync-title{font-size:15px;font-weight:700}
+.st-hint{font-size:12.5px;color:var(--text3);line-height:1.45;margin:4px 0 14px}
+.st-muted{font-size:12px;color:var(--text3)}
+.st-cta{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px}
+.st-cta .ic{width:18px;height:18px}
+.st-acct{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.st-avatar{width:40px;height:40px;border-radius:50%;background:var(--accent-dim);color:var(--accent);display:grid;place-items:center;font-weight:800;flex-shrink:0}
+.st-acct-txt{min-width:0}
+.st-email{font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.st-status{font-size:12px;color:var(--text3);margin-top:2px}
+.st-stats{display:grid;grid-template-columns:repeat(3,1fr);margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)}
+.st-stats>div{padding:12px 6px;text-align:center;min-width:0}
+.st-stats>div+div{border-left:1px solid var(--border)}
+.st-stats b{display:block;font-size:17px;font-weight:800}
+.st-stats b.sm{font-size:12px;line-height:22px;font-weight:700}
+.st-stats span{font-size:11px;color:var(--text3)}
+.st-row{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:10px 14px;background:none;border:0;border-top:1px solid var(--border);color:var(--text);font:inherit;text-align:left;cursor:pointer}
+.st-card>.st-row:first-child{border-top:0}
+button.st-row:active{background:var(--surface2)}
+.st-pref{cursor:default}
+.st-ic{width:20px;height:20px;color:var(--text2);display:grid;place-items:center;flex-shrink:0}
+.st-ic svg{width:18px;height:18px}
+.st-rt{flex:1;min-width:0}
+.st-rt b{display:block;font-size:14px;font-weight:600}
+.st-rt small{display:block;font-size:11.5px;color:var(--text3);margin-top:2px;line-height:1.35;font-weight:400}
+.st-chev{width:16px;height:16px;color:var(--text3);flex-shrink:0}
+.st-row.danger,.st-row.danger .st-ic,.st-row.danger b{color:var(--red)}
+.st-danger-card{border-color:rgba(244,63,94,.25)}
+#stDisconnect .st-row{border-top:1px solid var(--border)}
+.st-seg{display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:3px;gap:2px;flex-shrink:0}
+.st-seg button{min-height:32px;padding:0 12px;border:0;border-radius:6px;background:transparent;color:var(--text3);font:700 12px var(--font);cursor:pointer}
+.st-seg button.active{background:var(--surface3);color:var(--accent)}
+.st-pref select{width:auto;min-height:36px;padding:6px 10px;font-size:13px}
+.st-switch{position:relative;width:44px;height:26px;flex-shrink:0}
+.st-switch input{position:absolute;inset:0;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1}
+.st-switch span{position:absolute;inset:0;border-radius:13px;background:var(--surface3);border:1px solid var(--border2);transition:.15s}
+.st-switch span::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--text3);transition:.15s}
+.st-switch input:checked+span{background:var(--accent-dim);border-color:var(--accent)}
+.st-switch input:checked+span::after{transform:translateX(18px);background:var(--accent)}
 </style>
 </head>
 <body>
@@ -1166,7 +1220,7 @@ body{min-height:100dvh}
     <div class="header-logo">
       <div class="header-icon" style="background:transparent;border:none;padding:0;overflow:hidden"><img src="data:image/png;base64,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" style="width:102px;height:102px;object-fit:contain;border-radius:18px" alt="Decipher Wealth"></div>
       <div>
-        <div class="header-title" id="headerTitle">Trade Journal</div>
+        <div class="header-title" id="headerTitle">Trade Log</div>
         <div class="header-sub" id="headerSub">Loading...</div>
       </div>
     </div>
@@ -1179,12 +1233,9 @@ body{min-height:100dvh}
 
 <!-- ══ TAB: Journal ══ -->
 <div id="tabJournal" class="tab active">
-  <div class="section-header">
-    <span class="section-title">Trade Log</span>
-    <div style="display:flex;gap:6px">
-      <button class="btn-sm" onclick="openQuickAdd()" title="Quick Add — minimal form" style="padding:6px 10px;font-size:12px;gap:4px">⚡ Quick</button>
-      <button class="btn-sm accent" onclick="openAddTrade()">＋ New Trade</button>
-    </div>
+  <div class="jrow-actions">
+    <button class="btn-sm" onclick="openQuickAdd()" title="Quick Add — minimal form"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Quick</button>
+    <button class="btn-sm accent" onclick="openAddTrade()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Trade</button>
   </div>
   <div class="journal-segments" role="tablist" aria-label="Journal sections"><button class="segment" role="tab" data-journal-tab="PreTrade" onclick="switchTab('PreTrade')">Pre-Trade</button><button class="segment active" role="tab" aria-selected="true" data-journal-tab="Journal" onclick="switchTab('Journal')">Trade Log</button><button class="segment" role="tab" data-journal-tab="DailyJournal" onclick="switchTab('DailyJournal')">Daily Journal</button><button class="segment" role="tab" data-journal-tab="Library" onclick="switchTab('Library')">Library</button><button class="segment" role="tab" data-journal-tab="Strategy" onclick="switchTab('Strategy')">Strategy</button></div>
   <!-- Search + Filter bar -->
@@ -1206,9 +1257,8 @@ body{min-height:100dvh}
 
 <!-- ══ TAB: Pre-Trade ══ -->
 <div id="tabPreTrade" class="tab">
-  <div class="section-header">
-    <span class="section-title">Pre-Trade</span>
-    <button class="btn-sm accent" onclick="openAddPreTrade()">＋ New Setup</button>
+  <div class="jrow-actions">
+    <button class="btn-sm accent" onclick="openAddPreTrade()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Setup</button>
   </div>
   <div class="journal-segments" role="tablist" aria-label="Journal sections"><button class="segment" role="tab" data-journal-tab="PreTrade" onclick="switchTab('PreTrade')">Pre-Trade</button><button class="segment" role="tab" data-journal-tab="Journal" onclick="switchTab('Journal')">Trade Log</button><button class="segment" role="tab" data-journal-tab="DailyJournal" onclick="switchTab('DailyJournal')">Daily Journal</button><button class="segment" role="tab" data-journal-tab="Library" onclick="switchTab('Library')">Library</button><button class="segment" role="tab" data-journal-tab="Strategy" onclick="switchTab('Strategy')">Strategy</button></div>
   <div class="pretrade-subnav"><button class="btn-sm pretrade-history-btn" id="ptViewHistory" onclick="setPreTradeView(preTradeView==='history'?'active':'history')" aria-label="View setup history" title="View setup history" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg></button></div>
@@ -1241,9 +1291,6 @@ body{min-height:100dvh}
 
 <!-- ══ TAB: Library ══ -->
 <div id="tabLibrary" class="tab">
-  <div class="section-header">
-    <span class="section-title">Library</span>
-  </div>
   <div class="journal-segments" role="tablist" aria-label="Journal sections"><button class="segment" role="tab" data-journal-tab="PreTrade" onclick="switchTab('PreTrade')">Pre-Trade</button><button class="segment" role="tab" data-journal-tab="Journal" onclick="switchTab('Journal')">Trade Log</button><button class="segment" role="tab" data-journal-tab="DailyJournal" onclick="switchTab('DailyJournal')">Daily Journal</button><button class="segment" role="tab" data-journal-tab="Library" onclick="switchTab('Library')">Library</button><button class="segment" role="tab" data-journal-tab="Strategy" onclick="switchTab('Strategy')">Strategy</button></div>
   <div class="library-filters"><button class="filter-pill-btn" id="libFilterBtn" onclick="openLibraryFilterModal()" aria-label="Filter Library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Filter <span class="filter-count" id="libFilterCount" style="display:none"></span></button><button class="filter-pill-btn library-star-btn" id="libModelBtn" type="button" aria-label="Show model trades only" aria-pressed="false" title="Model Trades only" onclick="toggleLibraryModelFilter()">★</button><span class="library-study-control" id="libraryStudyControl"><button id="libStudyView" class="btn-sm library-study-btn" type="button" aria-label="Toggle Study mode" aria-pressed="false" onclick="toggleLibraryStudy(event)" onpointerdown="startLibraryStudyTip(event)" onpointerup="stopLibraryStudyTip()" onpointercancel="stopLibraryStudyTip()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/><path d="M9 7h7M9 11h5"/></svg></button><span class="library-study-tip" role="tooltip">Study mode shows the pre-trade thesis, notes, and lessons directly on each card. Tap again for Gallery.</span></span></div>
   <select id="libOutcomeFilter" hidden><option value="">All Outcomes</option><option value="win">Wins</option><option value="loss">Losses</option><option value="be">Breakeven</option></select>
@@ -1300,7 +1347,7 @@ body{min-height:100dvh}
 <div id="tabTradingAccounts" class="tab">
   <div class="section-header">
     <span class="section-title">Trading Accounts</span>
-    <button class="btn-sm accent" onclick="openAddAccount()">＋ Add Account</button>
+    <button class="btn-sm accent" onclick="openAddAccount()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Account</button>
   </div>
   <div id="acctList"></div>
 </div>
@@ -1309,7 +1356,7 @@ body{min-height:100dvh}
 <div id="tabProp" class="tab">
   <div class="section-header">
     <span class="section-title">Prop Firm Tracker</span>
-    <button class="btn-sm accent" onclick="openAddFirm()">＋ Add Firm</button>
+    <button class="btn-sm accent" onclick="openAddFirm()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Firm</button>
   </div>
 
   <!-- Summary cards -->
@@ -1484,9 +1531,6 @@ body{min-height:100dvh}
 
 <!-- ══ TAB: Strategy ══ -->
 <div id="tabStrategy" class="tab">
-  <div class="section-header">
-    <span class="section-title">Strategy & Plan</span>
-  </div>
   <div class="journal-segments" role="tablist" aria-label="Journal sections"><button class="segment" role="tab" data-journal-tab="PreTrade" onclick="switchTab('PreTrade')">Pre-Trade</button><button class="segment" role="tab" data-journal-tab="Journal" onclick="switchTab('Journal')">Trade Log</button><button class="segment" role="tab" data-journal-tab="DailyJournal" onclick="switchTab('DailyJournal')">Daily Journal</button><button class="segment" role="tab" data-journal-tab="Library" onclick="switchTab('Library')">Library</button><button class="segment" role="tab" data-journal-tab="Strategy" onclick="switchTab('Strategy')">Strategy</button></div>
   <!-- Empty-state CTA (Batch 4) — a nudge banner, not a gate: the form below
        always stays visible and editable either way. Shown only when the
@@ -1853,36 +1897,53 @@ body{min-height:100dvh}
 
 <!-- ══ TAB: Settings ══ -->
 <div id="tabSettings" class="tab">
-  <div class="section-header"><span class="section-title">Settings</span></div>
-  <section class="settings-section"><h3>Cloud &amp; Sync</h3><div class="card" style="padding:14px">
-    <div class="settings-row"><label>Connection</label><span id="settingsConnectionStatus">○ Not connected</span></div>
-    <div class="settings-row"><label>Google account</label><span id="gdriveEmail">—</span></div>
-    <div class="settings-row"><label>Last sync</label><span id="settingsSyncTime">Not synced</span></div>
-    <div class="settings-row"><label for="settingsAutoBackup">Automatic local backup</label><input id="settingsAutoBackup" type="checkbox" onchange="setSettingsAutoBackup(this.checked)"/></div>
-    <div id="gdrive-loading" style="font-size:12px;color:var(--text3)">Connecting to Google…</div>
-    <div id="gdrive-signed-out" style="display:none"><button class="btn btn-ghost" onclick="gdriveSignIn()" id="gdriveSignInBtn">Connect Google Drive</button></div>
-    <div id="gdrive-signed-in" class="settings-actions" style="display:none;margin-top:12px"><button class="btn btn-ghost" onclick="gdriveForceSave()">Sync now</button><button class="btn btn-ghost" onclick="gdriveSignOut()">Disconnect</button></div>
+  <div class="st-card st-sync" id="syncCard">
+    <div id="gdrive-loading" class="st-muted">Connecting to Google…</div>
+    <div id="gdrive-signed-out" style="display:none">
+      <div class="st-sync-title">Back up to Google Drive</div>
+      <p class="st-hint">Sign in to save your journal to your personal Drive app folder and keep devices in sync.</p>
+      <button class="btn btn-primary st-cta" id="gdriveSignInBtn" onclick="gdriveSignIn()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg> Sign in with Google</button>
+    </div>
+    <div id="gdrive-signed-in" style="display:none">
+      <div class="st-acct"><span class="st-avatar" id="stAvatar">G</span><div class="st-acct-txt"><div class="st-email" id="gdriveEmail">—</div><div class="st-status"><span id="settingsConnectionStatus">● Connected</span> · <span id="settingsSyncTime">Not synced</span></div></div></div>
+      <button class="btn btn-ghost st-cta" onclick="gdriveForceSave()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Sync now</button>
+    </div>
     <span id="storageStatusLabel" style="display:none">Not connected</span>
-  </div></section>
-  <section class="settings-section"><h3>Account summary</h3><div class="card" style="padding:14px">
-    <div class="settings-row"><label>Selected account</label><strong id="settingsSelectedAccount">All Accounts</strong></div>
-    <div class="settings-row"><label>Accounts</label><strong id="settingsAccts">0</strong></div>
-    <div class="settings-row"><label>Trades</label><strong id="settingsTrades">0</strong></div>
-  </div></section>
-  <section class="settings-section"><h3>App preferences</h3><div class="card" style="padding:14px">
-    <div class="settings-row"><label for="settingsTheme">Theme</label><select class="form-select" id="settingsTheme" onchange="applyTheme(this.value)"><option value="dark">Dark</option><option value="light">Light</option></select></div>
-    <div class="settings-row"><label for="settingsLanding">Default landing tab</label><select class="form-select" id="settingsLanding" onchange="saveAppPreference('landing',this.value)"><option value="Journal">Trade Log</option><option value="Stats">Metrics</option><option value="DailyJournal">Daily Journal</option><option value="Library">Library</option><option value="TradingAccounts">Accounts</option></select></div>
-    <div class="settings-row"><label for="settingsDateFormat">Date format</label><select class="form-select" id="settingsDateFormat" onchange="saveAppPreference('date',this.value)"><option value="day">Day / Month / Year</option><option value="month">Month / Day / Year</option></select></div>
-    <div class="settings-row"><label for="settingsTimeFormat">Time format</label><select class="form-select" id="settingsTimeFormat" onchange="saveAppPreference('time',this.value)"><option value="24">24-hour</option><option value="12">12-hour</option></select></div>
-  </div></section>
-  <section class="settings-section"><h3>Data management</h3><div class="card" style="padding:14px">
-    <div class="settings-row"><label>Local cache</label><span id="settingsCacheStatus">—</span></div>
-    <div class="settings-actions" style="margin-top:12px"><button class="btn btn-ghost" onclick="exportJSON()">Export full JSON</button><button class="btn btn-ghost" onclick="document.getElementById('jsonFileInput').click()">Import JSON</button></div>
+  </div>
+  <div class="st-stats">
+    <div><b id="settingsTrades">0</b><span>Trades</span></div>
+    <div><b id="settingsAccts">0</b><span>Accounts</span></div>
+    <div><b class="sm" id="settingsCacheStatus">—</b><span>On this device</span></div>
+  </div>
+  <span id="settingsSelectedAccount" hidden></span>
+
+  <h3 class="st-h">Preferences</h3>
+  <div class="st-card">
+    <div class="st-row st-pref"><span class="st-rt"><b>Theme</b></span><div class="st-seg" data-for="settingsTheme"><button type="button" data-v="dark" onclick="stSeg('settingsTheme','dark')">Dark</button><button type="button" data-v="light" onclick="stSeg('settingsTheme','light')">Light</button></div></div>
+    <div class="st-row st-pref"><span class="st-rt"><b>Date format</b></span><div class="st-seg" data-for="settingsDateFormat"><button type="button" data-v="day" onclick="stSeg('settingsDateFormat','day')">DD/MM</button><button type="button" data-v="month" onclick="stSeg('settingsDateFormat','month')">MM/DD</button></div></div>
+    <div class="st-row st-pref"><span class="st-rt"><b>Time format</b></span><div class="st-seg" data-for="settingsTimeFormat"><button type="button" data-v="24" onclick="stSeg('settingsTimeFormat','24')">24h</button><button type="button" data-v="12" onclick="stSeg('settingsTimeFormat','12')">12h</button></div></div>
+    <div class="st-row st-pref"><span class="st-rt"><b>Default tab</b></span><select class="form-select" id="settingsLanding" onchange="saveAppPreference('landing',this.value)"><option value="Journal">Trade Log</option><option value="Stats">Metrics</option><option value="DailyJournal">Daily Journal</option><option value="Library">Library</option><option value="TradingAccounts">Accounts</option></select></div>
+    <div class="st-row st-pref"><span class="st-rt"><b>Local backup</b><small>Keep a copy on this device</small></span><label class="st-switch"><input id="settingsAutoBackup" type="checkbox" aria-label="Automatic local backup" onchange="setSettingsAutoBackup(this.checked)"/><span></span></label></div>
+    <select id="settingsTheme" hidden onchange="applyTheme(this.value)"><option value="dark">Dark</option><option value="light">Light</option></select>
+    <select id="settingsDateFormat" hidden onchange="saveAppPreference('date',this.value)"><option value="day">Day / Month / Year</option><option value="month">Month / Day / Year</option></select>
+    <select id="settingsTimeFormat" hidden onchange="saveAppPreference('time',this.value)"><option value="24">24-hour</option><option value="12">12-hour</option></select>
+  </div>
+
+  <h3 class="st-h">Backup &amp; data</h3>
+  <div class="st-card">
+    <button class="st-row " onclick="exportCSV()"><span class="st-ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span><span class="st-rt"><b>Export trades as CSV</b><small>Open in Excel or Google Sheets</small></span><svg class="st-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+    <button class="st-row " onclick="document.getElementById('csvFileInput').click()"><span class="st-ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span><span class="st-rt"><b>Import trades from CSV</b><small>Needs columns: pair, dir, pnl, date. Duplicate IDs are skipped.</small></span><svg class="st-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+    <button class="st-row " onclick="exportJSON()"><span class="st-ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span><span class="st-rt"><b>Download backup (JSON)</b><small>Trades, accounts, strategy and custom checklist options</small></span><svg class="st-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+    <button class="st-row " onclick="document.getElementById('jsonFileInput').click()"><span class="st-ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span><span class="st-rt"><b>Restore from backup (JSON)</b></span><svg class="st-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
     <input type="file" id="jsonFileInput" accept=".json,application/json" style="display:none" onchange="importJSON(this)"/>
-    <div class="settings-actions" style="margin-top:8px"><button class="btn btn-ghost" onclick="exportCSV()">Export trades CSV</button><button class="btn btn-ghost" onclick="document.getElementById('csvFileInput').click()">Import trades CSV</button></div>
     <input type="file" id="csvFileInput" accept=".csv,text/csv" style="display:none" onchange="importCSV(this)"/>
-  </div></section>
-  <section class="settings-section"><h3>Danger zone</h3><div class="card settings-danger" style="padding:14px"><div style="font-size:12px;color:var(--text2);margin-bottom:10px">Clear this device's local copy. Google Drive data stays untouched.</div><button class="btn btn-danger" onclick="resetLocalJournalCache()">Clear local data</button></div></section>
+  </div>
+
+  <h3 class="st-h">Danger zone</h3>
+  <div class="st-card st-danger-card">
+    <button class="st-row danger" onclick="resetLocalJournalCache()"><span class="st-ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></span><span class="st-rt"><b>Clear local data</b><small>This device only. Google Drive data stays untouched.</small></span><svg class="st-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+    <div id="stDisconnect" style="display:none"><button class="st-row danger" onclick="gdriveSignOut()"><span class="st-ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span><span class="st-rt"><b>Disconnect Google Drive</b><small>Stops syncing. Your Drive copy is kept.</small></span><svg class="st-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button></div>
+  </div>
 
   <!-- Powered by Decipher Wealth -->
   <div style="text-align:center;padding:28px 0 16px;display:flex;flex-direction:column;align-items:center;gap:8px">
@@ -4198,6 +4259,7 @@ function gdriveShowSignedIn(){
   document.getElementById('gdrive-signed-out').style.display='none';
   document.getElementById('gdrive-signed-in').style.display='block';
   document.getElementById('gdriveEmail').textContent = (gdriveEmail && gdriveEmail.includes('@')) ? gdriveEmail : (gdriveEmail || 'Google account connected');
+  { const av=document.getElementById('stAvatar'); if(av)av.textContent=((gdriveEmail&&gdriveEmail[0])||'G').toUpperCase(); const d=document.getElementById('stDisconnect'); if(d)d.style.display='block'; }
   document.getElementById('storageStatusLabel').textContent='Connected';
   document.getElementById('settingsConnectionStatus')?.replaceChildren(document.createTextNode('● Connected'));
   updateAccountSyncLabels();
@@ -4208,6 +4270,7 @@ function gdriveShowSignedOut(){
   document.getElementById('gdrive-loading').style.display='none';
   document.getElementById('gdrive-signed-in').style.display='none';
   document.getElementById('gdrive-signed-out').style.display='block';
+  { const d=document.getElementById('stDisconnect'); if(d)d.style.display='none'; }
   document.getElementById('storageStatusLabel').textContent='Not connected';
   document.getElementById('settingsConnectionStatus')?.replaceChildren(document.createTextNode('○ Not connected'));
   document.getElementById('storageStatusLabel').style.color='var(--amber)';
@@ -5544,20 +5607,22 @@ function selectDrawerTab(tab){
 
 
 // ─── Journal sub-nav popover ───
-const JNAV_ITEMS=[['PreTrade','🎯','Pre-Trade'],['Journal','📓','Trade Log'],['DailyJournal','📅','Daily Journal'],['Library','📚','Library'],['Strategy','♟️','Strategy']];
+const JNAV_ITEMS=[['PreTrade','<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>','Pre-Trade'],['Journal','<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>','Trade Log'],['DailyJournal','<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>','Daily Journal'],['Library','<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>','Library'],['Strategy','<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>','Strategy']];
 function buildJournalNav(){
   document.querySelectorAll('.journal-segments').forEach(seg=>{
-    if(seg.nextElementSibling&&seg.nextElementSibling.classList.contains('jnav'))return;
+    if(seg.nextElementSibling&&seg.nextElementSibling.classList.contains('jnav-row'))return;
     const w=document.createElement('div');w.className='jnav';
     w.innerHTML='<button class="jnav-trigger" aria-haspopup="menu" onclick="toggleJournalNav(this.parentNode,event)"><span class="jnav-label"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></button><div class="jnav-pop" role="menu">'+JNAV_ITEMS.map(([k,i,l])=>'<button class="jnav-item" role="menuitem" data-jn="'+k+'" onclick="pickJournalNav(\''+k+'\')"><span>'+i+'</span>'+l+'<span class="jnav-check">✓</span></button>').join('')+'</div>';
-    seg.after(w);
+    const tab=seg.closest('.tab'),acts=tab&&tab.querySelector('.jrow-actions'),sub=tab&&tab.querySelector('.pretrade-subnav');
+    const row=document.createElement('div');row.className='jnav-row';seg.after(row);row.appendChild(w);
+    if(acts){ if(sub){acts.prepend(...sub.children);sub.remove();} row.appendChild(acts); }
   });
   syncJournalNav(typeof activeTab!=='undefined'?activeTab:'Journal');
 }
 function syncJournalNav(name){
   const it=JNAV_ITEMS.find(x=>x[0]===name);
   document.querySelectorAll('.jnav').forEach(w=>{
-    if(it)w.querySelector('.jnav-label').textContent=it[1]+' '+it[2];
+    if(it)w.querySelector('.jnav-label').innerHTML=it[1]+' '+it[2];
     w.querySelectorAll('.jnav-item').forEach(b=>b.classList.toggle('active',b.dataset.jn===name));
   });
 }
@@ -5604,7 +5669,7 @@ function switchTab(name){
   // Persist active tab to Telegram CloudStorage (session state)
   CS.set('active_tab', name);
   // Update header title and subtitle to reflect current tab
-  const tabLabels={Journal:'Trade Journal',PreTrade:'Pre-Trade',DailyJournal:'Daily Journal',Library:'Library',Calendar:'Calendar',Stats:'Metrics',Prop:'Prop Firm Tracker',TradingAccounts:'Trading Accounts',Strategy:'Strategy & Edge',Settings:'Settings'};
+  const tabLabels={Journal:'Trade Log',PreTrade:'Pre-Trade',DailyJournal:'Daily Journal',Library:'Library',Calendar:'Calendar',Stats:'Metrics',Prop:'Prop Firm Tracker',TradingAccounts:'Trading Accounts',Strategy:'Strategy',Settings:'Settings'};
   const tabSubs={PreTrade:'Planned Setups',DailyJournal:'Daily Reflections',Library:'Screenshot Review',Calendar:'P&L Overview',Stats:'Performance & Analytics',Prop:'Phases & Payouts',TradingAccounts:'Manage Accounts',Strategy:'Plan & Rules',Settings:'Preferences & Data'};
   document.getElementById('headerTitle').textContent=tabLabels[name]||name;
   const subEl=document.getElementById('headerSub');
@@ -8404,6 +8469,8 @@ function resetLocalJournalCache(){
     gdriveImageCache.clear();gdriveImageFetches.clear();renderSettings();showToast('Local cache cleared');
   });
 }
+function stSeg(id,v){const el=document.getElementById(id);if(!el)return;el.value=v;el.dispatchEvent(new Event('change'));syncSettingsSeg();}
+function syncSettingsSeg(){document.querySelectorAll('.st-seg').forEach(g=>{const el=document.getElementById(g.dataset.for);g.querySelectorAll('button').forEach(b=>{const on=!!el&&el.value===b.dataset.v;b.classList.toggle('active',on);b.setAttribute('aria-pressed',on);});});}
 function renderSettings(){
   document.getElementById('settingsTrades').textContent=trades.length;
   document.getElementById('settingsAccts').textContent=accounts.length;
@@ -8416,8 +8483,9 @@ function renderSettings(){
     const el=document.getElementById(id),saved=localStorage.getItem('tj_pref_'+key);
     if(saved&&[...el.options].some(o=>o.value===saved))el.value=saved;
   }
+  syncSettingsSeg();
   const local=localStorage.getItem(LOCAL_DATA_KEY);
-  document.getElementById('settingsCacheStatus').textContent=local?((new Blob([local]).size/1024).toFixed(0)+' KB'+(_hasUnsynced()?' · pending sync':' · saved')):'Empty';
+  document.getElementById('settingsCacheStatus').textContent=local?((new Blob([local]).size/1024).toFixed(0)+' KB'+(_hasUnsynced()?' · pending':'')):'Empty';
   // Refresh Drive panel state
   // Always resolve the card based on token presence, not gdriveReady.
   // On iOS, GSI never loads so gdriveReady stays false — the card would
