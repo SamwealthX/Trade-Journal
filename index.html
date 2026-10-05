@@ -1215,7 +1215,7 @@ button.st-row:active{background:var(--surface2)}
 .st-dot.warn{background:var(--amber)}
 .st-pref select{appearance:none;-webkit-appearance:none;background:var(--surface2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a93a6' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 9px center/12px;border:1px solid var(--border);border-radius:8px;color:var(--text);font:700 12px var(--font);min-height:38px;padding:0 28px 0 12px;width:auto}
 
-/* ── Shared picker ── */
+/* ── Shared picker (matches the Journal sub-nav popover: no row dividers, tinted selected row) ── */
 select.pk-native{display:none!important}
 .pk-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:44px;text-align:left;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font);font-size:15px;padding:10px 13px;cursor:pointer}
 .pk-btn .pk-val{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1224,17 +1224,24 @@ select.pk-native{display:none!important}
 .pk-btn.open{border-color:rgba(0,229,160,.5);box-shadow:0 0 0 3px rgba(0,229,160,.08)}
 .pk-chev{width:15px;height:15px;color:var(--text3);flex-shrink:0;transition:transform .15s}
 .pk-btn.open .pk-chev{transform:rotate(180deg)}
-.pk-pop{position:fixed;z-index:1200;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border2);border-radius:14px;box-shadow:0 14px 34px rgba(0,0,0,.45);overflow:hidden}
-.pk-search{padding:8px;border-bottom:1px solid var(--border);flex-shrink:0}
-.pk-search input{width:100%;min-height:38px;padding:0 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font:14px var(--font);outline:none}
-.pk-list{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
-.pk-item{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;padding:10px 14px;font-size:14px;font-weight:600;color:var(--text2);border-bottom:1px solid var(--border);cursor:pointer}
-.pk-item:last-child{border-bottom:0}
+.pk-pop{position:fixed;z-index:1200;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:5px;box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden;box-sizing:border-box}
+.pk-search{padding:3px 3px 6px;flex-shrink:0}
+.pk-search input{width:100%;min-height:38px;padding:0 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font:14px var(--font);outline:none;box-sizing:border-box}
+.pk-list{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:1px}
+.pk-item{display:flex;align-items:center;gap:10px;min-height:42px;padding:9px 10px;font:600 13px var(--font);color:var(--text2);border-radius:8px;cursor:pointer}
+.pk-item span{flex:1;min-width:0}
 .pk-item:active{background:var(--surface2)}
-.pk-item.sel{color:var(--accent)}
+.pk-item.sel{background:var(--accent-dim);color:var(--accent)}
 .pk-item.dis{opacity:.4}
-.pk-item svg{width:16px;height:16px;flex-shrink:0}
+.pk-check{width:15px;height:15px;flex-shrink:0;margin-left:auto;opacity:0}
+.pk-item.sel .pk-check{opacity:1}
+.pk-sugg .pk-item{min-height:40px}
+.pk-sugg .pk-item b{color:var(--text);font-weight:800}
+.pk-sugg .pk-check{display:none}
 .pk-empty{padding:14px;font-size:13px;color:var(--text3);text-align:center}
+/* keyboard-aware sheets/pages */
+.modal-overlay:not(.centered) .modal,#dailyEntryModal .modal{max-height:calc(var(--vvh,100vh)*.93)}
+body.kb-open .tab.active{padding-bottom:calc(var(--kb,0px) + 80px)}
 </style>
 </head>
 <body>
@@ -8252,11 +8259,7 @@ function deleteDailyEntry(){
   dailyJournal=dailyJournal.filter(x=>x.id!==e.id);
   gdriveScheduleSave();djCloseSheet();renderDailyJournalList();showToast('Reflection deleted');
 }
-// Keep the sheet (and Save bar) above the software keyboard on browsers that don't resize the layout viewport (iOS).
-function djKb(){const ov=document.getElementById('dailyEntryModal');if(!ov||!ov.classList.contains('open')||!window.visualViewport)return;const v=window.visualViewport;ov.style.height=v.height+'px';ov.style.top=v.offsetTop+'px';ov.style.bottom='auto';}
-function djKbReset(){const ov=document.getElementById('dailyEntryModal');if(ov){ov.style.height='';ov.style.top='';ov.style.bottom='';}}
-if(window.visualViewport){window.visualViewport.addEventListener('resize',djKb);window.visualViewport.addEventListener('scroll',djKb);}
-document.addEventListener('focusin',e=>{if(e.target.matches&&e.target.matches('#dailyEntryModal textarea'))setTimeout(()=>e.target.scrollIntoView({block:'center',behavior:'smooth'}),300);});
+function djKbReset(){}  // keyboard handling is now global (see 'Software keyboard' block)
 
 // ── heat-map day picker ──
 function openDailyCal(mode){djCalMode=mode||'pl';djCalView='m';djCalMonth=djSel.slice(0,7);djCalDraw();document.getElementById('dailyCalModal').classList.add('open');updateNavVisibility();}
@@ -10975,36 +10978,39 @@ function refreshPairSuggestions(){
 // .value, rebuilds options, or listens for 'change' keeps working. The visible control is a button + popover.
 (function(){
   const CHEV='<svg class="pk-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
-  const CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
-  const ROW=44, SEARCH_AT=8;           // rows are 44px; lists longer than 8 get a search field
+  const CHECK='<svg class="pk-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  const ROW=42, SROW=40, SEARCH_OVER=10;   // lists with MORE than 10 options get a search field; shorter ones just scroll
   let pop=null, cur=null;
   function closePk(){ if(pop){pop.remove();pop=null;} if(cur){cur._btn.classList.remove('open');cur=null;} }
   function lbl(sel){ const o=sel.options[sel.selectedIndex]; return o?o.textContent.trim():''; }
   function sync(sel){ const b=sel._btn; if(!b)return; b.querySelector('.pk-val').textContent=lbl(sel)||'Select…'; b.classList.toggle('ph',!sel.value); b.disabled=sel.disabled; }
-  function place(el,anchor,maxH){
-    const vv=window.visualViewport, vh=vv?vv.height:window.innerHeight, r=anchor.getBoundingClientRect();
-    const below=vh-r.bottom-10, above=r.top-10;
-    const h=Math.min(maxH,el.scrollHeight);
-    const down=below>=Math.min(h,200)||below>=above;
-    const room=Math.max(120,down?below:above);
-    el.style.maxHeight=Math.min(maxH,room)+'px';
-    const w=Math.max(r.width,200), left=Math.min(Math.max(8,r.left),window.innerWidth-w-8);
-    el.style.width=w+'px'; el.style.left=left+'px';
-    const eh=Math.min(el.offsetHeight,room);
-    el.style.top=(down?r.bottom+6:Math.max(8,r.top-6-eh))+'px';
+  // Position against the VISIBLE area (visual viewport) so the on-screen keyboard is never underneath the popover.
+  function place(el){
+    const anchor=el._anchor, maxH=el._maxH, minW=el._minW||180;
+    const vv=window.visualViewport, top0=vv?vv.offsetTop:0, vh=vv?vv.height:window.innerHeight;
+    const r=anchor.getBoundingClientRect(), aw=r.width;
+    el.style.width='max-content'; el.style.minWidth=Math.min(minW,aw)+'px'; el.style.maxWidth=aw+'px'; el.style.maxHeight='none';
+    const h=Math.min(maxH,el.scrollHeight), w=el.offsetWidth;
+    const below=top0+vh-r.bottom-8, above=r.top-top0-8;
+    const down=below>=h||below>=above;   // open downward only if it fully fits, otherwise wherever there is more room
+    const room=Math.max(100,down?below:above), eh=Math.min(h,room);
+    el.style.maxHeight=eh+'px';
+    el.style.left=Math.min(Math.max(8,r.left),window.innerWidth-w-8)+'px';
+    el.style.top=(down?r.bottom+6:Math.max(top0+8,r.top-6-eh))+'px';
   }
+  function reflow(){ if(pop)place(pop); if(sg)place(sg); }
   function openPk(sel){
     if(cur===sel){closePk();return;}
     closePk(); cur=sel; sel._btn.classList.add('open');
     const opts=[...sel.options].map(o=>({v:o.value,t:o.textContent.trim(),d:o.disabled}));
-    const searchable=opts.length>=SEARCH_AT;
+    const searchable=opts.length>SEARCH_OVER;
     pop=document.createElement('div'); pop.className='pk-pop';
     pop.innerHTML=(searchable?'<div class="pk-search"><input type="search" placeholder="Search…" autocomplete="off" autocapitalize="off"/></div>':'')+'<div class="pk-list"></div>';
     const list=pop.querySelector('.pk-list');
     function draw(q){
       q=(q||'').toLowerCase();
       const shown=opts.filter(o=>!q||o.t.toLowerCase().includes(q));
-      list.innerHTML=shown.length?shown.map(o=>`<div class="pk-item${o.v===sel.value?' sel':''}${o.d?' dis':''}" data-v="${escapeHtml(o.v)}"><span>${escapeHtml(o.t)}</span>${o.v===sel.value?CHECK:''}</div>`).join(''):'<div class="pk-empty">No matches</div>';
+      list.innerHTML=shown.length?shown.map(o=>`<div class="pk-item${o.v===sel.value?' sel':''}${o.d?' dis':''}" data-v="${escapeHtml(o.v)}"><span>${escapeHtml(o.t)}</span>${CHECK}</div>`).join(''):'<div class="pk-empty">No matches</div>';
     }
     draw('');
     list.addEventListener('click',e=>{
@@ -11012,9 +11018,10 @@ function refreshPairSuggestions(){
       const v=it.dataset.v, sv=sel.value; sel.value=v; closePk();
       if(sv!==v) sel.dispatchEvent(new Event('change',{bubbles:true}));
     });
-    const inp=pop.querySelector('input'); if(inp) inp.addEventListener('input',()=>{draw(inp.value);});
+    const inp=pop.querySelector('input'); if(inp) inp.addEventListener('input',()=>{draw(inp.value);place(pop);});
     document.body.appendChild(pop);
-    place(pop, sel._btn, searchable?(ROW*5.5+58):ROW*8);
+    pop._anchor=sel._btn; pop._maxH=searchable?(ROW*5.5+58):(ROW*8+10);
+    place(pop);
     const selEl=list.querySelector('.sel'); if(selEl) list.scrollTop=Math.max(0,selEl.offsetTop-ROW*2);
   }
   function enhance(sel){
@@ -11033,35 +11040,66 @@ function refreshPairSuggestions(){
   }
   function enhanceAll(){ document.querySelectorAll('select.form-select').forEach(enhance); }
   document.addEventListener('pointerdown',e=>{ if(pop&&!pop.contains(e.target)&&!(cur&&cur._btn.contains(e.target)))closePk(); },true);
-  document.addEventListener('keydown',e=>{ if(e.key==='Escape')closePk(); });
-  window.addEventListener('resize',closePk);
-  document.addEventListener('scroll',e=>{ if(pop&&!pop.contains(e.target)&&!(e.target.classList&&e.target.classList.contains('pk-list')))closePk(); },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'){closePk();hideSg();} if(e.key==='Enter'&&sgFor&&e.target===sgFor)hideSg(); });
+  // Keyboard open/close and rotation re-position the popovers instead of killing them (the search box needs the keyboard).
+  window.addEventListener('resize',reflow);
+  if(window.visualViewport){ visualViewport.addEventListener('resize',reflow); visualViewport.addEventListener('scroll',reflow); }
+  // Scrolling the page/sheet behind a popover closes it (the list's own scrolling doesn't).
+  document.addEventListener('scroll',e=>{
+    const t=e.target, own=t.classList&&t.classList.contains('pk-list');
+    if(own)return;
+    if(pop&&!pop.contains(t))closePk();
+    if(sg&&!sg.contains(t))hideSg();
+  },true);
   window.addEventListener('DOMContentLoaded',enhanceAll); if(document.readyState!=='loading')enhanceAll();
 
-  // ── Typed pair suggestions: nothing is shown until you type (or the whole list is ≤5) ──
+  // ── Typed pair suggestions: nothing shows until you type a letter ──
   let sg=null, sgFor=null;
   function hideSg(){ if(sg){sg.remove();sg=null;} sgFor=null; }
   function matches(q){
     const all=window._pairList||[]; q=q.trim().toUpperCase();
-    if(!q) return all.length<=5?all:[];
+    if(!q) return [];
     const pre=all.filter(p=>p.startsWith(q)), inc=all.filter(p=>!p.startsWith(q)&&p.includes(q));
-    const m=[...pre,...inc].slice(0,5);
+    const m=[...pre,...inc].slice(0,4);
     return (m.length===1&&m[0]===q)?[]:m;
   }
   function showSg(inp){
-    const m=matches(inp.value);
+    const q=inp.value.trim().toUpperCase(), m=matches(inp.value);
     if(!m.length){hideSg();return;}
     if(!sg||sgFor!==inp){ hideSg(); sg=document.createElement('div'); sg.className='pk-pop pk-sugg'; sg.innerHTML='<div class="pk-list"></div>'; document.body.appendChild(sg); sgFor=inp; }
-    sg.firstChild.innerHTML=m.map(p=>`<div class="pk-item" data-v="${escapeHtml(p)}"><span>${escapeHtml(p)}</span></div>`).join('');
-    place(sg,inp,ROW*5);
+    sg.firstChild.innerHTML=m.map(p=>{ const i=p.indexOf(q), h=i<0?escapeHtml(p):escapeHtml(p.slice(0,i))+'<b>'+escapeHtml(p.slice(i,i+q.length))+'</b>'+escapeHtml(p.slice(i+q.length)); return `<div class="pk-item" data-v="${escapeHtml(p)}"><span>${h}</span></div>`; }).join('');
+    sg._anchor=inp; sg._maxH=SROW*4+10; sg._minW=160;
+    place(sg);
   }
   document.addEventListener('input',e=>{ if(e.target.matches&&e.target.matches('#fPair,#ptPair,#qPair'))showSg(e.target); });
-  document.addEventListener('focusin',e=>{ if(e.target.matches&&e.target.matches('#fPair,#ptPair,#qPair'))showSg(e.target); });
   document.addEventListener('focusout',e=>{ if(sgFor&&e.target===sgFor)setTimeout(hideSg,120); });
   document.addEventListener('pointerdown',e=>{
     const it=sg&&e.target.closest&&e.target.closest('.pk-sugg .pk-item'); if(!it)return;
     e.preventDefault(); sgFor.value=it.dataset.v; sgFor.dispatchEvent(new Event('input',{bubbles:true})); hideSg();
   },true);
+})();
+
+// ─── Software keyboard (iOS): keep sheets/pages above it and bring the tapped field into view ───
+// iOS overlays the keyboard on top of the page instead of resizing it, so anything near the bottom stayed hidden.
+// Android resizes the layout viewport itself, so kb computes to ~0 there and none of this changes anything.
+(function(){
+  const vv=window.visualViewport; if(!vv)return;
+  let wasOpen=false;
+  function focusTarget(){ const t=document.activeElement; return (t&&t.matches&&t.matches('input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]),textarea,[contenteditable="true"]'))?t:null; }
+  function sync(){
+    const kb=Math.max(0,window.innerHeight-vv.height-vv.offsetTop), open=kb>80, root=document.documentElement;
+    root.style.setProperty('--kb',kb+'px'); root.style.setProperty('--vvh',vv.height+'px');
+    document.body.classList.toggle('kb-open',open);
+    document.querySelectorAll('.modal-overlay').forEach(ov=>{
+      if(open&&ov.classList.contains('open')){ ov.style.top=vv.offsetTop+'px'; ov.style.height=vv.height+'px'; ov.style.bottom='auto'; }
+      else { ov.style.top=ov.style.height=ov.style.bottom=''; }
+    });
+    if(open&&!wasOpen){ const t=focusTarget(); if(t) setTimeout(()=>t.scrollIntoView({block:'center',behavior:'smooth'}),60); }
+    wasOpen=open;
+  }
+  vv.addEventListener('resize',sync); vv.addEventListener('scroll',sync); window.addEventListener('orientationchange',()=>setTimeout(sync,300));
+  document.addEventListener('focusin',()=>{ const t=focusTarget(); if(!t)return; setTimeout(()=>{ if(document.activeElement===t&&document.body.classList.contains('kb-open'))t.scrollIntoView({block:'center',behavior:'smooth'}); },320); });
+  sync();
 })();
 
 // ─── Duplicate from peek ───
