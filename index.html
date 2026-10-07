@@ -1241,7 +1241,13 @@ select.pk-native{display:none!important}
 .pk-empty{padding:14px;font-size:13px;color:var(--text3);text-align:center}
 /* keyboard-aware sheets/pages */
 .modal-overlay:not(.centered) .modal,#dailyEntryModal .modal{max-height:calc(var(--vvh,100vh)*.93)}
-body.kb-open .tab.active{padding-bottom:calc(var(--kb,0px) + 80px)}
+/* bottom nav sits on top of the keyboard in Telegram/iOS: hide it only while the viewport really is keyboard-sized */
+body.kb-open .nav,body.kb-open .nav-collapsed-btn{opacity:0;visibility:hidden;pointer-events:none}
+#kbDebug{position:fixed;left:4px;top:4px;z-index:99999;max-width:62vw;padding:6px 8px;background:rgba(0,0,0,.82);color:#7CFFB2;font:10px/1.35 monospace;border-radius:6px;pointer-events:none;white-space:pre}
+/* no stray scrollbars: popover lists and horizontal chip rows */
+.pk-list{scrollbar-width:none}
+.pk-list::-webkit-scrollbar,.chip-scroll::-webkit-scrollbar,.wb-filter-pills::-webkit-scrollbar{display:none}
+.chip-scroll,.wb-filter-pills{overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
 </style>
 </head>
 <body>
@@ -1335,7 +1341,7 @@ body.kb-open .tab.active{padding-bottom:calc(var(--kb,0px) + 80px)}
 <div id="tabCalendar" class="tab">
   <!-- Period filter -->
 
-  <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px">
+  <div class="chip-scroll" style="display:flex;gap:6px;margin-bottom:14px;padding-bottom:2px">
     <button class="btn-sm" id="calFilter-week"   onclick="setCalFilter('week')"   style="flex-shrink:0">Week</button>
     <button class="btn-sm accent" id="calFilter-month"  onclick="setCalFilter('month')"  style="flex-shrink:0">Month</button>
     <button class="btn-sm" id="calFilter-year"   onclick="setCalFilter('year')"   style="flex-shrink:0">Year</button>
@@ -1651,7 +1657,7 @@ body.kb-open .tab.active{padding-bottom:calc(var(--kb,0px) + 80px)}
   <!-- Time period filter. "Custom" is the same kind of control as the other
        four — it just gets its bounds from customRange (set in the date-range
        modal) instead of from the calendar math in _calendarBounds(). -->
-  <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px">
+  <div class="chip-scroll" style="display:flex;gap:6px;margin-bottom:14px;padding-bottom:2px">
     <button class="btn-sm" id="statFilter-week"  onclick="setStatFilter('week')"  style="flex-shrink:0">Week</button>
     <button class="btn-sm" id="statFilter-month" onclick="setStatFilter('month')" style="flex-shrink:0">Month</button>
     <button class="btn-sm" id="statFilter-year"  onclick="setStatFilter('year')"  style="flex-shrink:0">Year</button>
@@ -10990,7 +10996,7 @@ function refreshPairSuggestions(){
     const vv=window.visualViewport, top0=vv?vv.offsetTop:0, vh=vv?vv.height:window.innerHeight;
     const r=anchor.getBoundingClientRect(), aw=r.width;
     el.style.width='max-content'; el.style.minWidth=Math.min(minW,aw)+'px'; el.style.maxWidth=aw+'px'; el.style.maxHeight='none';
-    const h=Math.min(maxH,el.scrollHeight), w=el.offsetWidth;
+    const h=Math.min(maxH,el.scrollHeight+2), w=el.offsetWidth;   // +2 = the popover's own border
     const below=top0+vh-r.bottom-8, above=r.top-top0-8;
     const down=below>=h||below>=above;   // open downward only if it fully fits, otherwise wherever there is more room
     const room=Math.max(100,down?below:above), eh=Math.min(h,room);
@@ -11020,7 +11026,7 @@ function refreshPairSuggestions(){
     });
     const inp=pop.querySelector('input'); if(inp) inp.addEventListener('input',()=>{draw(inp.value);place(pop);});
     document.body.appendChild(pop);
-    pop._anchor=sel._btn; pop._maxH=searchable?(ROW*5.5+58):(ROW*8+10);
+    pop._anchor=sel._btn; pop._maxH=searchable?(ROW*5.5+58):600;   // short lists size to their content so they never scroll
     place(pop);
     const selEl=list.querySelector('.sel'); if(selEl) list.scrollTop=Math.max(0,selEl.offsetTop-ROW*2);
   }
@@ -11079,26 +11085,83 @@ function refreshPairSuggestions(){
   },true);
 })();
 
-// ─── Software keyboard (iOS): keep sheets/pages above it and bring the tapped field into view ───
-// iOS overlays the keyboard on top of the page instead of resizing it, so anything near the bottom stayed hidden.
-// Android resizes the layout viewport itself, so kb computes to ~0 there and none of this changes anything.
+// ─── Software keyboard: bring the tapped field into view (needed on Telegram iOS) ───
+// Safari iOS scrolls the field itself; Android resizes the page and scrolls it itself; Telegram's iOS webview resizes
+// the page but does NOT scroll the field. So: after a tap into a text field, scroll ONLY if the field is actually
+// hidden (a no-op wherever the platform already did it). Nothing here depends on focus/blur state, so it can't get stuck.
 (function(){
-  const vv=window.visualViewport; if(!vv)return;
-  let wasOpen=false;
-  function focusTarget(){ const t=document.activeElement; return (t&&t.matches&&t.matches('input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]),textarea,[contenteditable="true"]'))?t:null; }
+  const vv=window.visualViewport, tg=(window.Telegram&&window.Telegram.WebApp)||null;
+  const SEL='input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=button]):not([type=submit]),textarea,[contenteditable="true"]';
+  const isText=t=>!!(t&&t.matches&&t.matches(SEL)&&!t.closest('.pk-pop'));
+  let baseline=0, debounce=null, lastDelta=0;
+  function fullHeight(){ return Math.max(window.innerHeight,vv?vv.height+vv.offsetTop:0, tg&&tg.viewportStableHeight||0); }
+  function curHeight(){ return tg&&tg.viewportHeight ? tg.viewportHeight : (vv?vv.height:window.innerHeight); }
+  function scrollParent(el){
+    for(let p=el.parentElement;p&&p!==document.body;p=p.parentElement){
+      const oy=getComputedStyle(p).overflowY;
+      if((oy==='auto'||oy==='scroll')&&p.scrollHeight>p.clientHeight+1) return p;
+    }
+    return null;
+  }
+  function stickyTop(){ const h=document.querySelector('.header'); if(!h)return 0; const pos=getComputedStyle(h).position; return (pos==='fixed'||pos==='sticky')?h.getBoundingClientRect().bottom:0; }
+  function ensureVisible(el){
+    if(!el||!el.isConnected||document.activeElement!==el)return;
+    const r=el.getBoundingClientRect();
+    const vTop=vv?vv.offsetTop:0, vBot=Math.min(vv?vv.offsetTop+vv.height:window.innerHeight, window.innerHeight);
+    let tTop=Math.max(vTop,stickyTop())+12, tBot=vBot-20;
+    const sp=scrollParent(el);
+    if(sp){ const pr=sp.getBoundingClientRect(); tTop=Math.max(tTop,pr.top+8); tBot=Math.min(tBot,pr.bottom-8); }
+    let d=0;
+    if(r.height>tBot-tTop) d=r.top-tTop;
+    else if(r.bottom>tBot) d=r.bottom-tBot;
+    else if(r.top<tTop)    d=r.top-tTop;
+    lastDelta=Math.round(d);
+    if(Math.abs(d)<2)return;
+    if(sp) sp.scrollTop+=d; else window.scrollBy(0,d);
+  }
+  function schedule(){ clearTimeout(debounce); debounce=setTimeout(()=>{ const t=document.activeElement; if(isText(t))ensureVisible(t); },60); }
+  // Keyboard = the viewport is much shorter than its largest-seen height AND a text field is focused.
+  // Recomputed on every resize, so it clears itself when the keyboard is dismissed (even with the field still focused).
   function sync(){
-    const kb=Math.max(0,window.innerHeight-vv.height-vv.offsetTop), open=kb>80, root=document.documentElement;
-    root.style.setProperty('--kb',kb+'px'); root.style.setProperty('--vvh',vv.height+'px');
+    const full=fullHeight(); if(full>baseline)baseline=full;
+    const shrink=baseline-curHeight(), open=shrink>150&&isText(document.activeElement);
     document.body.classList.toggle('kb-open',open);
+    // Safari iOS only (keyboard overlays, layout viewport unchanged): keep sheets inside the visible area
+    const kb=vv?Math.max(0,window.innerHeight-vv.height-vv.offsetTop):0, root=document.documentElement;
+    root.style.setProperty('--kb',kb+'px'); root.style.setProperty('--vvh',(vv?vv.height:window.innerHeight)+'px');
     document.querySelectorAll('.modal-overlay').forEach(ov=>{
-      if(open&&ov.classList.contains('open')){ ov.style.top=vv.offsetTop+'px'; ov.style.height=vv.height+'px'; ov.style.bottom='auto'; }
+      if(kb>80&&ov.classList.contains('open')){ ov.style.top=vv.offsetTop+'px'; ov.style.height=vv.height+'px'; ov.style.bottom='auto'; }
       else { ov.style.top=ov.style.height=ov.style.bottom=''; }
     });
-    if(open&&!wasOpen){ const t=focusTarget(); if(t) setTimeout(()=>t.scrollIntoView({block:'center',behavior:'smooth'}),60); }
-    wasOpen=open;
+    dbg();
   }
-  vv.addEventListener('resize',sync); vv.addEventListener('scroll',sync); window.addEventListener('orientationchange',()=>setTimeout(sync,300));
-  document.addEventListener('focusin',()=>{ const t=focusTarget(); if(!t)return; setTimeout(()=>{ if(document.activeElement===t&&document.body.classList.contains('kb-open'))t.scrollIntoView({block:'center',behavior:'smooth'}); },320); });
+  function onResize(){ sync(); schedule(); }
+  if(vv){ vv.addEventListener('resize',onResize); vv.addEventListener('scroll',sync); }
+  window.addEventListener('resize',onResize);
+  window.addEventListener('orientationchange',()=>setTimeout(()=>{baseline=0;onResize();},350));
+  try{ if(tg&&tg.onEvent) tg.onEvent('viewportChanged',onResize); }catch(e){}
+  document.addEventListener('focusin',e=>{
+    if(!isText(e.target))return;
+    [80,250,500,900].forEach(ms=>setTimeout(()=>{ sync(); ensureVisible(e.target); },ms));
+  });
+  document.addEventListener('focusout',()=>setTimeout(sync,120));
+
+  // ── Optional on-screen readout: open with ?debug=1, or tap the page title 5 times quickly ──
+  let box=null;
+  function dbgOn(){ try{return /[?&]debug=1/.test(location.search)||localStorage.getItem('tj_debug')==='1';}catch(e){return false;} }
+  function dbg(){
+    if(!dbgOn()){ if(box){box.remove();box=null;} return; }
+    if(!box){ box=document.createElement('div'); box.id='kbDebug'; document.body.appendChild(box); }
+    const a=document.activeElement, r=isText(a)?a.getBoundingClientRect():null;
+    box.textContent=['innerH '+window.innerHeight,'vv.h '+(vv?Math.round(vv.height):'-')+'  top '+(vv?Math.round(vv.offsetTop):'-'),'baseline '+baseline,'tg '+(tg?(tg.viewportHeight+' / stable '+tg.viewportStableHeight):'none'),'kb-open '+document.body.classList.contains('kb-open')+'  --kb '+document.documentElement.style.getPropertyValue('--kb'),'focus '+(isText(a)?(a.id||a.tagName):'-'),r?('field '+Math.round(r.top)+'→'+Math.round(r.bottom)+'  Δ'+lastDelta):''].join('\n');
+  }
+  let taps=[];
+  document.addEventListener('click',e=>{
+    if(!e.target.closest||!e.target.closest('#headerTitle'))return;
+    const n=Date.now(); taps=taps.filter(t=>n-t<3000); taps.push(n);
+    if(taps.length>=5){ taps=[]; try{ localStorage.setItem('tj_debug',localStorage.getItem('tj_debug')==='1'?'0':'1'); }catch(x){} dbg(); }
+  });
+  setInterval(()=>{ if(dbgOn()) dbg(); },600);
   sync();
 })();
 
