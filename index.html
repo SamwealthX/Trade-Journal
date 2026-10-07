@@ -1243,6 +1243,7 @@ select.pk-native{display:none!important}
 .modal-overlay:not(.centered) .modal,#dailyEntryModal .modal{max-height:calc(var(--vvh,100vh)*.93)}
 /* bottom nav sits on top of the keyboard in Telegram/iOS: hide it only while the viewport really is keyboard-sized */
 body.kb-open .nav,body.kb-open .nav-collapsed-btn{opacity:0;visibility:hidden;pointer-events:none}
+body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the space reserved for it */
 #kbDebug{position:fixed;left:4px;top:4px;z-index:99999;max-width:62vw;padding:6px 8px;background:rgba(0,0,0,.82);color:#7CFFB2;font:10px/1.35 monospace;border-radius:6px;pointer-events:none;white-space:pre}
 /* no stray scrollbars: popover lists and horizontal chip rows */
 .pk-list{scrollbar-width:none}
@@ -3210,6 +3211,7 @@ function applyTheme(mode, save = true){
   if(activeTab==='Stats') renderStats();
   if(save) CS.set('theme', mode);
   const themeSelect=document.getElementById('settingsTheme');if(themeSelect)themeSelect.value=mode;
+  if(typeof syncSettingsSeg==='function')syncSettingsSeg();   // keep the Settings Dark/Light toggle in step with the header button
 }
 
 function toggleTheme(){
