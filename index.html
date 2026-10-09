@@ -1294,6 +1294,12 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
 .pf-payfoot b{font-weight:700;color:var(--text)}.pf-payfoot b.positive{color:var(--green)}
 .pf-payfoot .btn-sm svg{width:13px;height:13px;margin-right:4px;vertical-align:-2px}
 .am .pk-item svg{width:16px;height:16px;flex-shrink:0}
+
+.st-seg.full{display:flex;width:100%}.st-seg.full button{flex:1}
+.ac-card.dim{opacity:.68}
+.ac-group{display:flex;align-items:center;gap:8px;padding:12px 14px;border:1px dashed var(--border2);border-radius:var(--radius);font-size:13px;color:var(--text2);margin:4px 0 10px;cursor:pointer;font-variant-numeric:tabular-nums}
+.ac-group b{font-weight:700;color:var(--text)}.ac-group .sp{flex:1}
+.ac-chev{display:inline-flex;transition:transform .15s}.ac-chev.open{transform:rotate(90deg)}.ac-chev svg{width:15px;height:15px}
 </style>
 </head>
 <body>
@@ -2123,6 +2129,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
       <div class="form-group">
         <label class="form-label">Risk Amount ($)</label>
         <input class="form-input" id="fRisk" type="number" step="any" placeholder="e.g. 100" oninput="autoCalc()"/>
+        <div id="fRiskHint" style="display:none;font-size:10.5px;color:var(--text3);margin-top:4px"></div>
       </div>
     </div>
     <div class="form-row">
@@ -2368,7 +2375,29 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
     </div>
     <div class="form-group">
       <label class="form-label">Starting Balance ($)</label>
-      <input class="form-input" id="acctBal" type="number" step="any" placeholder="e.g. 10000"/>
+      <input class="form-input" id="acctBal" type="number" step="any" placeholder="e.g. 10000" oninput="updateRiskPreview()"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Account Type</label>
+      <select class="form-select" id="acctType"><option value="live">Live</option><option value="demo">Demo</option><option value="prop">Prop</option></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Broker / Platform <span style="opacity:.6;font-weight:500;text-transform:none;letter-spacing:0">(optional)</span></label>
+      <input class="form-input" id="acctBroker" placeholder="e.g. Exness, MT5, cTrader"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Default Risk Per Trade <span style="opacity:.6;font-weight:500;text-transform:none;letter-spacing:0">(optional)</span></label>
+      <div class="st-seg full" data-for="acctRiskMode" style="margin-bottom:8px">
+        <button type="button" data-v="pct" onclick="stSeg('acctRiskMode','pct')">% of balance</button>
+        <button type="button" data-v="fixed" onclick="stSeg('acctRiskMode','fixed')">Fixed amount</button>
+      </div>
+      <select id="acctRiskMode" hidden onchange="updateRiskPreview()"><option value="pct">pct</option><option value="fixed">fixed</option></select>
+      <input class="form-input" id="acctRiskVal" type="number" step="any" min="0" placeholder="e.g. 0.5" oninput="updateRiskPreview()"/>
+      <div id="acctRiskPreview" style="font-size:11.5px;color:var(--text3);margin-top:6px;line-height:1.4"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes <span style="opacity:.6;font-weight:500;text-transform:none;letter-spacing:0">(optional)</span></label>
+      <textarea class="form-input" id="acctNotes" rows="2" placeholder="Anything worth remembering about this account"></textarea>
     </div>
     <div style="display:flex;gap:10px;margin-top:4px">
       <button class="btn btn-primary" onclick="saveAccount()" style="flex:2">Save Account</button>
@@ -5851,12 +5880,12 @@ function renderSwitchAcctList(){
   const allActive = activeAcctFilter==='all';
   let html = `<div class="switch-acct-row${allActive?' active':''}" onclick="selectSwitchAccount('all',this)">`
     + `<div class="acct-header-icon">ALL</div>`
-    + `<div class="switch-acct-mid"><div class="switch-acct-name">All Accounts</div><div class="switch-acct-sub">${accounts.length} account${accounts.length!==1?'s':''}</div></div>`
+    + `<div class="switch-acct-mid"><div class="switch-acct-name">All Accounts</div><div class="switch-acct-sub">${activeAccounts().length} account${activeAccounts().length!==1?'s':''}</div></div>`
     + `</div>`;
-  html += accounts.map(a=>{
+  html += activeAccounts().map(a=>{
     const at = trades.filter(t=>t.accountId===a.id);
     const ap = at.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
-    const bal = a.balance + ap;
+    const bal = acctBalance(a);
     const active = activeAcctFilter===a.id;
     const initials = a.name.trim().slice(0,2).toUpperCase();
     return `<div class="switch-swipe-wrap">`
@@ -5865,7 +5894,7 @@ function renderSwitchAcctList(){
       +   `ontouchstart="_swipeStart(event,this)" ontouchmove="_swipeMove(event,this)" ontouchend="_swipeEnd(event,this)" ontouchcancel="_swipeEnd(event,this)">`
       +   `<div class="acct-header-icon">${escapeHtml(initials)}</div>`
       +   `<div class="switch-acct-mid"><div class="switch-acct-name">${escapeHtml(a.name)}</div><div class="switch-acct-sub">${accountSyncLabel()}</div></div>`
-      +   `<div class="switch-acct-right"><div class="switch-acct-bal">$${bal.toFixed(2)}</div><div class="switch-acct-pnl ${ap>=0?'positive':'negative'}">${ap>=0?'+':''}$${Math.abs(ap).toFixed(2)}</div></div>`
+      +   `<div class="switch-acct-right"><div class="switch-acct-bal">${fmtMoney(bal)}</div><div class="switch-acct-pnl ${ap>=0?'positive':'negative'}">${fmtMoney(ap,{plus:true})}</div></div>`
       + `</div></div>`;
   }).join('');
   list.innerHTML = html;
@@ -6001,15 +6030,15 @@ function renderHeader(){
   const current = activeAcctFilter==='all' ? null : accounts.find(a=>a.id===activeAcctFilter);
   const balEl=document.getElementById('acctHeaderBalanceVal'), pnlEl=document.getElementById('acctHeaderPnl');
   if(balEl && pnlEl){
-    const bal = (current ? current.balance : accounts.reduce((sum,a)=>sum+(Number(a.balance)||0),0)) + total;
-    const newBalText = (bal<0?'-':'')+'$'+Math.abs(bal).toFixed(2);
+    const bal = current ? acctBalance(current) : activeAccounts().reduce((sum,a)=>sum+acctBalance(a),0);   // includes deposits/withdrawals/payouts
+    const newBalText = fmtMoney(bal);
     const newBalClass = 'val '+(bal>=0?'positive':'negative');
     if(balEl.textContent!==newBalText){
       balEl.textContent=newBalText; balEl.className=newBalClass;
       balEl.classList.add('pnl-flash');
       balEl.addEventListener('animationend',()=>balEl.classList.remove('pnl-flash'),{once:true});
     } else { balEl.className=newBalClass; }
-    pnlEl.textContent=(total>=0?'+':'-')+'$'+Math.abs(total).toFixed(2);
+    pnlEl.textContent=fmtMoney(total,{plus:true});
     pnlEl.className='acct-header-pnl '+(total>=0?'positive':'negative');
   }
   // Only update the subtitle on the Journal tab — other tabs own their subtitle
@@ -6995,6 +7024,7 @@ function openAddTrade(prefill){
   // selections in, so that data isn't hidden behind a tap.
   const hasChecklistData = CL_KEYS.some(k=>clSelections[k] && clSelections[k].length);
   if(hasChecklistData) expandClChecklist(); else collapseClChecklist();
+  delete document.getElementById('fRisk').dataset.auto; applyDefaultRisk();
   document.getElementById('tradeModal').classList.add('open');
   updateNavVisibility();
   setTimeout(()=>document.getElementById('fPair').focus(),120);
@@ -7067,8 +7097,26 @@ function openEditTrade(t){
   updateNavVisibility();
 }
 
+function activeAccounts(){ return accounts.filter(a=>a.status!=='archived'); }
+function selectableAccounts(keepId){ return accounts.filter(a=>a.status!=='archived'||a.id===keepId); }
+function defaultRiskFor(a){
+  if(!a||!(a.riskValue>0)) return null;
+  return a.riskMode==='fixed' ? a.riskValue : Math.round(acctBalance(a)*a.riskValue)/100;
+}
+// New trades only: prefill Risk Amount from the chosen account's default risk, unless the user already typed one.
+function applyDefaultRisk(){
+  if(editingTradeId) return;
+  const el=document.getElementById('fRisk'), hint=document.getElementById('fRiskHint'); if(!el)return;
+  if(el.value!=='' && el.dataset.auto!=='1') return;
+  const a=accounts.find(x=>x.id===document.getElementById('fAccount').value), r=defaultRiskFor(a);
+  if(r==null){ if(el.dataset.auto==='1'){ el.value=''; delete el.dataset.auto; autoCalc(); } if(hint)hint.style.display='none'; return; }
+  el.value=String(r); el.dataset.auto='1'; autoCalc();
+  if(hint){ hint.textContent='Default risk: '+(a.riskMode==='fixed'?fmtMoney(a.riskValue):(+a.riskValue)+'% of balance')+' · '+a.name; hint.style.display='block'; }
+}
+document.addEventListener('change',e=>{ if(e.target&&e.target.id==='fAccount') applyDefaultRisk(); });
+document.addEventListener('input',e=>{ if(e.target&&e.target.id==='fRisk'){ delete e.target.dataset.auto; const h=document.getElementById('fRiskHint'); if(h)h.style.display='none'; } });
 function populateAccountDropdown(selectedId){
-  document.getElementById('fAccount').innerHTML=accounts.map(a=>`<option value="${a.id}"${selectedId===a.id?' selected':''}>${escapeHtml(a.name)}</option>`).join('');
+  document.getElementById('fAccount').innerHTML=selectableAccounts(selectedId).map(a=>`<option value="${a.id}"${selectedId===a.id?' selected':''}>${escapeHtml(a.name)}</option>`).join('');
 }
 
 function clearTradeForm(){
@@ -7850,7 +7898,7 @@ function openAddPreTrade(){
   clTarget='pretrade';
   document.getElementById('preTradeModalTitle').textContent='New Setup';
   document.getElementById('preTradeDeleteBtn').style.display='none';
-  document.getElementById('ptAccount').innerHTML=accounts.map(a=>`<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
+  document.getElementById('ptAccount').innerHTML=activeAccounts().map(a=>`<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
   document.getElementById('ptPair').value='';
   document.getElementById('ptReasoning').value='';
   document.getElementById('ptEntry').value='';
@@ -7875,7 +7923,7 @@ function openEditPreTrade(id){
   clTarget='pretrade';
   document.getElementById('preTradeModalTitle').textContent='Edit Setup';
   document.getElementById('preTradeDeleteBtn').style.display='block';
-  document.getElementById('ptAccount').innerHTML=accounts.map(a=>`<option value="${a.id}"${pt.accountId===a.id?' selected':''}>${escapeHtml(a.name)}</option>`).join('');
+  document.getElementById('ptAccount').innerHTML=selectableAccounts(pt.accountId).map(a=>`<option value="${a.id}"${pt.accountId===a.id?' selected':''}>${escapeHtml(a.name)}</option>`).join('');
   document.getElementById('ptPair').value=pt.pair||'';
   document.getElementById('ptReasoning').value=pt.reasoning||'';
   document.getElementById('ptEntry').value=pt.plannedEntry||'';
@@ -8515,10 +8563,36 @@ function renderLibrary(){
 }
 
 // ─── Accounts ───
+const RISK_PLACEHOLDER={pct:'e.g. 0.5',fixed:'e.g. 100'};
+function _fillAcctExtras(a){
+  document.getElementById('acctType').value=(a&&a.type)||'live';
+  document.getElementById('acctBroker').value=(a&&a.broker)||'';
+  document.getElementById('acctNotes').value=(a&&a.notes)||'';
+  document.getElementById('acctRiskMode').value=(a&&a.riskMode)||'pct';
+  document.getElementById('acctRiskVal').value=(a&&a.riskValue>0)?a.riskValue:'';
+  syncSettingsSeg(); updateRiskPreview();
+}
+function _readAcctExtras(){
+  const mode=document.getElementById('acctRiskMode').value||'pct'; let val=parseFloat(document.getElementById('acctRiskVal').value);
+  if(!(val>0)) val=0;
+  if(mode==='pct'&&val>100){ showToast('Risk can’t be more than 100% of the balance','error'); return null; }
+  return {type:document.getElementById('acctType').value||'live', broker:document.getElementById('acctBroker').value.trim(), notes:document.getElementById('acctNotes').value.trim(), riskMode:mode, riskValue:val};
+}
+function updateRiskPreview(){
+  const mode=document.getElementById('acctRiskMode').value||'pct', val=parseFloat(document.getElementById('acctRiskVal').value), out=document.getElementById('acctRiskPreview');
+  document.getElementById('acctRiskVal').placeholder=RISK_PLACEHOLDER[mode];
+  if(!(val>0)){ out.textContent='Prefills Risk Amount on new trades. Leave empty to skip.'; return; }
+  if(mode==='fixed'){ out.textContent='= '+fmtMoney(val)+' per trade'; return; }
+  if(val>100){ out.textContent='Percent can’t be more than 100.'; return; }
+  const a=editingAcctId?accounts.find(x=>x.id===editingAcctId):null;
+  const bal=a?acctBalance(a):(parseFloat(document.getElementById('acctBal').value)||0);
+  out.textContent='= '+fmtMoney(bal*val/100)+' per trade at the '+(a?'current':'starting')+' balance ('+fmtMoney(bal)+')';
+}
 function openAddAccount(){
   editingAcctId=null;
   document.getElementById('acctModalTitle').textContent='New Account';
   document.getElementById('acctName').value=''; document.getElementById('acctBal').value='';
+  _fillAcctExtras(null);
   document.getElementById('acctDeleteBtn').style.display='none';
   document.getElementById('acctModal').classList.add('open');
   updateNavVisibility();
@@ -8526,8 +8600,9 @@ function openAddAccount(){
 function saveAccount(){
   const name=document.getElementById('acctName').value.trim(), bal=parseFloat(document.getElementById('acctBal').value)||0;
   if(!name){showToast('Enter account name','error');return;}
-  if(editingAcctId){ const idx=accounts.findIndex(a=>a.id===editingAcctId); if(idx!==-1){accounts[idx].name=name;accounts[idx].balance=bal;} }
-  else accounts.push({id:genId(),name,balance:bal,ledger:[]});
+  const extras=_readAcctExtras(); if(!extras)return;
+  if(editingAcctId){ const idx=accounts.findIndex(a=>a.id===editingAcctId); if(idx!==-1){accounts[idx].name=name;accounts[idx].balance=bal;Object.assign(accounts[idx],extras);} }
+  else accounts.push({id:genId(),name,balance:bal,ledger:[],...extras});
   saveAccounts(); document.getElementById('acctModal').classList.remove('open');
   updateNavVisibility();
   renderAll(); renderAcctList(); renderSettings(); showToast(editingAcctId?'Account updated ✓':'Account added ✓');
@@ -8535,16 +8610,16 @@ function saveAccount(){
 function deleteAccount(){
   if(!editingAcctId)return;
   const id=editingAcctId, acct=accounts.find(a=>a.id===id); if(!acct)return;
-  const remaining=accounts.filter(a=>a.id!==id), n=trades.filter(t=>t.accountId===id).length;
+  const remaining=accounts.filter(a=>a.id!==id), n=trades.filter(t=>t.accountId===id).length, tgt=remaining.find(a=>a.status!=='archived')||remaining[0];
   const firm=(typeof _linkedFirm==='function')?_linkedFirm(id):null;
   let msg='Delete "'+acct.name+'"?';
-  if(n) msg+=' Its '+n+' trade'+(n!==1?'s':'')+' will be moved to "'+(remaining[0]?remaining[0].name:'')+'".';
+  if(n) msg+=' Its '+n+' trade'+(n!==1?'s':'')+' will be moved to "'+(tgt?tgt.name:'')+'".';
   if(firm) msg+=' The linked prop firm "'+firm.name+'" will no longer be linked to it.';
   showConfirm('Delete account?',msg,()=>{ _deleteAccountNow(id); });
 }
 function _deleteAccountNow(id){
   accounts=accounts.filter(a=>a.id!==id);
-  trades=trades.map(t=>t.accountId===id?{...t,accountId:accounts[0]?.id||''}:t); tradesVersion++;
+  trades=trades.map(t=>t.accountId===id?{...t,accountId:(activeAccounts()[0]||accounts[0])?.id||''}:t); tradesVersion++;
   if(activeAcctFilter===id){
     activeAcctFilter='all';
     CS.set('active_account', 'all'); // keep CloudStorage in sync so next session doesn't restore the deleted account id
@@ -8561,32 +8636,65 @@ function acctBalanceNow(a){
   const led=(typeof accountLedgerEntries==='function'?accountLedgerEntries(a.id):[]).reduce((x,e)=>x+(e.type==='deposit'?1:-1)*Math.abs(parseFloat(e.amount)||0),0);
   return {pl, bal:(parseFloat(a.balance)||0)+pl+led};
 }
+function acctBalance(a){ return acctBalanceNow(a).bal; }   // the one definition of an account's current balance
 function openAcctMenu(btn,id,ev){
-  openActionMenu(btn,[
-    {label:'Edit account',icon:_I.edit,fn:()=>editAccount(id)},
-    {label:'Deposit / Withdraw',icon:_I.ledger,fn:()=>openLedgerModal(id)}
-  ],ev);
+  const a=accounts.find(x=>x.id===id); if(!a)return;
+  const items=[{label:'Edit account',icon:_I.edit,fn:()=>editAccount(id)}];
+  if(a.status==='archived') items.push({label:'Restore account',icon:_I.restore,fn:()=>restoreAccount(id)});
+  else{
+    items.push({label:'Deposit / Withdraw',icon:_I.ledger,fn:()=>openLedgerModal(id)});
+    if(activeAccounts().length>1) items.push({label:'Archive account',icon:_I.archive,fn:()=>archiveAccount(id)});
+  }
+  openActionMenu(btn,items,ev);
+}
+function archiveAccount(id){
+  const a=accounts.find(x=>x.id===id); if(!a)return;
+  if(activeAccounts().length<=1){ showToast('Keep at least one active account','error'); return; }
+  showConfirm('Archive account?','"'+a.name+'" will be hidden from account lists and totals. Its trades and history are kept, and you can restore it any time.',()=>{
+    a.status='archived';
+    if(activeAcctFilter===id){ activeAcctFilter='all'; CS.set('active_account','all'); }
+    saveAccounts(); renderAll(); renderAcctList(); showToast('Account archived');
+  });
+}
+function restoreAccount(id){
+  const a=accounts.find(x=>x.id===id); if(!a)return;
+  a.status='active'; saveAccounts(); renderAll(); renderAcctList(); showToast('Account restored ✓');
+}
+let _archOpen=false;
+function toggleArchivedGroup(){ _archOpen=!_archOpen; renderAcctList(); }
+function _acctCard(r,archived){
+  const {a,pl,bal,n}=r, start=parseFloat(a.balance)||0, pct=start>0?pl/start*100:null;
+  const firm=(typeof _linkedFirm==='function')?_linkedFirm(a.id):null;
+  let chip='';
+  if(archived) chip='<span class="ac-chip">Archived</span>';
+  else if(firm) chip='<span class="ac-chip'+(firm.phase==='funded'?' ok':'')+'">Prop · '+escapeHtml(PROP_PHASE_LABEL[firm.phase||'challenge']||'')+'</span>';
+  else if(a.type==='demo') chip='<span class="ac-chip">Demo</span>';
+  else if(a.type==='prop') chip='<span class="ac-chip">Prop</span>';
+  const plTxt=fmtMoney(pl,{plus:true})+(pct!==null?' · '+(pct>=0?'+':'')+pct.toFixed(2)+'%':'');
+  const risk=a.riskValue>0?' · Risk '+(a.riskMode==='fixed'?fmtMoney(a.riskValue,{dec:0}):(+a.riskValue)+'%'):'';
+  return '<div class="ac-card'+(archived?' dim':'')+'" onclick="editAccount(\''+a.id+'\')">'
+    +'<div class="ac-top"><span class="ac-name">'+escapeHtml(a.name)+'</span>'+chip+'<button class="ac-menu" aria-label="Account actions" onclick="openAcctMenu(this,\''+a.id+'\',event)">'+_I.dots+'</button></div>'
+    +'<div class="ac-bal"><b>'+fmtMoney(bal)+'</b><span class="ac-pl '+(pl>=0?'pos':'neg')+'">'+plTxt+'</span></div>'
+    +'<div class="ac-q">'+(a.broker?escapeHtml(a.broker)+' · ':'')+'Start '+fmtMoney(start,{dec:0})+' · '+n+' trade'+(n!==1?'s':'')+risk+'</div></div>';
 }
 function renderAcctList(){
   const list=document.getElementById('acctList'), sum=document.getElementById('acctSummary');
   if(!list) return;
   if(!accounts.length){ if(sum)sum.style.display='none'; list.innerHTML='<div class="empty" style="padding:24px 0"><div class="empty-title">No accounts</div></div>';return; }
-  const rows=accounts.map(a=>({a,...acctBalanceNow(a),n:trades.filter(t=>t.accountId===a.id).length}));
+  const all=accounts.map(a=>({a,...acctBalanceNow(a),n:trades.filter(t=>t.accountId===a.id).length}));
+  const act=all.filter(r=>r.a.status!=='archived'), arch=all.filter(r=>r.a.status==='archived');
   if(sum){
-    const tb=rows.reduce((x,r)=>x+r.bal,0), tp=rows.reduce((x,r)=>x+r.pl,0);
+    const tb=act.reduce((x,r)=>x+r.bal,0), tp=act.reduce((x,r)=>x+r.pl,0);
     sum.style.display='';
-    sum.innerHTML='<div><b>'+fmtMoney(tb)+'</b><span>Total balance</span></div><div><b class="'+(tp>0?'positive':tp<0?'negative':'')+'">'+fmtMoney(tp,{plus:true})+'</b><span>Total P&amp;L</span></div><div><b>'+accounts.length+'</b><span>Accounts</span></div>';
+    sum.innerHTML='<div><b>'+fmtMoney(tb)+'</b><span>Total balance</span></div><div><b class="'+(tp>0?'positive':tp<0?'negative':'')+'">'+fmtMoney(tp,{plus:true})+'</b><span>Total P&amp;L</span></div><div><b>'+act.length+'</b><span>'+(arch.length?'Active':'Accounts')+'</span></div>';
   }
-  list.innerHTML=rows.map(({a,pl,bal,n})=>{
-    const start=parseFloat(a.balance)||0, pct=start>0?pl/start*100:null;
-    const firm=(typeof _linkedFirm==='function')?_linkedFirm(a.id):null;
-    const chip=firm?'<span class="ac-chip'+(firm.phase==='funded'?' ok':'')+'">Prop · '+escapeHtml(PROP_PHASE_LABEL[firm.phase||'challenge']||'')+'</span>':'';
-    const plTxt=fmtMoney(pl,{plus:true})+(pct!==null?' · '+(pct>=0?'+':'')+pct.toFixed(2)+'%':'');
-    return '<div class="ac-card" onclick="editAccount(\''+a.id+'\')">'
-      +'<div class="ac-top"><span class="ac-name">'+escapeHtml(a.name)+'</span>'+chip+'<button class="ac-menu" aria-label="Account actions" onclick="openAcctMenu(this,\''+a.id+'\',event)">'+_I.dots+'</button></div>'
-      +'<div class="ac-bal"><b>'+fmtMoney(bal)+'</b><span class="ac-pl '+(pl>=0?'pos':'neg')+'">'+plTxt+'</span></div>'
-      +'<div class="ac-q">Start '+fmtMoney(start,{dec:0})+' · '+n+' trade'+(n!==1?'s':'')+'</div></div>';
-  }).join('');
+  let html=act.map(r=>_acctCard(r,false)).join('');
+  if(arch.length){
+    const ap=arch.reduce((x,r)=>x+r.pl,0);
+    html+='<div class="ac-group" onclick="toggleArchivedGroup()"><span class="ac-chev'+(_archOpen?' open':'')+'">'+_I.chev+'</span><b>Archived · '+arch.length+'</b><span class="sp"></span><span class="'+(ap>=0?'positive':'negative')+'">'+fmtMoney(ap,{plus:true,dec:0})+'</span></div>';
+    if(_archOpen) html+=arch.map(r=>_acctCard(r,true)).join('');
+  }
+  list.innerHTML=html;
 }
 function settingsAutoBackup(){return localStorage.getItem('tj_autoBackup')!=='0'}
 function setSettingsAutoBackup(enabled){localStorage.setItem('tj_autoBackup',enabled?'1':'0');showToast(enabled?'Local backup on':'Local backup off');renderSettings()}
@@ -8626,6 +8734,7 @@ function editAccount(id){
   editingAcctId=id; const a=accounts.find(x=>x.id===id); if(!a)return;
   document.getElementById('acctModalTitle').textContent='Edit Account';
   document.getElementById('acctName').value=a.name; document.getElementById('acctBal').value=a.balance;
+  _fillAcctExtras(a);
   document.getElementById('acctDeleteBtn').style.display=accounts.length>1?'block':'none';
   document.getElementById('acctModal').classList.add('open');
   updateNavVisibility();
@@ -11084,6 +11193,9 @@ const _I={
   dots:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>',
   alert:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
   check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  restore:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>',
+  archive:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>',
+  chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>',
   chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>'
 };
 
@@ -11330,7 +11442,7 @@ function openQuickAdd(prefillDate){
   document.getElementById('qPnl').value = '';
   document.getElementById('qPnl').style.color = '';
   // Populate account dropdown
-  document.getElementById('qAccount').innerHTML = accounts.map(a=>`<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
+  document.getElementById('qAccount').innerHTML = activeAccounts().map(a=>`<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
   // Pre-select current account filter if specific
   if(activeAcctFilter !== 'all'){
     document.getElementById('qAccount').value = activeAcctFilter;
@@ -11532,7 +11644,7 @@ function importCSV(input){
       let added=0, skipped=0;
 
       // Use the currently selected account as default for imported rows
-      const defaultAcctId = activeAcctFilter!=='all' ? activeAcctFilter : (accounts[0]?.id||'');
+      const defaultAcctId = activeAcctFilter!=='all' ? activeAcctFilter : ((activeAccounts()[0]||accounts[0])?.id||'');
 
       const get=(row,key,fallback='')=>colIdx[key]!==undefined ? (row[colIdx[key]]||fallback) : fallback;
 
@@ -11853,7 +11965,7 @@ function onConsistencyTypeChange(){
 function populateLinkedAccountDropdown(selectedId){
   const sel = document.getElementById('pLinkedAccount');
   sel.innerHTML = '<option value="">\u2014 No link (manual entry) \u2014</option>'
-    + accounts.map(a=>`<option value="${a.id}"${a.id===selectedId?' selected':''}>${escapeHtml(a.name)}</option>`).join('');
+    + selectableAccounts(selectedId).map(a=>`<option value="${a.id}"${a.id===selectedId?' selected':''}>${escapeHtml(a.name)}</option>`).join('');
   _syncLinkedAccountUI(selectedId);
 }
 
