@@ -1963,7 +1963,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Amount ($)</label>
+        <label class="form-label" id="ledgerAmtLbl">Amount ($)</label>
         <input class="form-input" id="ledgerAmount" type="number" step="any" placeholder="e.g. 2000"/>
       </div>
       <div class="form-group">
@@ -2127,7 +2127,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
         <input class="form-input" id="fSize" type="number" step="any" placeholder="0.00" oninput="autoCalc()"/>
       </div>
       <div class="form-group">
-        <label class="form-label">Risk Amount ($)</label>
+        <label class="form-label" id="fRiskLbl">Risk Amount ($)</label>
         <input class="form-input" id="fRisk" type="number" step="any" placeholder="e.g. 100" oninput="autoCalc()"/>
         <div id="fRiskHint" style="display:none;font-size:10.5px;color:var(--text3);margin-top:4px"></div>
       </div>
@@ -2144,7 +2144,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Actual P&L ($)</label>
+        <label class="form-label" id="fPnlLbl">Actual P&L ($)</label>
         <input class="form-input" id="fPnl" type="number" step="any" placeholder="Auto-calculated" oninput="manualPnl()"/>
       </div>
       <div class="form-group">
@@ -2373,8 +2373,23 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
       <label class="form-label">Account Name</label>
       <input class="form-input" id="acctName" placeholder="e.g. Main Account, Prop Firm, Demo"/>
     </div>
+    <div class="form-group" id="acctCurGroup" style="display:none">
+      <label class="form-label">Currency</label>
+      <select class="form-select" id="acctCurrency" onchange="onAcctCurChange()">
+        <option value="USD">USD · US Dollar</option><option value="EUR">EUR · Euro</option><option value="GBP">GBP · British Pound</option><option value="JPY">JPY · Japanese Yen</option><option value="AUD">AUD · Australian Dollar</option><option value="CAD">CAD · Canadian Dollar</option><option value="CHF">CHF · Swiss Franc</option><option value="NZD">NZD · New Zealand Dollar</option><option value="NGN">NGN · Nigerian Naira</option><option value="ZAR">ZAR · South African Rand</option><option value="USDT">USDT · Tether</option><option value="USDC">USDC · USD Coin</option><option value="CUSTOM">Custom…</option>
+      </select>
+      <div id="acctCurCustom" style="display:none;margin-top:8px">
+        <input class="form-input" id="acctCurSym" maxlength="5" placeholder="Symbol or code, up to 5 characters (e.g. XAU)" oninput="onAcctCurChange()"/>
+        <div class="st-seg full" data-for="acctCurPos" style="margin-top:8px">
+          <button type="button" data-v="prefix" onclick="stSeg('acctCurPos','prefix')">Before amount</button>
+          <button type="button" data-v="suffix" onclick="stSeg('acctCurPos','suffix')">After amount</button>
+        </div>
+        <select id="acctCurPos" hidden onchange="onAcctCurChange()"><option value="prefix">prefix</option><option value="suffix">suffix</option></select>
+      </div>
+      <div style="font-size:11.5px;color:var(--text3);margin-top:6px;line-height:1.4">Trades keep the P&amp;L you typed — nothing is converted.</div>
+    </div>
     <div class="form-group">
-      <label class="form-label">Starting Balance ($)</label>
+      <label class="form-label" id="acctBalLbl">Starting Balance ($)</label>
       <input class="form-input" id="acctBal" type="number" step="any" placeholder="e.g. 10000" oninput="updateRiskPreview()"/>
     </div>
     <div class="form-group">
@@ -2660,7 +2675,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
   <div class="modal">
         <div class="modal-title">Monthly Goal</div>
     <div class="form-group">
-      <label class="form-label">Target P&L ($)</label>
+      <label class="form-label" id="goalInputLbl">Target P&L ($)</label>
       <input class="form-input" id="goalInput" type="number" step="any" placeholder="e.g. 5000"/>
     </div>
     <div style="display:flex;gap:10px">
@@ -2869,7 +2884,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Actual P&L ($)</label>
+        <label class="form-label" id="qPnlLbl">Actual P&L ($)</label>
         <input class="form-input" id="qPnl" type="number" step="any" placeholder="e.g. 120 or -50" oninput="colorQPnl()"/>
       </div>
       <div class="form-group">
@@ -2918,6 +2933,109 @@ const DEFAULT_CHECKLIST = {
 };
 
 // ─── State ───
+// ─── Currency (Phase 2b, batch 2b-1) ───
+// CURRENCY_UI=false keeps the whole feature inert: no picker, every account reads as USD, output identical to before.
+// Flip to true only after batches 2b-2..2b-4 ship (the rest of the app still shows "$" everywhere else).
+const CURRENCY_UI=false;
+const CUR_USD={code:'USD',sym:'$',pos:'prefix',dec:2};
+// AUD/CAD/NZD use the narrow "$" on purpose (most users read their own balance as "$"); the Accounts tab and the
+// Switch Account sheet add a code chip for any non-USD account. To disambiguate later, change the three symbols here to 'A$','CA$','NZ$'.
+const CURRENCIES={
+  USD:CUR_USD,
+  EUR:{code:'EUR',sym:'€',pos:'prefix',dec:2},
+  GBP:{code:'GBP',sym:'£',pos:'prefix',dec:2},
+  JPY:{code:'JPY',sym:'¥',pos:'prefix',dec:0},
+  AUD:{code:'AUD',sym:'$',pos:'prefix',dec:2},
+  CAD:{code:'CAD',sym:'$',pos:'prefix',dec:2},
+  CHF:{code:'CHF',sym:'CHF',pos:'prefix',dec:2},
+  NZD:{code:'NZD',sym:'$',pos:'prefix',dec:2},
+  NGN:{code:'NGN',sym:'₦',pos:'prefix',dec:2},
+  ZAR:{code:'ZAR',sym:'R',pos:'prefix',dec:2},
+  USDT:{code:'USDT',sym:'USDT',pos:'suffix',dec:2},
+  USDC:{code:'USDC',sym:'USDC',pos:'suffix',dec:2}
+};
+function _curFromAcct(a){
+  if(!CURRENCY_UI||!a) return CUR_USD;
+  const c=a.currency;
+  if(c==='CUSTOM'){ const s=String(a.currencySymbol||'').trim().slice(0,5); return {code:'CUSTOM',sym:s||'¤',pos:a.currencyPos==='suffix'?'suffix':'prefix',dec:2}; }
+  return (typeof c==='string'&&Object.prototype.hasOwnProperty.call(CURRENCIES,c))?CURRENCIES[c]:CUR_USD;   // missing or unknown code = USD
+}
+// curOf(account | accountId | already-resolved currency) -> {code,sym,pos,dec}
+function curOf(x){
+  if(!CURRENCY_UI||x==null||x==='') return CUR_USD;
+  if(typeof x==='object') return (x.code&&x.sym&&x.dec!=null)?x:_curFromAcct(x);
+  const a=accounts.find(z=>z.id===x);
+  return a?_curFromAcct(a):CUR_USD;
+}
+function _curKey(c){ return c.code==='CUSTOM'?'CUSTOM|'+c.sym+'|'+c.pos:c.code; }
+// One shared currency for a list of resolved currencies, or null when they differ (never sum across currencies).
+function _uniformCur(list){
+  if(!list.length) return CUR_USD;
+  const k=_curKey(list[0]);
+  for(let i=1;i<list.length;i++) if(_curKey(list[i])!==k) return null;
+  return list[0];
+}
+function acctsCur(accts){ return _uniformCur(accts.map(curOf)); }
+function _curWrap(num,c){ return c.pos==='suffix'?num+'\u00a0'+c.sym:c.sym+(/[A-Za-z]{2,}$/.test(c.sym)?'\u00a0':'')+num; }
+function _curTag(a){ const c=curOf(a); return c.code==='USD'?'':(c.code==='CUSTOM'?c.sym:c.code); }
+function _withCur(base,a){ const t=_curTag(a); return t?(base?base+' · ':'')+t:base; }
+// The firm's currency is its linked account's (same lookup getLinkedTrades uses).
+function _firmCur(f){
+  if(!CURRENCY_UI||!f) return CUR_USD;
+  let a=f.linkedAccount?accounts.find(x=>x.id===f.linkedAccount):null;
+  if(!a) a=accounts.find(x=>x.name===f.name)||null;
+  return curOf(a);
+}
+// ─── Currency (batch 2b-2): context-aware P&L formatting ───
+// ctx for fmtPnl / _ctxCur = trade | account | accountId | currency code | resolved currency | array of any of these.
+// An array that spans two currencies resolves to CUR_MIXED (never summed, never labelled with a wrong symbol).
+const CUR_MIXED={code:'MIXED',sym:'',pos:'prefix',dec:2,mixed:true};
+function _scopeCurFilter(){   // currency of the current account filter ("All" = shared currency of the active accounts, else mixed)
+  if(!CURRENCY_UI) return CUR_USD;
+  if(activeAcctFilter!=='all') return curOf(activeAcctFilter);
+  return acctsCur(activeAccounts())||CUR_MIXED;
+}
+function _ctxCur(x){
+  if(!CURRENCY_UI||x==null||x==='') return CUR_USD;
+  if(x===CUR_MIXED) return CUR_MIXED;
+  if(Array.isArray(x)){
+    if(!x.length) return _scopeCurFilter();
+    let c0=null,k0=null,lastId;
+    for(let i=0;i<x.length;i++){
+      const e=x[i];
+      if(e&&typeof e==='object'&&e.accountId!==undefined&&e.accountId===lastId&&k0!==null) continue;   // same account as the previous trade
+      const c=_ctxCur(e); if(c.mixed) return CUR_MIXED;
+      const k=_curKey(c); if(k0===null){k0=k;c0=c;} else if(k!==k0) return CUR_MIXED;
+      lastId=(e&&typeof e==='object')?e.accountId:undefined;
+    }
+    return c0||CUR_USD;
+  }
+  if(typeof x==='object'){
+    if(x.code&&x.sym&&x.dec!=null) return x;                                   // already resolved
+    if(x.accountId!==undefined&&x.balance===undefined) return curOf(x.accountId);   // a trade
+    return _curFromAcct(x);                                                    // an account
+  }
+  if(typeof x==='string'){
+    const a=accounts.find(z=>z.id===x); if(a) return _curFromAcct(a);
+    if(Object.prototype.hasOwnProperty.call(CURRENCIES,x)) return CURRENCIES[x];
+  }
+  return CUR_USD;
+}
+function _mixedCtx(ctx){ return _ctxCur(ctx).mixed===true; }
+function _amtRaw(s,ctx){ return _curWrap(String(s),_ctxCur(ctx)); }   // symbol around an already-formatted/raw number string
+function _setCurLbl(id,base,ctx){ const el=document.getElementById(id); if(el){ const c=_ctxCur(ctx); el.textContent=c.mixed?base:base+' ('+c.sym+')'; } }
+// Whole-unit signed amount for tight cells (calendar days/weeks). USD: identical to the old `${sign}$${Math.abs(n).toFixed(0)}`.
+function fmtPnl0(v,ctx){ const n=Number(v)||0, c=ctx===undefined?CUR_USD:_ctxCur(ctx); if(c.mixed) return 'Mixed';
+  return (n>0?'+':n<0?'-':'')+_curWrap(Math.abs(n).toFixed(0),c); }
+// Balance in the old toLocaleString(undefined,…) style. USD: identical to '$'+n.toLocaleString(undefined,{2 dp}).
+function _fmtBalLoc(n,ctx){ const c=ctx===undefined?CUR_USD:_ctxCur(ctx); if(c.mixed) return 'Mixed'; const d=c===CUR_USD?2:c.dec;
+  return _curWrap(Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}),c); }
+// Always-signed amount (sign even at 0), for the P&L-bars footer. USD: identical to `${v>=0?'+':'-'}$${Math.abs(v).toFixed(2)}`.
+function fmtPnlSigned(v,ctx){ const n=Number(v)||0, c=ctx===undefined?CUR_USD:_ctxCur(ctx); if(c.mixed) return 'Mixed';
+  return (n>=0?'+':'-')+_curWrap(Math.abs(n).toFixed(c===CUR_USD?2:c.dec),c); }
+let _statsScope=[];   // trades behind the Stats tab right now; rows that carry no trades of their own use this for their currency
+function syncTradeFormCur(){ const a=document.getElementById('fAccount'), v=a?a.value:''; _setCurLbl('fRiskLbl','Risk Amount',v); _setCurLbl('fPnlLbl','Actual P&L',v); }
+function syncQuickCur(){ const a=document.getElementById('qAccount'); _setCurLbl('qPnlLbl','Actual P&L',a?a.value:''); }
 let trades = [], accounts = [], strategy = {}, edgeTags = [];
 // Pre-Trade (Priority 2): planned setups, separate from executed trades.
 // { id, accountId, status:'watching'|'taken'|'skipped', linkedTradeId,
@@ -5198,7 +5316,8 @@ function openLedgerModal(acctId){
   }
   const acct = _ledgerTarget ? accounts.find(a=>a.id===_ledgerTarget) : (activeAcctFilter==='all' ? accounts[0] : accounts.find(a=>a.id===activeAcctFilter));
   if(!acct){ showToast('Add an account first','error'); return; }
-  document.getElementById('ledgerAcctNote').textContent = 'For: '+acct.name;
+  document.getElementById('ledgerAcctNote').textContent = 'For: '+_withCur(acct.name,acct);
+  document.getElementById('ledgerAmtLbl').textContent = 'Amount ('+curOf(acct).sym+')';
   document.getElementById('ledgerAmount').value='';
   document.getElementById('ledgerNote').value='';
   document.getElementById('ledgerDate').value=new Date().toISOString().slice(0,10);
@@ -5229,7 +5348,7 @@ function deleteLedgerEntry(accountId,entryId){
 }
 function renderLedgerEntryList(accountId){
   const entries=accountLedgerEntries(accountId).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  const el=document.getElementById('ledgerEntryList');
+  const el=document.getElementById('ledgerEntryList'), cu=curOf(accountId);
   if(!entries.length){ el.innerHTML='<div style="color:var(--text3);font-size:13px;text-align:center;padding:8px 0">No entries yet</div>'; return; }
   el.innerHTML=entries.map(e=>{
     const sign=e.type==='deposit'?'+':'-';
@@ -5237,7 +5356,7 @@ function renderLedgerEntryList(accountId){
     const del = e.source==='prop'
       ? '<span style="font-size:10px;color:var(--text3)">from Payout Log</span>'
       : `<span style="color:var(--red);cursor:pointer;font-size:12px" onclick="deleteLedgerEntry('${accountId}','${e.id}')">Delete</span>`;
-    return `<div class="info-row"><span class="k">${escapeHtml(e.date)}${e.note?' · '+escapeHtml(e.note):''}</span><div style="display:flex;align-items:center;gap:10px"><span class="v" style="color:${color}">${sign}$${Math.abs(e.amount).toFixed(2)}</span>${del}</div></div>`;
+    return `<div class="info-row"><span class="k">${escapeHtml(e.date)}${e.note?' · '+escapeHtml(e.note):''}</span><div style="display:flex;align-items:center;gap:10px"><span class="v" style="color:${color}">${sign}${_curWrap(Math.abs(e.amount).toFixed(cu.dec),cu)}</span>${del}</div></div>`;
   }).join('');
 }
 
@@ -5893,8 +6012,8 @@ function renderSwitchAcctList(){
       + `<div class="switch-acct-row${active?' active':''}" onclick="selectSwitchAccount('${a.id}',this)" `
       +   `ontouchstart="_swipeStart(event,this)" ontouchmove="_swipeMove(event,this)" ontouchend="_swipeEnd(event,this)" ontouchcancel="_swipeEnd(event,this)">`
       +   `<div class="acct-header-icon">${escapeHtml(initials)}</div>`
-      +   `<div class="switch-acct-mid"><div class="switch-acct-name">${escapeHtml(a.name)}</div><div class="switch-acct-sub">${accountSyncLabel()}</div></div>`
-      +   `<div class="switch-acct-right"><div class="switch-acct-bal">${fmtMoney(bal)}</div><div class="switch-acct-pnl ${ap>=0?'positive':'negative'}">${fmtMoney(ap,{plus:true})}</div></div>`
+      +   `<div class="switch-acct-mid"><div class="switch-acct-name">${escapeHtml(a.name)}</div><div class="switch-acct-sub">${_withCur(accountSyncLabel(),a)}</div></div>`
+      +   `<div class="switch-acct-right"><div class="switch-acct-bal">${fmtMoney(bal,null,a)}</div><div class="switch-acct-pnl ${ap>=0?'positive':'negative'}">${fmtMoney(ap,{plus:true},a)}</div></div>`
       + `</div></div>`;
   }).join('');
   list.innerHTML = html;
@@ -6031,15 +6150,17 @@ function renderHeader(){
   const balEl=document.getElementById('acctHeaderBalanceVal'), pnlEl=document.getElementById('acctHeaderPnl');
   if(balEl && pnlEl){
     const bal = current ? acctBalance(current) : activeAccounts().reduce((sum,a)=>sum+acctBalance(a),0);   // includes deposits/withdrawals/payouts
-    const newBalText = fmtMoney(bal);
-    const newBalClass = 'val '+(bal>=0?'positive':'negative');
+    const hc = current ? curOf(current) : acctsCur(activeAccounts());   // null = mixed currencies: show "Mixed", never a cross-currency sum
+    const pc = current ? hc : (ft.length ? _uniformCur([...new Set(ft.map(t=>t.accountId))].map(curOf)) : hc);   // 'All' P&L spans every trade, archived accounts included
+    const newBalText = hc ? fmtMoney(bal,null,hc) : 'Mixed';
+    const newBalClass = 'val '+(hc?(bal>=0?'positive':'negative'):'');
     if(balEl.textContent!==newBalText){
       balEl.textContent=newBalText; balEl.className=newBalClass;
       balEl.classList.add('pnl-flash');
       balEl.addEventListener('animationend',()=>balEl.classList.remove('pnl-flash'),{once:true});
     } else { balEl.className=newBalClass; }
-    pnlEl.textContent=fmtMoney(total,{plus:true});
-    pnlEl.className='acct-header-pnl '+(total>=0?'positive':'negative');
+    pnlEl.textContent=pc?fmtMoney(total,{plus:true},pc):'Mixed';
+    pnlEl.className='acct-header-pnl '+(pc?(total>=0?'positive':'negative'):'');
   }
   // Only update the subtitle on the Journal tab — other tabs own their subtitle
   if(activeTab==='Journal'){
@@ -6196,7 +6317,7 @@ function _tradeCardInnerHtml(t){
     +'<div class="trade-scan"><div class="trade-scan-left">'
     +'<span class="trade-pair">'+escapeHtml(t.pair)+(hasImgs?'<span class="chart-indicator" title="Chart attached"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m6 16 5-5 3 2 5-7"/></svg></span>':'')+'</span>'
     +'<div class="trade-scan-meta"><span class="tag '+(t.dir==='long'?'tag-long':'tag-short')+'">'+(t.dir||'').toUpperCase()+'</span>'+(t.session?'<span>'+escapeHtml(t.session)+'</span>':'')+(t.time?'<span>'+escapeHtml(t.time)+'</span>':'')+'</div>'
-    +'</div><div class="trade-scan-right"><span class="trade-pnl '+(pnl>=0?'positive':'negative')+'">'+fmtPnl(pnl)+'</span><span class="trade-scan-return">'+returnText+'</span></div></div>'
+    +'</div><div class="trade-scan-right"><span class="trade-pnl '+(pnl>=0?'positive':'negative')+'">'+fmtPnl(pnl,t)+'</span><span class="trade-scan-return">'+returnText+'</span></div></div>'
     +(clText?'<div class="cl-summary">'+escapeHtml(clText)+'</div>':'')
     +'<div class="trade-bottom"><span>'+(acct?escapeHtml(acct.name):'')+'</span><span>'+(t.entry?'In: '+escapeHtml(t.entry):'')+(t.exit?' \u2192 '+escapeHtml(t.exit):'')+'</span></div>'
     +'</div>';
@@ -6267,7 +6388,7 @@ function renderTradeList(){
     const pnlColor=dayPnl>0?'var(--green)':dayPnl<0?'var(--red)':'var(--text3)';
     const groupHtml=`<div class="date-group-label">
       <span>${fmtGroupDate(date)}</span>
-      <span class="dg-count" style="color:${pnlColor};border-color:${dayPnl!==0?pnlColor+'44':'var(--border)'}">${dayPnl!==0?fmtPnl(dayPnl):''} ${dateTrades.length} trade${dateTrades.length!==1?'s':''}</span>
+      <span class="dg-count" style="color:${pnlColor};border-color:${dayPnl!==0?pnlColor+'44':'var(--border)'}">${dayPnl!==0&&!_mixedCtx(dateTrades)?fmtPnl(dayPnl,dateTrades):''} ${dateTrades.length} trade${dateTrades.length!==1?'s':''}</span>
     </div>`;
     desired.push({type:'group',key:'group-'+date,html:groupHtml,pnlColor,dayPnl,date});
     dateTrades.forEach(t=>desired.push({type:'trade',id:t.id,trade:t}));
@@ -6520,7 +6641,7 @@ function openPeek(id){
         </div>
       </div>
       <div style="text-align:right">
-        <div class="peek-pnl ${pnl>=0?'positive':'negative'}">${fmtPnl(pnl)}</div>
+        <div class="peek-pnl ${pnl>=0?'positive':'negative'}">${fmtPnl(pnl,t)}</div>
         <div style="font-size:12px;color:var(--text2);margin-top:3px">${t.date||''}${t.time?' · '+escapeHtml(t.time):''}</div>
         ${t.session?`<div style="font-size:11px;color:var(--amber);margin-top:2px">${escapeHtml(t.session)}</div>`:''}
         ${acct?`<div style="font-size:11px;color:var(--text3)">${escapeHtml(acct.name)}</div>`:''}
@@ -6528,7 +6649,7 @@ function openPeek(id){
     </div>
     <div class="card" style="padding:12px;margin-bottom:10px;background:var(--surface2)">
       ${irow('Entry',escapeHtml(t.entry)||'—')} ${irow('Exit',escapeHtml(t.exit)||'—')}
-      ${irow('Size',escapeHtml(t.size)||'—')} ${irow('Risk',t.risk?'$'+escapeHtml(t.risk):'—')}
+      ${irow('Size',escapeHtml(t.size)||'—')} ${irow('Risk',t.risk?_amtRaw(escapeHtml(t.risk),t):'—')}
       ${t.sl?irow('Stop Loss',escapeHtml(t.sl)):''} ${t.tp?irow('Take Profit',escapeHtml(t.tp)):''}
       ${r!==null?irow('R:R',(parseFloat(r)>=0?'+':'')+r+'R'):''}
     </div>
@@ -7024,7 +7145,7 @@ function openAddTrade(prefill){
   // selections in, so that data isn't hidden behind a tap.
   const hasChecklistData = CL_KEYS.some(k=>clSelections[k] && clSelections[k].length);
   if(hasChecklistData) expandClChecklist(); else collapseClChecklist();
-  delete document.getElementById('fRisk').dataset.auto; applyDefaultRisk();
+  delete document.getElementById('fRisk').dataset.auto; applyDefaultRisk(); syncTradeFormCur();
   document.getElementById('tradeModal').classList.add('open');
   updateNavVisibility();
   setTimeout(()=>document.getElementById('fPair').focus(),120);
@@ -7093,6 +7214,7 @@ function openEditTrade(t){
   if(hasChecklistData) expandClChecklist(); else collapseClChecklist();
   // restore setup dropdown value
   if(t.setup) document.getElementById('fSetup').value=t.setup;
+  syncTradeFormCur();
   document.getElementById('tradeModal').classList.add('open');
   updateNavVisibility();
 }
@@ -7111,9 +7233,9 @@ function applyDefaultRisk(){
   const a=accounts.find(x=>x.id===document.getElementById('fAccount').value), r=defaultRiskFor(a);
   if(r==null){ if(el.dataset.auto==='1'){ el.value=''; delete el.dataset.auto; autoCalc(); } if(hint)hint.style.display='none'; return; }
   el.value=String(r); el.dataset.auto='1'; autoCalc();
-  if(hint){ hint.textContent='Default risk: '+(a.riskMode==='fixed'?fmtMoney(a.riskValue):(+a.riskValue)+'% of balance')+' · '+a.name; hint.style.display='block'; }
+  if(hint){ hint.textContent='Default risk: '+(a.riskMode==='fixed'?fmtMoney(a.riskValue,null,a):(+a.riskValue)+'% of balance')+' · '+a.name; hint.style.display='block'; }
 }
-document.addEventListener('change',e=>{ if(e.target&&e.target.id==='fAccount') applyDefaultRisk(); });
+document.addEventListener('change',e=>{ if(e.target&&e.target.id==='fAccount'){ applyDefaultRisk(); syncTradeFormCur(); } if(e.target&&e.target.id==='qAccount') syncQuickCur(); });
 document.addEventListener('input',e=>{ if(e.target&&e.target.id==='fRisk'){ delete e.target.dataset.auto; const h=document.getElementById('fRiskHint'); if(h)h.style.display='none'; } });
 function populateAccountDropdown(selectedId){
   document.getElementById('fAccount').innerHTML=selectableAccounts(selectedId).map(a=>`<option value="${a.id}"${selectedId===a.id?' selected':''}>${escapeHtml(a.name)}</option>`).join('');
@@ -7253,7 +7375,7 @@ function computePeriodStats(fromDate, toDate, acctId){
   const startBalance = startBase + beforeTrades.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
   const periodPnl = periodTrades.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
   const endBalance = startBalance + periodPnl;
-  const pct = startBalance>0 ? (periodPnl/startBalance*100) : null;
+  const pct = (startBalance>0 && !(acctId==='all' && _ctxCur(accounts).mixed)) ? (periodPnl/startBalance*100) : null;
 
   const longs = periodTrades.filter(t=>t.dir==='long').length;
   const shorts = periodTrades.filter(t=>t.dir==='short').length;
@@ -7304,7 +7426,8 @@ function computePeriodStats(fromDate, toDate, acctId){
     startBalance, endBalance, periodPnl, pct,
     longs, shorts, total: periodTrades.length,
     winsCount: wins.length, lossesCount: losses.length,
-    winRate, pf, exp, bestTrade, worstTrade, avgHold, hasHoldData, maxDD
+    winRate, pf, exp, bestTrade, worstTrade, avgHold, hasHoldData, maxDD,
+    cur: acctId==='all' ? (accounts.length?_ctxCur(accounts):CUR_USD) : curOf(acctId)
   };
 }
 
@@ -7502,7 +7625,7 @@ function renderMonthReportCanvas(){
   ctx.fillStyle = C.text2; ctx.font = '700 11px -apple-system,Helvetica,Arial,sans-serif';
   ctx.fillText('NET P&L', x+16, y+14);
   ctx.fillStyle = pnlColor; ctx.font = '800 32px -apple-system,Helvetica,Arial,sans-serif';
-  ctx.fillText(fmtPnl(stats.monthPnl), x+16, y+50);
+  ctx.fillText(fmtPnl(stats.monthPnl,stats.cur), x+16, y+50);
   if(stats.pct!==null){
     // ROI/% change gets a small trend-direction arrow, same as the
     // reference layout — was missing entirely before.
@@ -7534,9 +7657,9 @@ function renderMonthReportCanvas(){
   ctx.fillText('End Balance', x+colW, y+13);
   if(showPayout) ctx.fillText('Payout', x+colW*2, y+13);
   ctx.fillStyle = C.text; ctx.font = '700 17px -apple-system,Helvetica,Arial,sans-serif';
-  ctx.fillText('$'+stats.startBalance.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}), x, y+38);
-  ctx.fillText('$'+stats.endBalance.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}), x+colW, y+38);
-  if(showPayout) ctx.fillText('$'+stats.payout.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}), x+colW*2, y+38);
+  ctx.fillText(_fmtBalLoc(stats.startBalance,stats.cur), x, y+38);
+  ctx.fillText(_fmtBalLoc(stats.endBalance,stats.cur), x+colW, y+38);
+  if(showPayout) ctx.fillText(_fmtBalLoc(stats.payout,stats.cur), x+colW*2, y+38);
   y += 58+22;
 
   // Divider
@@ -7571,7 +7694,7 @@ function renderMonthReportCanvas(){
   y += pillH+10;
 
   // Stat rows
-  const fmtSigned = v => v===null ? '—' : fmtPnl(v);
+  const fmtSigned = v => v===null ? '—' : fmtPnl(v,stats.cur);
   const rowValsMap = {
     // bestTrade/worstTrade are now always >=0 / <=0 respectively by
     // construction (see computePeriodStats), including the $0 "no trade in
@@ -7581,10 +7704,10 @@ function renderMonthReportCanvas(){
     'Best Trade': [fmtSigned(stats.bestTrade), C.accent],
     'Worst Trade': [fmtSigned(stats.worstTrade), C.red],
     'Avg Hold Time': [stats.avgHold===null?'—':minutesToDuration(stats.avgHold), C.text],
-    'Max Balance Drawdown': [stats.maxDD>0?fmtPnl(-stats.maxDD):'—', stats.maxDD>0?C.red:C.text],
+    'Max Balance Drawdown': [stats.maxDD>0?fmtPnl(-stats.maxDD,stats.cur):'—', stats.maxDD>0?C.red:C.text],
     'Win Rate': [stats.winRate.toFixed(1)+'%', stats.winRate>=50?C.accent:C.red],
     'Profit Factor': [stats.pf===null?'—':stats.pf===Infinity?'∞':stats.pf.toFixed(2), stats.pf===null?C.text:(stats.pf===Infinity||stats.pf>=1)?C.accent:C.red],
-    'Expectancy': [fmtPnl(stats.exp), stats.exp>=0?C.accent:C.red]
+    'Expectancy': [fmtPnl(stats.exp,stats.cur), stats.exp>=0?C.accent:C.red]
   };
   rows.forEach((label,i)=>{
     const ry = y+i*ROW_H;
@@ -7660,7 +7783,7 @@ function _monthReportFilename(){
 
 function _monthReportShareText(){
   const s = _lastReportStats; if(!s) return '';
-  return `${s.monthLabel} — ${s.acctName}\nNet P&L: ${fmtPnl(s.monthPnl)}${s.pct!==null?` (${s.pct>=0?'+':''}${s.pct.toFixed(2)}%)`:''}\nWin Rate: ${s.winRate.toFixed(1)}% · ${s.total} trades`;
+  return `${s.monthLabel} — ${s.acctName}\nNet P&L: ${fmtPnl(s.monthPnl,s.cur)}${s.pct!==null?` (${s.pct>=0?'+':''}${s.pct.toFixed(2)}%)`:''}\nWin Rate: ${s.winRate.toFixed(1)}% · ${s.total} trades`;
 }
 
 function _canShareReportFile(){
@@ -8174,7 +8297,7 @@ function djMap(){
   const k=tradesVersion+'|'+activeAcctFilter;
   if(k!==_djMapKey){
     _djMapKey=k;_djMap={};_djMax=0;
-    filteredTrades().forEach(t=>{if(!t.date)return;const m=_djMap[t.date]||(_djMap[t.date]={n:0,pnl:0});m.n++;m.pnl+=parseFloat(t.pnl)||0;});
+    filteredTrades().forEach(t=>{if(!t.date)return;const m=_djMap[t.date]||(_djMap[t.date]={n:0,pnl:0,ids:[]});m.n++;m.pnl+=parseFloat(t.pnl)||0;const aid=t.accountId==null?'':t.accountId;if(m.ids.indexOf(aid)<0)m.ids.push(aid);});
     const cut=djAdd(djToday(),-90);
     Object.keys(_djMap).forEach(d=>{if(d>=cut)_djMax=Math.max(_djMax,Math.abs(_djMap[d].pnl))});
   }
@@ -8184,6 +8307,7 @@ function djMap(){
 // <0.5% light · 0.5–1.5% medium · ≥1.5% strong. No balance set → thirds of the biggest recent day.
 function djBase(){
   const cur=activeAcctFilter==='all'?null:accounts.find(a=>a.id===activeAcctFilter);
+  if(!cur&&_ctxCur(accounts).mixed) return 0;   // summed starting balances of different currencies are meaningless
   const b=cur?Number(cur.balance):accounts.reduce((s,a)=>s+(Number(a.balance)||0),0);
   return b>0?b:0;
 }
@@ -8237,14 +8361,14 @@ function djDayHtml(date){
   const day=tradesOnDate(date),n=day.length,e=djEntry(date),today=djToday();
   const pnl=day.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
   const w=day.filter(t=>(parseFloat(t.pnl)||0)>0).length,l=day.filter(t=>(parseFloat(t.pnl)||0)<0).length;
-  const netR=day.reduce((s,t)=>s+(Number(calcR(t))||0),0),b=djBase(),pct=b?pnl/b*100:null;
+  const netR=day.reduce((s,t)=>s+(Number(calcR(t))||0),0),b=djBase(),pct=(b&&!_mixedCtx(day))?pnl/b*100:null;
   const wkd=[0,6].includes(djD(date).getDay());
   // Trade-driven: weekend trades behave exactly like weekday trades. Only zero-trade days get a rest label.
   const sub=n?n+' trade'+(n===1?'':'s'):date===today?'No trades yet today':wkd?'Weekend · No trades taken':'Rest day · Market watch';
   let h='<div class="dj-card"><div class="dj-row"><div style="min-width:0"><div class="dj-day-title">'+escapeHtml(djFmt(date))+(date===today?' · Today':'')+'</div><div class="dj-sub">'+sub+'</div></div>'+(e?'<span class="dj-pill ok">Reflected</span>':n?'<span class="dj-pill warn">Not reflected yet</span>':'')+'</div>';
   if(n){
     const cls=pnl>=0?'positive':'negative';
-    h+='<div class="dj-pnl-row"><span class="dj-pnl '+cls+'">'+fmtPnl(pnl)+'</span>'+(pct!==null?'<span class="dj-pct '+cls+'">'+(pnl>=0?'+':'')+pct.toFixed(2)+'%</span>':'')+'</div>'
+    h+='<div class="dj-pnl-row"><span class="dj-pnl '+cls+'">'+fmtPnl(pnl,day)+'</span>'+(pct!==null?'<span class="dj-pct '+cls+'">'+(pnl>=0?'+':'')+pct.toFixed(2)+'%</span>':'')+'</div>'
      +'<div class="dj-stats"><div><span>Win / loss</span><strong>'+w+' / '+l+'</strong></div><div><span>Net R</span><strong class="'+(netR>=0?'positive':'negative')+'">'+(netR>=0?'+':'')+netR.toFixed(2)+'R</strong></div><div><span>Discipline</span><strong>'+(e&&e.rating?e.rating+'/5':'–')+'</strong></div></div>';
   }else h+='<div class="dj-rest">'+(date===today?'Plan your session or note what you are watching.':wkd?'Nothing traded. Add a note if you watched the markets or planned ahead.':'Sitting out is a decision. Note what you saw and why you stayed flat.')+'</div>';
   h+='<button class="btn btn-primary" onclick="djOpenSheet()">'+(e?'Edit reflection':'Reflect on day')+'</button></div>';
@@ -8272,7 +8396,7 @@ function djDayHtml(date){
       +[...day].sort((a,b)=>String(a.time||'').localeCompare(String(b.time||''))).map(t=>{
         const p=parseFloat(t.pnl)||0,r=calcR(t),acct=accounts.find(a=>a.id===t.accountId),bal=Number(acct&&acct.balance)||0;
         const ret=[r!==null?(Number(r)>0?'+':'')+r+'R':'',bal?(p>=0?'+':'')+(p/bal*100).toFixed(2)+'%':''].filter(Boolean).join(' · ')||'—';
-        return '<button class="dj-trade" onclick="openPeek(\''+escapeForInlineHandler(t.id)+'\')"><span class="dj-tl"><span class="trade-pair">'+escapeHtml(t.pair||'Trade')+'</span><div class="trade-scan-meta"><span class="tag '+(t.dir==='long'?'tag-long':'tag-short')+'">'+(t.dir||'').toUpperCase()+'</span>'+(t.session?'<span>'+escapeHtml(t.session)+'</span>':'')+(t.time?'<span>'+escapeHtml(t.time)+'</span>':'')+(t.setup?'<span>'+escapeHtml(t.setup)+'</span>':'')+'</div></span><span class="dj-tr"><span class="trade-pnl '+(p>=0?'positive':'negative')+'">'+fmtPnl(p)+'</span><span class="trade-scan-return">'+ret+'</span></span></button>';
+        return '<button class="dj-trade" onclick="openPeek(\''+escapeForInlineHandler(t.id)+'\')"><span class="dj-tl"><span class="trade-pair">'+escapeHtml(t.pair||'Trade')+'</span><div class="trade-scan-meta"><span class="tag '+(t.dir==='long'?'tag-long':'tag-short')+'">'+(t.dir||'').toUpperCase()+'</span>'+(t.session?'<span>'+escapeHtml(t.session)+'</span>':'')+(t.time?'<span>'+escapeHtml(t.time)+'</span>':'')+(t.setup?'<span>'+escapeHtml(t.setup)+'</span>':'')+'</div></span><span class="dj-tr"><span class="trade-pnl '+(p>=0?'positive':'negative')+'">'+fmtPnl(p,t)+'</span><span class="trade-scan-return">'+ret+'</span></span></button>';
       }).join('')+'</div>';
   }
   return h;
@@ -8298,7 +8422,7 @@ function djRenderPast(){
   const shown=all.slice(0,djPastCap);
   list.innerHTML='<div class="dj-card" style="padding:2px 4px">'+shown.map(e=>{
     const m=mp[e.date],snip=(['review','lessons','mindset','market','reflection'].map(k=>djTxt(e,k)).find(Boolean)||'').split('\n')[0];
-    return '<button class="dj-past'+(e.date===djSel?' cur':'')+'" onclick="djPick(\''+e.date+'\')"><span style="min-width:0;flex:1"><span class="dj-row" style="justify-content:flex-start;gap:7px"><b>'+escapeHtml(djFmt(e.date))+'</b>'+(e.tag?'<span class="dj-pill" style="padding:1px 8px">'+escapeHtml(e.tag)+'</span>':'')+'</span><span class="dj-sn">'+escapeHtml(snip)+'</span></span><span style="text-align:right;flex:none"><span class="trade-pnl '+(m&&m.n?(m.pnl>=0?'positive':'negative'):'')+'" style="display:block;'+(m&&m.n?'':'color:var(--text3)')+'">'+(m&&m.n?fmtPnl(m.pnl):'No trades')+'</span>'+(e.rating?'<span class="dj-stars" style="font-size:11px;letter-spacing:1px">'+djStars(e.rating)+'</span>':'')+'</span></button>';
+    return '<button class="dj-past'+(e.date===djSel?' cur':'')+'" onclick="djPick(\''+e.date+'\')"><span style="min-width:0;flex:1"><span class="dj-row" style="justify-content:flex-start;gap:7px"><b>'+escapeHtml(djFmt(e.date))+'</b>'+(e.tag?'<span class="dj-pill" style="padding:1px 8px">'+escapeHtml(e.tag)+'</span>':'')+'</span><span class="dj-sn">'+escapeHtml(snip)+'</span></span><span style="text-align:right;flex:none"><span class="trade-pnl '+(m&&m.n?(m.pnl>=0?'positive':'negative'):'')+'" style="display:block;'+(m&&m.n?'':'color:var(--text3)')+'">'+(m&&m.n?fmtPnl(m.pnl,m.ids):'No trades')+'</span>'+(e.rating?'<span class="dj-stars" style="font-size:11px;letter-spacing:1px">'+djStars(e.rating)+'</span>':'')+'</span></button>';
   }).join('')
   +(all.length>5?'<button class="dj-link" onclick="djMorePast()">'+(djPastCap>=all.length?'Show less':'Show '+Math.min(5,all.length-djPastCap)+' more')+'</button>':'')
   +'<button class="dj-link" onclick="openDailyCal(\'jr\')">Browse all in calendar</button></div>';
@@ -8318,7 +8442,7 @@ function djCloseSheet(){document.getElementById('dailyEntryModal').classList.rem
 function djSheetDraw(){
   const d=djDraft,day=tradesOnDate(djSel),n=day.length,pnl=day.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
   const w=day.filter(t=>(parseFloat(t.pnl)||0)>0).length,l=day.filter(t=>(parseFloat(t.pnl)||0)<0).length;
-  document.getElementById('djSheetHead').innerHTML='<div class="dj-day-title" style="font-size:17px">'+escapeHtml(djFmt(djSel))+'</div><div class="dj-sub">'+(n?'<span class="'+(pnl>=0?'positive':'negative')+'" style="font-family:var(--mono);font-weight:700">'+fmtPnl(pnl)+'</span> · '+n+' trade'+(n===1?'':'s')+' · '+w+'W '+l+'L':'No trades logged')+'</div>'
+  document.getElementById('djSheetHead').innerHTML='<div class="dj-day-title" style="font-size:17px">'+escapeHtml(djFmt(djSel))+'</div><div class="dj-sub">'+(n?'<span class="'+(pnl>=0?'positive':'negative')+'" style="font-family:var(--mono);font-weight:700">'+fmtPnl(pnl,day)+'</span> · '+n+' trade'+(n===1?'':'s')+' · '+w+'W '+l+'L':'No trades logged')+'</div>'
     +(n?'<div class="dj-sh-chips">'+day.map(t=>{const r=calcR(t);return '<span class="dj-chip">'+escapeHtml(t.pair||'Trade')+(r!==null?' <span class="'+(parseFloat(r)>=0?'positive':'negative')+'">'+(parseFloat(r)>=0?'+':'')+r+'R</span>':'')+'</span>';}).join('')+'</div>':'');
   const moods=DJ_MOODS.includes(d.mood)||!d.mood?DJ_MOODS:DJ_MOODS.concat([d.mood]);   // keep a legacy mood (e.g. "Disciplined") visible
   const q=escapeForInlineHandler,sug=!d.tag&&d.rating>=4&&DJ_RULES.every(([id])=>d.rules.includes(id));
@@ -8385,8 +8509,8 @@ function djCalDraw(){
   const[y,m]=djCalMonth.split('-').map(Number),today=djToday(),mx=today.slice(0,7),em=djEntryMap(),mp=djMap(),mode=djCalMode,mv=djCalView;
   const key=(yy,mm,dd)=>yy+'-'+String(mm).padStart(2,'0')+'-'+String(dd).padStart(2,'0');
   const dim=new Date(y,m,0).getDate(),off=(new Date(y,m-1,1).getDay()+6)%7;
-  let net=0,td=0,rf=0;
-  for(let mm=(mv==='m'?m:1);mm<=(mv==='m'?m:12);mm++){const nd=new Date(y,mm,0).getDate();for(let d=1;d<=nd;d++){const k=key(y,mm,d);if(k>today)break;const x=mp[k];if(x&&x.n){td++;net+=x.pnl;if(em[k])rf++;}}}
+  let net=0,td=0,rf=0;const nids=[];
+  for(let mm=(mv==='m'?m:1);mm<=(mv==='m'?m:12);mm++){const nd=new Date(y,mm,0).getDate();for(let d=1;d<=nd;d++){const k=key(y,mm,d);if(k>today)break;const x=mp[k];if(x&&x.n){td++;net+=x.pnl;x.ids.forEach(i=>{if(nids.indexOf(i)<0)nids.push(i);});if(em[k])rf++;}}}
   let body;
   if(mv==='m'){
     body='<div class="dj-cg">'+['MON','TUE','WED','THU','FRI','SAT','SUN'].map(x=>'<div class="dj-cgh">'+x+'</div>').join('')+Array(off).fill('<div></div>').join('');
@@ -8413,7 +8537,7 @@ function djCalDraw(){
     +(mv==='m'?'<button class="filter-pill-btn" onclick="djCalView_(\'y\')">'+new Date(y,m-1,1).toLocaleDateString('en-GB',{month:'long'})+'</button>':'')
     +'<button class="filter-pill-btn" onclick="djCalView_(\''+(mv==='m'?'y':'m')+'\')">'+y+'</button></div><button class="dj-arrow" '+(ok?'':'disabled ')+'onclick="djCalShift(1)" aria-label="Next">'+djIc('cr',18)+'</button></div>'
     +'<div class="dj-seg"><button class="filter-pill-btn'+(mode==='pl'?' has-filter':'')+'" onclick="djCalSetMode(\'pl\')">P&amp;L heat</button><button class="filter-pill-btn'+(mode==='jr'?' has-filter':'')+'" onclick="djCalSetMode(\'jr\')">Reflection activity</button></div>'
-    +'<div class="dj-stats"><div><span>Net P&amp;L</span><strong class="'+(net>=0?'positive':'negative')+'">'+fmtPnl(net)+'</strong></div><div><span>Trading days</span><strong>'+td+'</strong></div><div><span>Reflected</span><strong>'+rf+'/'+td+'</strong></div></div>'
+    +'<div class="dj-stats"><div><span>Net P&amp;L</span><strong class="'+(net>=0?'positive':'negative')+'">'+fmtPnl(net,nids)+'</strong></div><div><span>Trading days</span><strong>'+td+'</strong></div><div><span>Reflected</span><strong>'+rf+'/'+td+'</strong></div></div>'
     +body+lg
     +'<div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-ghost" onclick="djCalToday()">Today</button><button class="btn btn-ghost" onclick="djCalUnreflected()">Latest unreflected</button></div>';
 }
@@ -8570,23 +8694,50 @@ function _fillAcctExtras(a){
   document.getElementById('acctNotes').value=(a&&a.notes)||'';
   document.getElementById('acctRiskMode').value=(a&&a.riskMode)||'pct';
   document.getElementById('acctRiskVal').value=(a&&a.riskValue>0)?a.riskValue:'';
+  if(CURRENCY_UI){
+    document.getElementById('acctCurGroup').style.display='';
+    const c=(a&&a.currency&&(a.currency==='CUSTOM'||Object.prototype.hasOwnProperty.call(CURRENCIES,a.currency)))?a.currency:'USD';
+    document.getElementById('acctCurrency').value=c;
+    document.getElementById('acctCurSym').value=(a&&a.currencySymbol)||'';
+    document.getElementById('acctCurPos').value=(a&&a.currencyPos==='suffix')?'suffix':'prefix';
+  }
+  _syncAcctCurUI();
   syncSettingsSeg(); updateRiskPreview();
 }
+// The currency the form is currently set to (USD whenever the flag is off).
+function _acctFormCur(){
+  if(!CURRENCY_UI) return CUR_USD;
+  return _curFromAcct({currency:document.getElementById('acctCurrency').value, currencySymbol:document.getElementById('acctCurSym').value, currencyPos:document.getElementById('acctCurPos').value});
+}
+function _syncAcctCurUI(){
+  const lbl=document.getElementById('acctBalLbl'); if(lbl) lbl.textContent='Starting Balance ('+_acctFormCur().sym+')';
+  const box=document.getElementById('acctCurCustom'); if(box) box.style.display=(CURRENCY_UI&&document.getElementById('acctCurrency').value==='CUSTOM')?'block':'none';
+}
+function onAcctCurChange(){ _syncAcctCurUI(); updateRiskPreview(); }
 function _readAcctExtras(){
   const mode=document.getElementById('acctRiskMode').value||'pct'; let val=parseFloat(document.getElementById('acctRiskVal').value);
   if(!(val>0)) val=0;
   if(mode==='pct'&&val>100){ showToast('Risk can’t be more than 100% of the balance','error'); return null; }
-  return {type:document.getElementById('acctType').value||'live', broker:document.getElementById('acctBroker').value.trim(), notes:document.getElementById('acctNotes').value.trim(), riskMode:mode, riskValue:val};
+  const ex={type:document.getElementById('acctType').value||'live', broker:document.getElementById('acctBroker').value.trim(), notes:document.getElementById('acctNotes').value.trim(), riskMode:mode, riskValue:val};
+  if(CURRENCY_UI){
+    const cc=document.getElementById('acctCurrency').value||'USD'; ex.currency=cc;
+    if(cc==='CUSTOM'){
+      const sy=document.getElementById('acctCurSym').value.trim().slice(0,5);
+      if(!sy){ showToast('Enter a symbol or code for the custom currency','error'); return null; }
+      ex.currencySymbol=sy; ex.currencyPos=document.getElementById('acctCurPos').value==='suffix'?'suffix':'prefix';
+    }
+  }
+  return ex;
 }
 function updateRiskPreview(){
   const mode=document.getElementById('acctRiskMode').value||'pct', val=parseFloat(document.getElementById('acctRiskVal').value), out=document.getElementById('acctRiskPreview');
   document.getElementById('acctRiskVal').placeholder=RISK_PLACEHOLDER[mode];
   if(!(val>0)){ out.textContent='Prefills Risk Amount on new trades. Leave empty to skip.'; return; }
-  if(mode==='fixed'){ out.textContent='= '+fmtMoney(val)+' per trade'; return; }
+  if(mode==='fixed'){ out.textContent='= '+fmtMoney(val,null,_acctFormCur())+' per trade'; return; }
   if(val>100){ out.textContent='Percent can’t be more than 100.'; return; }
   const a=editingAcctId?accounts.find(x=>x.id===editingAcctId):null;
   const bal=a?acctBalance(a):(parseFloat(document.getElementById('acctBal').value)||0);
-  out.textContent='= '+fmtMoney(bal*val/100)+' per trade at the '+(a?'current':'starting')+' balance ('+fmtMoney(bal)+')';
+  { const fc=_acctFormCur(); out.textContent='= '+fmtMoney(bal*val/100,null,fc)+' per trade at the '+(a?'current':'starting')+' balance ('+fmtMoney(bal,null,fc)+')'; }
 }
 function openAddAccount(){
   editingAcctId=null;
@@ -8601,7 +8752,7 @@ function saveAccount(){
   const name=document.getElementById('acctName').value.trim(), bal=parseFloat(document.getElementById('acctBal').value)||0;
   if(!name){showToast('Enter account name','error');return;}
   const extras=_readAcctExtras(); if(!extras)return;
-  if(editingAcctId){ const idx=accounts.findIndex(a=>a.id===editingAcctId); if(idx!==-1){accounts[idx].name=name;accounts[idx].balance=bal;Object.assign(accounts[idx],extras);} }
+  if(editingAcctId){ const idx=accounts.findIndex(a=>a.id===editingAcctId); if(idx!==-1){accounts[idx].name=name;accounts[idx].balance=bal;Object.assign(accounts[idx],extras); if(CURRENCY_UI&&extras.currency!=='CUSTOM'){delete accounts[idx].currencySymbol;delete accounts[idx].currencyPos;} } }
   else accounts.push({id:genId(),name,balance:bal,ledger:[],...extras});
   saveAccounts(); document.getElementById('acctModal').classList.remove('open');
   updateNavVisibility();
@@ -8663,19 +8814,20 @@ function restoreAccount(id){
 let _archOpen=false;
 function toggleArchivedGroup(){ _archOpen=!_archOpen; renderAcctList(); }
 function _acctCard(r,archived){
-  const {a,pl,bal,n}=r, start=parseFloat(a.balance)||0, pct=start>0?pl/start*100:null;
+  const {a,pl,bal,n}=r, start=parseFloat(a.balance)||0, pct=start>0?pl/start*100:null, cu=curOf(a);
   const firm=(typeof _linkedFirm==='function')?_linkedFirm(a.id):null;
   let chip='';
   if(archived) chip='<span class="ac-chip">Archived</span>';
   else if(firm) chip='<span class="ac-chip'+(firm.phase==='funded'?' ok':'')+'">Prop · '+escapeHtml(PROP_PHASE_LABEL[firm.phase||'challenge']||'')+'</span>';
   else if(a.type==='demo') chip='<span class="ac-chip">Demo</span>';
   else if(a.type==='prop') chip='<span class="ac-chip">Prop</span>';
-  const plTxt=fmtMoney(pl,{plus:true})+(pct!==null?' · '+(pct>=0?'+':'')+pct.toFixed(2)+'%':'');
-  const risk=a.riskValue>0?' · Risk '+(a.riskMode==='fixed'?fmtMoney(a.riskValue,{dec:0}):(+a.riskValue)+'%'):'';
+  { const ct=_curTag(a); if(ct) chip+='<span class="ac-chip">'+escapeHtml(ct)+'</span>'; }
+  const plTxt=fmtMoney(pl,{plus:true},cu)+(pct!==null?' · '+(pct>=0?'+':'')+pct.toFixed(2)+'%':'');
+  const risk=a.riskValue>0?' · Risk '+(a.riskMode==='fixed'?fmtMoney(a.riskValue,{dec:0},cu):(+a.riskValue)+'%'):'';
   return '<div class="ac-card'+(archived?' dim':'')+'" onclick="editAccount(\''+a.id+'\')">'
     +'<div class="ac-top"><span class="ac-name">'+escapeHtml(a.name)+'</span>'+chip+'<button class="ac-menu" aria-label="Account actions" onclick="openAcctMenu(this,\''+a.id+'\',event)">'+_I.dots+'</button></div>'
-    +'<div class="ac-bal"><b>'+fmtMoney(bal)+'</b><span class="ac-pl '+(pl>=0?'pos':'neg')+'">'+plTxt+'</span></div>'
-    +'<div class="ac-q">'+(a.broker?escapeHtml(a.broker)+' · ':'')+'Start '+fmtMoney(start,{dec:0})+' · '+n+' trade'+(n!==1?'s':'')+risk+'</div></div>';
+    +'<div class="ac-bal"><b>'+fmtMoney(bal,null,cu)+'</b><span class="ac-pl '+(pl>=0?'pos':'neg')+'">'+plTxt+'</span></div>'
+    +'<div class="ac-q">'+(a.broker?escapeHtml(a.broker)+' · ':'')+'Start '+fmtMoney(start,{dec:0},cu)+' · '+n+' trade'+(n!==1?'s':'')+risk+'</div></div>';
 }
 function renderAcctList(){
   const list=document.getElementById('acctList'), sum=document.getElementById('acctSummary');
@@ -8684,14 +8836,14 @@ function renderAcctList(){
   const all=accounts.map(a=>({a,...acctBalanceNow(a),n:trades.filter(t=>t.accountId===a.id).length}));
   const act=all.filter(r=>r.a.status!=='archived'), arch=all.filter(r=>r.a.status==='archived');
   if(sum){
-    const tb=act.reduce((x,r)=>x+r.bal,0), tp=act.reduce((x,r)=>x+r.pl,0);
+    const tb=act.reduce((x,r)=>x+r.bal,0), tp=act.reduce((x,r)=>x+r.pl,0), sc=acctsCur(act.map(r=>r.a));   // sc null = mixed currencies
     sum.style.display='';
-    sum.innerHTML='<div><b>'+fmtMoney(tb)+'</b><span>Total balance</span></div><div><b class="'+(tp>0?'positive':tp<0?'negative':'')+'">'+fmtMoney(tp,{plus:true})+'</b><span>Total P&amp;L</span></div><div><b>'+act.length+'</b><span>'+(arch.length?'Active':'Accounts')+'</span></div>';
+    sum.innerHTML='<div><b>'+(sc?fmtMoney(tb,null,sc):'Mixed')+'</b><span>Total balance</span></div><div><b class="'+(sc&&tp>0?'positive':sc&&tp<0?'negative':'')+'">'+(sc?fmtMoney(tp,{plus:true},sc):'Mixed')+'</b><span>Total P&amp;L</span></div><div><b>'+act.length+'</b><span>'+(arch.length?'Active':'Accounts')+'</span></div>';
   }
   let html=act.map(r=>_acctCard(r,false)).join('');
   if(arch.length){
-    const ap=arch.reduce((x,r)=>x+r.pl,0);
-    html+='<div class="ac-group" onclick="toggleArchivedGroup()"><span class="ac-chev'+(_archOpen?' open':'')+'">'+_I.chev+'</span><b>Archived · '+arch.length+'</b><span class="sp"></span><span class="'+(ap>=0?'positive':'negative')+'">'+fmtMoney(ap,{plus:true,dec:0})+'</span></div>';
+    const ap=arch.reduce((x,r)=>x+r.pl,0), ac=acctsCur(arch.map(r=>r.a));
+    html+='<div class="ac-group" onclick="toggleArchivedGroup()"><span class="ac-chev'+(_archOpen?' open':'')+'">'+_I.chev+'</span><b>Archived · '+arch.length+'</b><span class="sp"></span><span class="'+(ac?(ap>=0?'positive':'negative'):'')+'">'+(ac?fmtMoney(ap,{plus:true,dec:0},ac):'Mixed')+'</span></div>';
     if(_archOpen) html+=arch.map(r=>_acctCard(r,true)).join('');
   }
   list.innerHTML=html;
@@ -8880,13 +9032,15 @@ function _acctRoiBase(acctId, dateStr){
 function roiForPeriod(fromDate, toDate, acctId){
   acctId = acctId || activeAcctFilter;
   const ids = acctId==='all' ? accounts.map(a=>a.id) : [acctId];
-  let pnl=0, base=0;
+  let pnl=0, base=0; const _rc=[];
   ids.forEach(id=>{
     const ts=trades.filter(t=>t.accountId===id && t.date && t.date>=fromDate && t.date<=toDate);
     if(!ts.length) return;
+    _rc.push(curOf(id));
     pnl+=ts.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
     base+=_acctRoiBase(id, fromDate);
   });
+  if(_uniformCur(_rc)===null) return null;   // mixed currencies: no cross-currency percentage
   return base>0 ? pnl/base*100 : null;
 }
 function dailyRoi(dateStr, acctId){ return roiForPeriod(dateStr, dateStr, acctId); }
@@ -8950,9 +9104,9 @@ function yearlyPerfGrid(f){
   scoped.forEach(t=>{
     const d = parseLocalDate(t.date); if(!d) return;
     const y = d.getFullYear(), m = d.getMonth();
-    if(!map[y]) map[y] = Array.from({length:12},()=>({pnl:0,count:0}));
+    if(!map[y]) map[y] = Array.from({length:12},()=>({pnl:0,count:0,ids:[]}));
     map[y][m].pnl += (parseFloat(t.pnl)||0);
-    map[y][m].count++;
+    map[y][m].count++; { const aid=t.accountId==null?'':t.accountId; if(map[y][m].ids.indexOf(aid)<0) map[y][m].ids.push(aid); }
   });
   const nowYear = new Date().getFullYear();
   let years;
@@ -8978,14 +9132,14 @@ function yearlyPerfGrid(f){
       if(mo.count===0) return `<div class="yp-mcell yp-empty${cur}"><div class="yp-pnl">–</div></div>`;
       const cls = mo.pnl>=0 ? 'yp-win' : 'yp-loss';
       return `<div class="yp-mcell ${cls}${cur}" onclick="openMonthReportFor(${y},${i})">
-        <div class="yp-pnl">${mo.pnl>=0?'+':'-'}${Math.abs(mo.pnl).toFixed(0)}</div>
+        <div class="yp-pnl">${_mixedCtx(mo.ids)?'Mixed':(mo.pnl>=0?'+':'-')+Math.abs(mo.pnl).toFixed(0)}</div>
         <div class="yp-roi ${mo.pnl>=0?'positive':'negative'}">${fmtRoi(roiForPeriod(_ymd(y,i,1), _ymd(y,i,new Date(y,i+1,0).getDate())))}</div>
         <div class="yp-count">${mo.count} trade${mo.count!==1?'s':''}</div>
       </div>`;
     }).join('');
     const totalCell = yearCount===0
       ? `<div class="yp-mcell yp-empty"><div class="yp-pnl">–</div></div>`
-      : `<div class="yp-mcell yp-total"><div class="yp-pnl ${yearTotal>=0?'positive':'negative'}">${yearTotal>=0?'+':'-'}${Math.abs(yearTotal).toFixed(0)}</div><div class="yp-roi ${yearTotal>=0?'positive':'negative'}">${fmtRoi(roiForPeriod(y+'-01-01', y+'-12-31'))}</div><div class="yp-count">${yearCount} trades</div></div>`;
+      : `<div class="yp-mcell yp-total"><div class="yp-pnl ${yearTotal>=0?'positive':'negative'}">${_mixedCtx(monthsArr.flatMap(mo=>mo.ids||[]))?'Mixed':(yearTotal>=0?'+':'-')+Math.abs(yearTotal).toFixed(0)}</div><div class="yp-roi ${yearTotal>=0?'positive':'negative'}">${fmtRoi(roiForPeriod(y+'-01-01', y+'-12-31'))}</div><div class="yp-count">${yearCount} trades</div></div>`;
     return `<div class="yp-mcell yp-ycell">${y}</div>${cells}${totalCell}`;
   }).join('');
 
@@ -9006,7 +9160,7 @@ function openMonthReportFor(year, monthIdx){
 // 52-week activity heatmap for a given year (Mon-first columns).
 function yearHeatmapHtml(year){
   const byDate={};
-  filteredTrades().forEach(t=>{ if(!t.date || !t.date.startsWith(year+'-')) return; if(!byDate[t.date]) byDate[t.date]={pnl:0,count:0}; byDate[t.date].pnl+=parseFloat(t.pnl)||0; byDate[t.date].count++; });
+  filteredTrades().forEach(t=>{ if(!t.date || !t.date.startsWith(year+'-')) return; if(!byDate[t.date]) byDate[t.date]={pnl:0,count:0,ids:[]}; { const aid=t.accountId==null?'':t.accountId; if(byDate[t.date].ids.indexOf(aid)<0) byDate[t.date].ids.push(aid); } byDate[t.date].pnl+=parseFloat(t.pnl)||0; byDate[t.date].count++; });
   const vals=Object.values(byDate).map(d=>Math.abs(d.pnl)); const max=Math.max(1,...vals);
   const jan1=new Date(year,0,1), start=new Date(jan1); start.setDate(jan1.getDate()-((jan1.getDay()+6)%7));
   const dec31=new Date(year,11,31);
@@ -9021,7 +9175,7 @@ function yearHeatmapHtml(year){
     if(!data){ cells+=`<div class="hm-cell" title="${key} · no trades"></div>`; continue; }
     const a=(0.25+0.75*Math.abs(data.pnl)/max).toFixed(2);
     const color=data.pnl>0?'var(--green)':data.pnl<0?'var(--red)':'var(--text3)';
-    const tip=`${key} · ${fmtPnl(data.pnl)} · ${fmtRoi(dailyRoi(key))} · ${data.count} trade${data.count!==1?'s':''}`;
+    const tip=`${key} · ${fmtPnl(data.pnl,data.ids)} · ${fmtRoi(dailyRoi(key))} · ${data.count} trade${data.count!==1?'s':''}`;
     cells+=`<div class="hm-cell on" style="background:${color};opacity:${a}" title="${escapeHtml(tip)}" onclick="showDayTradesForDate('${key}')"></div>`;
   }
   return `<div class="card" style="padding:14px;margin-bottom:14px">
@@ -9038,7 +9192,7 @@ function monthlySummariesHtml(year){
     if(!ts.length) return `<div class="ms-card empty"><div class="ms-name">${n}</div><div class="ms-pnl" style="color:var(--text3)">—</div><div class="ms-meta"><span>No trades</span></div></div>`;
     const pnl=ts.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0), w=ts.filter(t=>parseFloat(t.pnl)>0).length;
     const roi=roiForPeriod(_ymd(year,i,1), _ymd(year,i,new Date(year,i+1,0).getDate()));
-    return `<div class="ms-card" onclick="openMonthReportFor(${year},${i})"><div class="ms-name">${n}</div><div class="ms-pnl ${pnl>=0?'positive':'negative'}">${fmtPnl(pnl)}</div><div class="ms-meta"><span class="${pnl>=0?'positive':'negative'}">${fmtRoi(roi)}</span><span>${ts.length} trade${ts.length!==1?'s':''} · ${Math.round(w/ts.length*100)}%</span></div></div>`;
+    return `<div class="ms-card" onclick="openMonthReportFor(${year},${i})"><div class="ms-name">${n}</div><div class="ms-pnl ${pnl>=0?'positive':'negative'}">${fmtPnl(pnl,ts)}</div><div class="ms-meta"><span class="${pnl>=0?'positive':'negative'}">${fmtRoi(roi)}</span><span>${ts.length} trade${ts.length!==1?'s':''} · ${Math.round(w/ts.length*100)}%</span></div></div>`;
   }).join('');
   return `<div class="card" style="padding:14px"><div class="chart-title" style="margin-bottom:10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Monthly Performance</div><div class="ms-grid">${cards}</div></div>`;
 }
@@ -9078,7 +9232,7 @@ function renderCalSummaryView(f, fromVal, toVal){
   const dayMap={};
   ft.forEach(t=>{
     const d=t.date;
-    if(!dayMap[d])dayMap[d]={pnl:0,count:0};
+    if(!dayMap[d])dayMap[d]={pnl:0,count:0,ids:[]}; { const aid=t.accountId==null?'':t.accountId; if(dayMap[d].ids.indexOf(aid)<0) dayMap[d].ids.push(aid); }
     dayMap[d].pnl+=(parseFloat(t.pnl)||0);
     dayMap[d].count++;
   });
@@ -9090,7 +9244,7 @@ function renderCalSummaryView(f, fromVal, toVal){
   const useWeeks = spanDays>14;
   const isoWk=(d)=>{ const x=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); x.setUTCDate(x.getUTCDate()+4-(x.getUTCDay()||7)); const ys=new Date(Date.UTC(x.getUTCFullYear(),0,1)); return x.getUTCFullYear()+'-'+Math.ceil((((x-ys)/86400000)+1)/7); };
   const weekTotals={};
-  if(useWeeks) sortedDays.forEach(([date,data])=>{ const k=isoWk(parseLocalDate(date)); if(!weekTotals[k]) weekTotals[k]={pnl:0,count:0,first:date,last:date}; weekTotals[k].pnl+=data.pnl; weekTotals[k].count+=data.count; weekTotals[k].last=date; });
+  if(useWeeks) sortedDays.forEach(([date,data])=>{ const k=isoWk(parseLocalDate(date)); if(!weekTotals[k]) weekTotals[k]={pnl:0,count:0,ids:[],first:date,last:date}; weekTotals[k].pnl+=data.pnl; data.ids.forEach(i=>{ if(weekTotals[k].ids.indexOf(i)<0) weekTotals[k].ids.push(i); }); weekTotals[k].count+=data.count; weekTotals[k].last=date; });
   const fmtDayRow=(s)=>{ const d=parseLocalDate(s); return d?d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+', '+d.toLocaleDateString('en-US',{weekday:'short'}):s; };
   const fmtMD=(s)=>{ const d=parseLocalDate(s); return d?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):s; };
   const CAP=10;
@@ -9101,7 +9255,7 @@ function renderCalSummaryView(f, fromVal, toVal){
       const k=isoWk(parseLocalDate(date));
       if(k!==lastWk){
         lastWk=k; const w=weekTotals[k];
-        html+=`<div class="cal-week-sub"><span>Week ${k.split('-')[1]} · ${fmtMD(w.last)} – ${fmtMD(w.first)}</span><span class="v ${w.pnl>=0?'positive':'negative'}">${fmtPnl(w.pnl)}</span></div>`;
+        html+=`<div class="cal-week-sub"><span>Week ${k.split('-')[1]} · ${fmtMD(w.last)} – ${fmtMD(w.first)}</span><span class="v ${w.pnl>=0?'positive':'negative'}">${fmtPnl(w.pnl,w.ids)}</span></div>`;
       }
     }
     const pnl=data.pnl;
@@ -9109,7 +9263,7 @@ function renderCalSummaryView(f, fromVal, toVal){
       <span class="k" style="font-size:13px;font-weight:600">${fmtDayRow(date)}</span>
       <div style="display:flex;gap:12px;align-items:center">
         <span style="font-size:11px;color:var(--text3)">${data.count} trade${data.count!==1?'s':''}</span>
-        <span class="v ${pnl>=0?'positive':'negative'}">${fmtPnl(pnl)}</span>
+        <span class="v ${pnl>=0?'positive':'negative'}">${fmtPnl(pnl,data.ids)}</span>
       </div>
     </div>`;
     if(idx<CAP) visible+=html; else hidden+=html;
@@ -9132,7 +9286,7 @@ function renderCalSummaryView(f, fromVal, toVal){
     <div class="cal-summary-row">
       <div class="cal-stat ${totalPnl<0?'red-accent':''}">
         <div class="cal-stat-label">Total P&L</div>
-        <div class="cal-stat-value ${totalPnl>=0?'positive':'negative'}">${fmtPnl(totalPnl)}</div>
+        <div class="cal-stat-value ${totalPnl>=0?'positive':'negative'}">${fmtPnl(totalPnl,ft)}</div>
       </div>
       <div class="cal-stat">
         <div class="cal-stat-label">Win Rate</div>
@@ -9204,7 +9358,7 @@ function renderCalendar(){
   document.getElementById('calSummaryRow').innerHTML=`
     <div class="cal-stat ${totalPnl<0?'red-accent':''}">
       <div class="cal-stat-label">Month P&L</div>
-      <div class="cal-stat-value ${totalPnl>=0?'positive':'negative'}">${fmtPnl(totalPnl)}</div>
+      <div class="cal-stat-value ${totalPnl>=0?'positive':'negative'}">${fmtPnl(totalPnl,ft)}</div>
     </div>
     <div class="cal-stat">
       <div class="cal-stat-label">Win Rate</div>
@@ -9224,16 +9378,16 @@ function renderCalendar(){
   const goal=monthlyGoals[monthKey]||0;
   const goalFill=document.getElementById('goalFill');
   if(goal>0){
-    const fillPct=Math.min(100,Math.abs(totalPnl)/goal*100);
+    const fillPct=_mixedCtx(ft)?0:Math.min(100,Math.abs(totalPnl)/goal*100);   // mixed scope: no cross-currency progress
     goalFill.style.width=fillPct+'%';
     goalFill.style.background=totalPnl>=0?'var(--accent)':'var(--red)';
   } else {
     goalFill.style.width='0%';
     goalFill.style.background='var(--accent)';
   }
-  document.getElementById('goalCurrent').textContent=fmtPnl(totalPnl);
+  document.getElementById('goalCurrent').textContent=fmtPnl(totalPnl,ft);
   document.getElementById('goalCurrent').className=totalPnl>=0?'positive':'negative';
-  document.getElementById('goalTarget').textContent=goal?'$'+goal.toLocaleString():'Set a goal';
+  document.getElementById('goalTarget').textContent=goal?(_mixedCtx(ft)?'pick one account':_curWrap(goal.toLocaleString(),_ctxCur(ft))):'Set a goal';
 
   // Build day map — store individual trades per day for pips
   const dayMap={};
@@ -9281,7 +9435,7 @@ function renderCalendar(){
     }
     const wkNum=wkDate?isoWeek(wkDate):'';
     cells+=`<div class="cal-week-num">W${wkNum}</div>`;
-    let wkPnl=0, wkCount=0;
+    let wkPnl=0, wkCount=0; const wkTr=[];
 
     for(let col=0;col<7;col++){
       const slot=row*7+col;
@@ -9291,7 +9445,7 @@ function renderCalendar(){
       }
       const d=slot-startOffset+1;
       const data=dayMap[d], isToday=isCurrentMonth&&today.getDate()===d;
-      if(data){ wkPnl+=data.pnl; wkCount+=data.count; }
+      if(data){ wkPnl+=data.pnl; wkCount+=data.count; data.trades.forEach(t=>wkTr.push(t)); }
       let cls='cal-cell';
       if(isToday) cls+=' today';
       if(data){ cls+=data.pnl>=0?' win-day':' loss-day'; }
@@ -9309,7 +9463,7 @@ function renderCalendar(){
         cells+=`<div class="${cls}" onclick="showDayTrades(${d})">
           <div class="cal-day-num">${d}</div>
           <div>
-            <div class="cal-day-pnl ${data.pnl>=0?'pos':'neg'}">${data.pnl>0?'+':data.pnl<0?'-':''}$${Math.abs(data.pnl).toFixed(0)}</div>
+            <div class="cal-day-pnl ${data.pnl>=0?'pos':'neg'}">${fmtPnl0(data.pnl,data.trades)}</div>
             <div class="cal-day-roi ${data.pnl>=0?'pos':'neg'}">${fmtRoi(dailyRoi(_ymd(calYear,calMonth,d)))}</div>
             <div class="cal-pips">${pips}${extraPip}</div>
           </div>
@@ -9323,7 +9477,7 @@ function renderCalendar(){
     }
     // Weekly total column (visible ≥900px only, see .cal-week-total)
     cells+= wkCount
-      ? `<div class="cal-week-total"><div class="cal-week-total-pnl ${wkPnl>=0?'positive':'negative'}">${wkPnl>0?'+':wkPnl<0?'-':''}$${Math.abs(wkPnl).toFixed(0)}</div><div class="cal-week-total-count">${wkCount} trade${wkCount!==1?'s':''}</div></div>`
+      ? `<div class="cal-week-total"><div class="cal-week-total-pnl ${wkPnl>=0?'positive':'negative'}">${fmtPnl0(wkPnl,wkTr)}</div><div class="cal-week-total-count">${wkCount} trade${wkCount!==1?'s':''}</div></div>`
       : `<div class="cal-week-total"><div class="cal-dash">—</div></div>`;
   }
   document.getElementById('calGrid').innerHTML=cells;
@@ -9345,7 +9499,7 @@ function _trendArrowSvg(isUp){
 
 function dayReportHtml(stats){
   const pnlCls = stats.dayPnl>=0 ? 'positive' : 'negative';
-  const fmtSigned = v => v===null ? '—' : fmtPnl(v);
+  const fmtSigned = v => v===null ? '—' : fmtPnl(v,stats.cur);
   const rows = [
     // Unconditional per row now — see the matching comment at the Month
     // Report canvas render site for why (bestTrade/worstTrade are always
@@ -9357,10 +9511,10 @@ function dayReportHtml(stats){
   // Same rule as the Month Report: only show Avg Hold Time if at least
   // one trade that day actually has a logged Close Time.
   if(stats.hasHoldData) rows.push(['Avg Hold Time', minutesToDuration(stats.avgHold), '']);
-  rows.push(['Max Balance Drawdown', stats.maxDD>0?fmtPnl(-stats.maxDD):'—', stats.maxDD>0?'negative':'']);
+  rows.push(['Max Balance Drawdown', stats.maxDD>0?fmtPnl(-stats.maxDD,stats.cur):'—', stats.maxDD>0?'negative':'']);
   rows.push(['Win Rate', `${stats.winRate.toFixed(1)}%`, stats.winRate>=50?'positive':'negative', `${stats.winsCount}W / ${stats.lossesCount}L`]);
   rows.push(['Profit Factor', stats.pf===null?'—':stats.pf===Infinity?'∞':stats.pf.toFixed(2), stats.pf===null?'':(stats.pf===Infinity||stats.pf>=1)?'positive':'negative']);
-  rows.push(['Expectancy', fmtPnl(stats.exp), stats.exp>=0?'positive':'negative']);
+  rows.push(['Expectancy', fmtPnl(stats.exp,stats.cur), stats.exp>=0?'positive':'negative']);
 
   const rowsMarkup = rows.map(([label,val,cls,sub])=>`
     <div class="info-row">
@@ -9377,11 +9531,11 @@ function dayReportHtml(stats){
     <div class="day-report-pnl" style="display:flex;align-items:flex-start;justify-content:space-between;padding:14px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:14px">
       <div style="border-left:3px solid var(${stats.dayPnl>=0?'--accent':'--red'});padding-left:12px">
         <div style="font-size:11px;font-weight:700;color:var(--text2);letter-spacing:.3px">NET P&L</div>
-        <div class="day-report-pnl-value ${pnlCls}" style="font-size:26px;font-weight:800;font-family:var(--mono)">${fmtPnl(stats.dayPnl)}</div>
+        <div class="day-report-pnl-value ${pnlCls}" style="font-size:26px;font-weight:800;font-family:var(--mono)">${fmtPnl(stats.dayPnl,stats.cur)}</div>
       </div>
       ${stats.pct!==null?`<div class="${pnlCls}" style="font-size:14px;font-weight:700;margin-top:2px;display:flex;align-items:center;gap:3px;justify-content:flex-end">${_trendArrowSvg(stats.pct>=0)}${stats.pct>=0?'+':''}${stats.pct.toFixed(2)}%</div>`:''}
     </div>
-    <div class="day-report-balance-strip"><div class="day-report-balance-stat"><div class="day-report-balance-label">Start Balance</div><div class="day-report-balance-value">$${stats.startBalance.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div><div class="day-report-balance-stat"><div class="day-report-balance-label">End Balance</div><div class="day-report-balance-value">$${stats.endBalance.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div></div>
+    <div class="day-report-balance-strip"><div class="day-report-balance-stat"><div class="day-report-balance-label">Start Balance</div><div class="day-report-balance-value">${_fmtBalLoc(stats.startBalance,stats.cur)}</div></div><div class="day-report-balance-stat"><div class="day-report-balance-label">End Balance</div><div class="day-report-balance-value">${_fmtBalLoc(stats.endBalance,stats.cur)}</div></div></div>
     <div class="chart-title" style="margin-bottom:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Trade Stats</div>
     <div class="cal-summary-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:10px">
       <div class="cal-stat"><div class="cal-stat-label">Longs</div><div class="cal-stat-value" style="color:var(--accent)">${stats.longs}</div></div>
@@ -9432,7 +9586,7 @@ let _goalEditMonthKey = null;
 function openGoalEdit(){
   _goalEditMonthKey=`${calYear}-${String(calMonth+1).padStart(2,'0')}`;
   document.getElementById('goalInput').value=monthlyGoals[_goalEditMonthKey]||'';
-  document.getElementById('goalModal').classList.add('open');
+  _setCurLbl('goalInputLbl','Target P&L',_scopeCurFilter()); document.getElementById('goalModal').classList.add('open');
 }
 // Opener for the Metrics tab's Monthly Goal widget specifically — always
 // the real current month, independent of Calendar tab state.
@@ -9440,7 +9594,7 @@ function openMonthlyGoalWidgetEdit(){
   const now=new Date();
   _goalEditMonthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   document.getElementById('goalInput').value=monthlyGoals[_goalEditMonthKey]||'';
-  document.getElementById('goalModal').classList.add('open');
+  _setCurLbl('goalInputLbl','Target P&L',_scopeCurFilter()); document.getElementById('goalModal').classList.add('open');
 }
 function saveGoal(){
   const monthKey=_goalEditMonthKey || `${calYear}-${String(calMonth+1).padStart(2,'0')}`;
@@ -9748,6 +9902,7 @@ function renderStats(){
   applyWidgetPrefs();
   if(wbEditMode) wbBuildChrome();
   const ft = statsFilteredTrades();
+  _statsScope = ft;
   renderMonthStripCard();
 
   const wins   = ft.filter(t=>parseFloat(t.pnl)>0);
@@ -9773,7 +9928,7 @@ function renderStats(){
   let pctHtml = '';
   if(activeAcctFilter==='all'){
     const totalStart = accounts.reduce((s,a)=>s+(a.balance||0),0);
-    if(totalStart>0){ const pct=(totalPnl/totalStart*100); pctHtml=`<span style="font-size:12px;font-weight:700;color:${pct>=0?'var(--green)':'var(--red)'}">(${pct>=0?'+':''}${pct.toFixed(2)}%)</span>`; }
+    if(totalStart>0 && !_ctxCur(accounts).mixed){ const pct=(totalPnl/totalStart*100); pctHtml=`<span style="font-size:12px;font-weight:700;color:${pct>=0?'var(--green)':'var(--red)'}">(${pct>=0?'+':''}${pct.toFixed(2)}%)</span>`; }
   } else {
     const acct = accounts.find(a=>a.id===activeAcctFilter);
     if(acct&&acct.balance>0){ const pct=(totalPnl/acct.balance*100); pctHtml=`<span style="font-size:12px;font-weight:700;color:${pct>=0?'var(--green)':'var(--red)'}">(${pct>=0?'+':''}${pct.toFixed(2)}%)</span>`; }
@@ -9783,13 +9938,13 @@ function renderStats(){
   // (first two) plus borderless metric rows — see paintStatCards().
   const coreStatItems = [
     {label:'Win Rate', value:`${winRate}%`, tone:'accent', sub:`${wins.length}W / ${losses.length}L`},
-    {label:'Total P&L', value:fmtPnl(totalPnl), tone:totalPnl>=0?'accent':'red', red:totalPnl<0,
+    {label:'Total P&L', value:fmtPnl(totalPnl,ft), tone:totalPnl>=0?'accent':'red', red:totalPnl<0,
      sub:`<span style="display:inline-flex;align-items:center;gap:6px"><span>${ft.length} trades</span>${pctHtml}</span>`},
-    {label:'Avg Win', value:fmtPnl(avgWin), tone:'accent', sub:'per winning trade'},
-    {label:'Avg Loss', value:fmtPnl(-avgLoss), tone:'red', red:true, sub:'per losing trade'},
+    {label:'Avg Win', value:fmtPnl(avgWin,ft), tone:'accent', sub:'per winning trade'},
+    {label:'Avg Loss', value:fmtPnl(-avgLoss,ft), tone:'red', red:true, sub:'per losing trade'},
     {label:'Profit Factor', value:pf, tone:(pf==='∞'||(pf!=='—'&&parseFloat(pf)>=1))?'accent':(pf==='—'?'':'red'),
      red:(pf!=='—'&&pf!=='∞'&&parseFloat(pf)<1), sub:'gross P / gross L'},
-    {label:'Expectancy', value:fmtPnl(exp), tone:parseFloat(exp)>=0?'accent':'red', red:parseFloat(exp)<0, sub:'avg per trade'},
+    {label:'Expectancy', value:fmtPnl(exp,ft), tone:parseFloat(exp)>=0?'accent':'red', red:parseFloat(exp)<0, sub:'avg per trade'},
     {label:'Avg R', value:avgR==='—'?'—':avgR+'R', tone:parseFloat(avgR)>=0?'accent':'red', red:parseFloat(avgR)<0, sub:'average R multiple'},
     {label:'Best R', value:bestR==='—'?'—':'+'+bestR+'R', tone:'accent', sub:'best single trade'},
     {label:'Avg Trade Duration', value:avgDurMins===null?'—':minutesToDuration(avgDurMins), tone:'accent',
@@ -9841,7 +9996,7 @@ function renderStats(){
   }
 
   const streakStatItems = [
-    {label:'Max Drawdown', value:maxDD>0?fmtPnl(-maxDD):'—', tone:'red', red:true,
+    {label:'Max Drawdown', value:maxDD>0?fmtPnl(-maxDD,ft):'—', tone:'red', red:true,
      sub:maxDDPct>0?maxDDPct.toFixed(1)+'% from peak':'no drawdown'},
     {label:'Streaks', tone:'', listValue:`<span class="accent">${maxWin}</span> <span style="color:var(--text3);font-weight:400">/</span> <span class="red">${maxLoss}</span>`,
      sub:curWin>0?`🔥 ${curWin} win streak now`:curLoss>0?`❄️ ${curLoss} loss streak now`:ft.length?'best W / worst L':'best W / worst L',
@@ -9931,7 +10086,7 @@ function renderStats(){
   document.getElementById('bestWorst').innerHTML=display.map(t=>{
     const pnl=parseFloat(t.pnl), r=calcR(t), win=pnl>=0;
     return `<div class="bw-item ${win?'win':'loss'}">
-      <div class="bw-top"><span class="bw-pair">${escapeHtml(t.pair)}</span><span class="bw-pnl ${win?'positive':'negative'}">${fmtPnl(pnl)}</span></div>
+      <div class="bw-top"><span class="bw-pair">${escapeHtml(t.pair)}</span><span class="bw-pnl ${win?'positive':'negative'}">${fmtPnl(pnl,t)}</span></div>
       <div class="bw-meta"><span>${escapeHtml(t.date||'')}</span>${r!==null?`<span class="${parseFloat(r)>=0?'r-pos':'r-neg'}">${parseFloat(r)>=0?'+':''}${r}R</span>`:''}</div>
     </div>`;
   }).join('')||'<div style="color:var(--text3);font-size:14px;padding:8px 0">No trades yet</div>';
@@ -9972,8 +10127,8 @@ function renderMonthStripCard(){
   const fmtDay=s=>{ const d=parseLocalDate(s); return d?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):''; };
   el.innerHTML=head+`<div class="month-strip-grid">
     <div class="month-strip-cell"><div class="month-strip-label">Win Rate</div><div class="month-strip-value">${winRate}%</div></div>
-    <div class="month-strip-cell"><div class="month-strip-label">Best Day</div><div class="month-strip-value ${bestDay[1]>=0?'positive':'negative'}">${fmtPnl(bestDay[1])}</div><div class="month-strip-sub">${fmtDay(bestDay[0])}</div></div>
-    <div class="month-strip-cell"><div class="month-strip-label">Worst Day</div><div class="month-strip-value ${worstDay[1]>=0?'positive':'negative'}">${fmtPnl(worstDay[1])}</div><div class="month-strip-sub">${fmtDay(worstDay[0])}</div></div>
+    <div class="month-strip-cell"><div class="month-strip-label">Best Day</div><div class="month-strip-value ${bestDay[1]>=0?'positive':'negative'}">${fmtPnl(bestDay[1],monthTrades)}</div><div class="month-strip-sub">${fmtDay(bestDay[0])}</div></div>
+    <div class="month-strip-cell"><div class="month-strip-label">Worst Day</div><div class="month-strip-value ${worstDay[1]>=0?'positive':'negative'}">${fmtPnl(worstDay[1],monthTrades)}</div><div class="month-strip-sub">${fmtDay(worstDay[0])}</div></div>
   </div>`;
 }
 
@@ -10309,12 +10464,12 @@ function renderPairTable(pairMap){
         losses:`<span style="color:var(--red)">${d.losses}</span>`,
         total:d.total,
         winrate:wr+'%',
-        pnl:`<span style="color:${d.pnl>=0?'var(--green)':'var(--red)'}">${fmtPnl(d.pnl)}</span>`,
+        pnl:`<span style="color:${d.pnl>=0?'var(--green)':'var(--red)'}">${fmtPnl(d.pnl,d.trades)}</span>`,
         pf: ext.pf===null ? '—' : ext.pf.toFixed(2),
         dur: ext.avgDur===null ? '—' : minutesToDuration(ext.avgDur),
         rr: ext.rr===null ? '—' : ext.rr.toFixed(2),
-        avgwl: `${fmtPnl(ext.avgWin)} / ${fmtPnl(-ext.avgLoss)}`,
-        maxdd: ext.maxDD>0 ? `<span style="color:var(--red)">${fmtPnl(-ext.maxDD)} (${ext.maxDDPct.toFixed(1)}%)</span>` : '—'
+        avgwl: `${fmtPnl(ext.avgWin,d.trades)} / ${fmtPnl(-ext.avgLoss,d.trades)}`,
+        maxdd: ext.maxDD>0 ? `<span style="color:var(--red)">${fmtPnl(-ext.maxDD,d.trades)} (${ext.maxDDPct.toFixed(1)}%)</span>` : '—'
       };
       return `<tr><td>${escapeHtml(pair)}</td>${cols.map(k=>`<td>${vals[k]}</td>`).join('')}</tr>`;
     }).join('') : `<tr><td colspan="${cols.length+1}" style="color:var(--text3);font-size:13px;text-align:left;font-family:var(--font);padding:12px 10px">Log trades with pairs to see this breakdown</td></tr>`;
@@ -10343,7 +10498,7 @@ function renderDailyPnlWidget(chronological){
   const el=document.getElementById('dailyPnlWidget'); if(!el) return;
   if(!chronological.length){ el.innerHTML=`<div style="color:var(--text3);font-size:13px;text-align:center;padding:12px 0">No trades in this period</div>`; return; }
   const byDate={};
-  chronological.forEach(t=>{ if(!t.date) return; if(!byDate[t.date]) byDate[t.date]={pnl:0,count:0}; byDate[t.date].pnl+=parseFloat(t.pnl)||0; byDate[t.date].count++; });
+  chronological.forEach(t=>{ if(!t.date) return; if(!byDate[t.date]) byDate[t.date]={pnl:0,count:0,ids:[]}; { const aid=t.accountId==null?'':t.accountId; if(byDate[t.date].ids.indexOf(aid)<0) byDate[t.date].ids.push(aid); } byDate[t.date].pnl+=parseFloat(t.pnl)||0; byDate[t.date].count++; });
   const days=Object.entries(byDate).sort((a,b)=>a[0].localeCompare(b[0]));
   if(!days.length){ el.innerHTML=`<div style="color:var(--text3);font-size:13px;text-align:center;padding:12px 0">No dated trades in this period</div>`; return; }
   const max=Math.max(...days.map(([,d])=>Math.abs(d.pnl)))||1;
@@ -10367,13 +10522,13 @@ function renderDailyPnlWidget(chronological){
   }).join('');
   el.innerHTML=`<div style="position:relative"><div class="dbar-tip" id="dbarTip"></div><div class="dbar-wrap">${cols}</div></div>
     <div class="dbar-labels">${labs}</div>
-    <div class="rhist-footer"><span>${days.length} day${days.length!==1?'s':''} · <span class="positive">${greenDays}</span>/<span class="negative">${days.length-greenDays}</span></span><span>Avg <span class="v ${avg>=0?'positive':'negative'}">${fmtPnl(avg)}</span></span></div>`;
+    <div class="rhist-footer"><span>${days.length} day${days.length!==1?'s':''} · <span class="positive">${greenDays}</span>/<span class="negative">${days.length-greenDays}</span></span><span>Avg <span class="v ${avg>=0?'positive':'negative'}">${fmtPnl(avg,chronological)}</span></span></div>`;
 }
 function _dailyMicroTip(d,data){
   const dt=parseLocalDate(d), dateText=dt?dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):d;
   const cls=data.pnl>0?'positive':(data.pnl<0?'negative':'');
   const stats=dayReportStats(d,activeAcctFilter);
-  return `<div class="micro-tip-date">${dateText} · UTC</div><div class="micro-tip-pnl ${cls}">${fmtPnl(data.pnl)}</div><div class="micro-tip-meta">Starting balance: $${stats.startBalance.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} · ${fmtRoi(dailyRoi(d))}</div>`;
+  return `<div class="micro-tip-date">${dateText} · UTC</div><div class="micro-tip-pnl ${cls}">${fmtPnl(data.pnl,data.ids)}</div><div class="micro-tip-meta">Starting balance: ${_fmtBalLoc(stats.startBalance,stats.cur)} · ${fmtRoi(dailyRoi(d))}</div>`;
 }
 function showDbarTip(e,i){
   const tip=document.getElementById('dbarTip'),r=window._dailyPnlDays&&window._dailyPnlDays[i];if(!tip||!r||tip.classList.contains('pinned'))return;
@@ -10419,7 +10574,7 @@ function renderLongShortWidget(ft){
     const wr=(d.wins/d.n*100).toFixed(0), sign=d.pnl>0?'positive':(d.pnl<0?'negative':'');
     return `<div class="ls-tile">
       <div class="ls-head" style="color:${idColor}">${dirIcon}${label}</div>
-      <div class="ls-pnl ${sign}">${fmtPnl(d.pnl)}</div>
+      <div class="ls-pnl ${sign}">${fmtPnl(d.pnl,ft)}</div>
       <div class="ls-meta">${d.n} trade${d.n!==1?'s':''} · ${wr}% win</div>
       <div class="perf-bar-track" style="margin-top:9px"><div class="perf-bar-fill" style="width:${wr}%;background:var(--text2)"></div></div>
     </div>`;
@@ -10472,7 +10627,7 @@ function renderHourOfDayWidget(ft){
     const ht=Math.max(4,Math.round(Math.abs(d.pnl)/max*100));
     const color=d.pnl>0?'var(--green)':(d.pnl<0?'var(--red)':'var(--text3)');
     const thin=d.n<3;
-    const label=String(d.h).padStart(2,'0')+':00 · '+d.n+' trade'+(d.n!==1?'s':'')+' · '+fmtPnl(d.pnl);
+    const label=String(d.h).padStart(2,'0')+':00 · '+d.n+' trade'+(d.n!==1?'s':'')+' · '+fmtPnl(d.pnl,withTime);
     return `<div class="hour-col" title="${escapeHtml(label)}"><div class="hour-b" style="height:${ht}%;background:${color};opacity:${thin?0.4:0.92}"></div></div>`;
   }).join('');
   const labs=active.map(d=>`<div>${String(d.h).padStart(2,'0')}</div>`).join('');
@@ -10480,8 +10635,8 @@ function renderHourOfDayWidget(ft){
   active.forEach(d=>{ if(d.pnl>best.pnl) best=d; if(d.pnl<worst.pnl) worst=d; });
   el.innerHTML=`<div class="hour-wrap">${cols}</div>
     <div class="hour-labels">${labs}</div>
-    <div class="metric-row" style="margin-top:8px"><div class="metric-row-label">Best hour</div><div class="metric-row-val accent">${String(best.h).padStart(2,'0')}:00 · ${fmtPnl(best.pnl)}</div></div>
-    <div class="metric-row"><div class="metric-row-label">Worst hour</div><div class="metric-row-val red">${String(worst.h).padStart(2,'0')}:00 · ${fmtPnl(worst.pnl)}</div></div>
+    <div class="metric-row" style="margin-top:8px"><div class="metric-row-label">Best hour</div><div class="metric-row-val accent">${String(best.h).padStart(2,'0')}:00 · ${fmtPnl(best.pnl,withTime)}</div></div>
+    <div class="metric-row"><div class="metric-row-label">Worst hour</div><div class="metric-row-val red">${String(worst.h).padStart(2,'0')}:00 · ${fmtPnl(worst.pnl,withTime)}</div></div>
     <div class="hour-note">Hours with under 3 trades are dimmed. Time shown is exactly as entered — no timezone conversion.</div>`;
 }
 
@@ -10503,7 +10658,7 @@ function renderRecentTradesWidget(ft){
       <span class="rt-dir ${t.dir==='short'?'short':'long'}">${t.dir==='short'?'S':'L'}</span>
       <span class="rt-when">${escapeHtml(when)}</span>
       <span class="rt-r">${r!==null?(parseFloat(r)>=0?'+':'')+r+'R':''}</span>
-      <span class="rt-pnl ${cls}" style="${p===0?'color:var(--text2)':''}">${p===0?'$0':fmtPnl(p)}</span>
+      <span class="rt-pnl ${cls}" style="${p===0?'color:var(--text2)':''}">${p===0?_amtRaw('0',t):fmtPnl(p,t)}</span>
       <span class="rt-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
     </div>`;
   }).join('');
@@ -10526,8 +10681,9 @@ function renderMonthlyGoalWidget(){
   const monthStart=new Date(now.getFullYear(),now.getMonth(),1);
   const monthEnd=new Date(now.getFullYear(),now.getMonth()+1,0);
   const monthTrades=filteredTrades().filter(t=>{ if(!t.date) return false; const d=parseLocalDate(t.date); return d && d>=monthStart && d<=monthEnd; });
+  const gcx=monthTrades.length?monthTrades:_scopeCurFilter(), gMixed=_mixedCtx(gcx);
   const made=monthTrades.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
-  const pct=Math.max(0,Math.min(100,goal>0?(made/goal*100):0));
+  const pct=gMixed?0:Math.max(0,Math.min(100,goal>0?(made/goal*100):0));
   const today=now.getDate(), daysInMonth=monthEnd.getDate();
   const tradingDaysLeft=Math.max(0,daysInMonth-today);
   const remaining=Math.max(0,goal-made);
@@ -10535,13 +10691,13 @@ function renderMonthlyGoalWidget(){
   const linearPace=(today/daysInMonth*100);
   const paceDelta=pct-linearPace;
   el.innerHTML=`<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:9px">
-      <div class="stat-value accent" style="font-size:22px">${fmtPnl(made)}</div>
-      <div style="font-size:12px;color:var(--text2);font-family:var(--mono)">${pct.toFixed(0)}% of ${fmtPnl(goal).replace('+','')}</div>
+      <div class="stat-value accent" style="font-size:22px">${fmtPnl(made,gcx)}</div>
+      <div style="font-size:12px;color:var(--text2);font-family:var(--mono)">${gMixed?'pick one account':pct.toFixed(0)+'% of '+fmtPnl(goal,gcx).replace('+','')}</div>
     </div>
     <div class="goal-progress"><div class="goal-fill" style="width:${pct}%"></div></div>
     <div class="goal-amounts"><span style="color:var(--text3)">${monthStart.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span><span style="color:var(--text3)">${monthEnd.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span></div>
-    <div class="metric-row" style="margin-top:8px"><div><div class="metric-row-label">Needed per day</div><div class="metric-row-sub">${tradingDaysLeft} day${tradingDaysLeft!==1?'s':''} left in the month</div></div><div class="metric-row-val">${remaining>0?fmtPnl(perDay).replace('+',''):'Goal reached'}</div></div>
-    <div class="metric-row"><div><div class="metric-row-label">Pace</div><div class="metric-row-sub">vs. linear target</div></div><div class="metric-row-val ${paceDelta>=0?'accent':'red'}">${paceDelta>=0?'+':''}${paceDelta.toFixed(0)}%</div></div>`;
+    <div class="metric-row" style="margin-top:8px"><div><div class="metric-row-label">Needed per day</div><div class="metric-row-sub">${tradingDaysLeft} day${tradingDaysLeft!==1?'s':''} left in the month</div></div><div class="metric-row-val">${gMixed?'—':remaining>0?fmtPnl(perDay,gcx).replace('+',''):'Goal reached'}</div></div>
+    <div class="metric-row"><div><div class="metric-row-label">Pace</div><div class="metric-row-sub">vs. linear target</div></div><div class="metric-row-val ${paceDelta>=0?'accent':'red'}">${gMixed?'—':(paceDelta>=0?'+':'')+paceDelta.toFixed(0)+'%'}</div></div>`;
 }
 
 async function renderCharts(ft){
@@ -10651,9 +10807,10 @@ async function renderBalanceCard(){
   // Headline dollar figure is always the true, right-now balance — it never
   // reflects whatever window is selected, so it can't look stale/wrong while
   // someone's browsing an older period. Only the % badge is window-scoped.
-  if(amountEl) amountEl.textContent = (currentBalance<0?'-$':'$')+Math.abs(currentBalance).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const _bc=_scopeCurFilter();
+  if(amountEl) amountEl.textContent = _bc.mixed ? 'Mixed' : (currentBalance<0?'-':'')+_curWrap(Math.abs(currentBalance).toLocaleString('en-US',{minimumFractionDigits:_bc.dec,maximumFractionDigits:_bc.dec}),_bc);
   if(badgeEl){
-    if(startingBalance>0){
+    if(startingBalance>0 && !_bc.mixed){
       const pct=(tradingPnL/startingBalance)*100;
       badgeEl.textContent=(pct>=0?'+':'')+pct.toFixed(2)+'%';
       badgeEl.style.color = pct>=0 ? 'var(--green)':'var(--red)';
@@ -10956,7 +11113,7 @@ function renderDrawdownChart(sorted){
   const lineD=pts.map((p,i)=>(i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
   const areaD=`M0,${top} ${pts.map(p=>'L'+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')} L${W},${top} Z`;
   summaryEl.innerHTML = maxDD>0
-    ? `<span class="negative" style="font-family:var(--mono);font-size:18px;font-weight:700">-${maxDDPct.toFixed(1)}%</span><span style="font-size:11px;color:var(--text3)">max drawdown · ${fmtPnl(-maxDD)}</span>`
+    ? `<span class="negative" style="font-family:var(--mono);font-size:18px;font-weight:700">-${maxDDPct.toFixed(1)}%</span><span style="font-size:11px;color:var(--text3)">max drawdown · ${fmtPnl(-maxDD,sorted)}</span>`
     : `<span style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--text)">0%</span><span style="font-size:11px;color:var(--text3)">no drawdown in this period</span>`;
   chartEl.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="90" preserveAspectRatio="none">
     <line x1="0" y1="${top}" x2="${W}" y2="${top}" stroke="${T.border2}" stroke-width="1"/>
@@ -10978,10 +11135,10 @@ function renderPnlBars(sorted){
     const h=Math.round((Math.abs(v)/max)*60); // 60px = half of a 120px-tall row
     const pos=v>=0, color=pos?'var(--accent)':'var(--red)';
     const t=sorted[i], d=t.date?parseLocalDate(t.date):null, dateText=d?d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
-    return `<div class="pnl-bar-hit" tabindex="0" role="button" aria-label="${escapeHtml((t.pair||'Trade')+' '+fmtPnl(v))}" onclick="togglePnlPin(event,${i})" onmouseenter="showPnlTooltip(event,${i})" onmousemove="movePnlTooltip(event)" onmouseleave="hidePnlTooltip()" onfocus="showPnlTooltip(event,${i})" onblur="hidePnlTooltip()"><div class="pnl-bar-fill" style="${pos?'bottom':'top'}:50%;height:${h}px;background:${color}"></div><span hidden>${escapeHtml(dateText)}</span></div>`;
+    return `<div class="pnl-bar-hit" tabindex="0" role="button" aria-label="${escapeHtml((t.pair||'Trade')+' '+fmtPnl(v,t))}" onclick="togglePnlPin(event,${i})" onmouseenter="showPnlTooltip(event,${i})" onmousemove="movePnlTooltip(event)" onmouseleave="hidePnlTooltip()" onfocus="showPnlTooltip(event,${i})" onblur="hidePnlTooltip()"><div class="pnl-bar-fill" style="${pos?'bottom':'top'}:50%;height:${h}px;background:${color}"></div><span hidden>${escapeHtml(dateText)}</span></div>`;
   }).join('');
   window._pnlChartTrades=sorted;
-  el.innerHTML=`<div class="pnl-chart"><div class="pnl-tooltip" id="pnlTooltip"></div><div style="position:absolute;left:0;right:0;top:50%;height:1px;background:var(--border2)"></div><div class="pnl-bars-row">${bars}</div></div><div class="rhist-footer"><span>${sorted.length} trade${sorted.length!==1?'s':''} · <span class="positive">${wins}W</span>/<span class="negative">${losses}L</span></span><span>Avg <span class="v ${avg>=0?'positive':'negative'}">${avg>=0?'+':'-'}$${Math.abs(avg).toFixed(2)}</span></span></div>`;
+  el.innerHTML=`<div class="pnl-chart"><div class="pnl-tooltip" id="pnlTooltip"></div><div style="position:absolute;left:0;right:0;top:50%;height:1px;background:var(--border2)"></div><div class="pnl-bars-row">${bars}</div></div><div class="rhist-footer"><span>${sorted.length} trade${sorted.length!==1?'s':''} · <span class="positive">${wins}W</span>/<span class="negative">${losses}L</span></span><span>Avg <span class="v ${avg>=0?'positive':'negative'}">${fmtPnlSigned(avg,sorted)}</span></span></div>`;
 }
 
 // Hover previews a compact trade card; tap pins it inside the chart.
@@ -10989,7 +11146,7 @@ let _pnlPinned=-1;
 function pnlTooltipHtml(t,index,pinned=false){
  const pnl=parseFloat(t.pnl)||0,d=t.date?parseLocalDate(t.date):null,r=calcR(t),cls=pnl>=0?'positive':'negative';
  const when=d?d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—';
- return `<div class="micro-tip-date">${when}</div><div class="micro-tip-pnl ${cls}">${fmtPnl(pnl)}</div><div class="micro-tip-meta">${escapeHtml(t.pair||'Trade')} · ${t.dir==='short'?'Short':'Long'} · ${r===null?'—':(parseFloat(r)>=0?'+':'')+r+'R'}</div>${pinned?`<button class="pnl-tip-action" onclick="event.stopPropagation();openPinnedTradeDetail(${index})">View full detail →</button>`:''}`;
+ return `<div class="micro-tip-date">${when}</div><div class="micro-tip-pnl ${cls}">${fmtPnl(pnl,t)}</div><div class="micro-tip-meta">${escapeHtml(t.pair||'Trade')} · ${t.dir==='short'?'Short':'Long'} · ${r===null?'—':(parseFloat(r)>=0?'+':'')+r+'R'}</div>${pinned?`<button class="pnl-tip-action" onclick="event.stopPropagation();openPinnedTradeDetail(${index})">View full detail →</button>`:''}`;
 }
 function showPnlTooltip(event,index){const tip=document.getElementById('pnlTooltip'),t=window._pnlChartTrades?.[index];if(!tip||!t||tip.classList.contains('pinned'))return;tip.innerHTML=pnlTooltipHtml(t,index);tip.classList.add('show');movePnlTooltip(event);}
 function togglePnlPin(event,index){event.stopPropagation();const tip=document.getElementById('pnlTooltip'),t=window._pnlChartTrades?.[index];if(!tip||!t)return;if(_pnlPinned===index){hidePnlTooltip(true);return;}_pnlPinned=index;tip.innerHTML=pnlTooltipHtml(t,index,true);tip.classList.add('show','pinned');tip.parentElement?.classList.add('has-pinned');document.querySelectorAll('#pnlBars .pnl-bar-hit').forEach((b,j)=>b.classList.toggle('pnl-sel',j===index));movePnlTooltip(event);}
@@ -11085,7 +11242,13 @@ function destroyCharts(){
 
 // ─── Utils ───
 function irow(k,v){ return `<div class="info-row"><span class="k">${k}</span><span class="v">${v}</span></div>`; }
-function fmtPnl(v){ const n=parseFloat(v)||0; if(n===0)return '$0.00'; return (n>0?'+$':'-$')+Math.abs(n).toFixed(2); }
+// fmtPnl(v, ctx): ctx optional (see _ctxCur). No ctx = USD, byte-identical to the old output. Unlike fmtMoney it keeps the historic
+// no-thousands-separator style on every currency. Mixed ctx returns 'Mixed' (callers that cannot show that must check _mixedCtx first).
+function fmtPnl(v,ctx){ const n=parseFloat(v)||0, c=ctx===undefined?CUR_USD:_ctxCur(ctx);
+  if(c.mixed) return 'Mixed';
+  if(c===CUR_USD){ if(n===0)return '$0.00'; return (n>0?'+$':'-$')+Math.abs(n).toFixed(2); }
+  const t=Math.abs(n).toFixed(c.dec); if(!(+t)) return _curWrap(t,c);
+  return (n>0?'+':'-')+_curWrap(t,c); }
 // Shared row renderer for Best Day of Week / Session Performance — both
 // blocks compute the same {wins,losses,total,pnl} shape per bucket, so one
 // function keeps them visually identical instead of two near-duplicate
@@ -11102,7 +11265,7 @@ function _perfRowHtml(label,row){
       <span class="perf-row-label">${label}</span>
       <div class="perf-row-meta">
         <span class="perf-row-count">${row.total} trade${row.total!==1?'s':''}</span>
-        <span class="perf-row-pnl" style="color:${pnlColor}">${fmtPnl(row.pnl)}</span>
+        <span class="perf-row-pnl" style="color:${pnlColor}">${fmtPnl(row.pnl,row.trades||_statsScope)}</span>
         <span class="perf-row-wr" style="color:${barColor}">${wr}%</span>
       </div>
     </div>
@@ -11161,10 +11324,10 @@ function refreshPairSuggestions(){
 }
 
 
-// ─── Money formatting (single place; Phase 2 will make this currency-aware) ───
-function fmtMoney(n,o){ o=o||{}; const v=Number(n)||0, d=o.dec==null?2:o.dec;
+// ─── Money formatting (single place). cur = account | accountId | resolved currency; omitted = USD, so older calls are unchanged ───
+function fmtMoney(n,o,cur){ o=o||{}; const c=curOf(cur), v=Number(n)||0, d=o.dec==null?c.dec:o.dec;
   const t=Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
-  return (v<0?'-':(o.plus&&v>0?'+':''))+'$'+t; }
+  return (v<0?'-':(o.plus&&v>0?'+':''))+_curWrap(t,c); }
 const PROP_PHASE_LABEL={funded:'Funded',challenge:'Phase 1',verification:'Phase 2',phase3:'Phase 3'};
 
 // ─── Small action menu (the "⋯" on account / firm cards); styled like the pickers ───
@@ -11447,6 +11610,7 @@ function openQuickAdd(prefillDate){
   if(activeAcctFilter !== 'all'){
     document.getElementById('qAccount').value = activeAcctFilter;
   }
+  syncQuickCur();
   refreshPairSuggestions();
   renderQSetupChips();
   autoTagQSession();
@@ -12193,9 +12357,10 @@ function renderPropFirms(){
   const fundedFirms = propFirms.filter(f=>f.phase==='funded');
   const fundedCycle = fundedFirms.reduce((x,f)=>x+(getCyclePnL(f)||0),0);
   summaryEl.style.display = propFirms.length ? '' : 'none';
-  summaryEl.innerHTML = '<div><b class="'+(fundedCycle>0?'positive':fundedCycle<0?'negative':'')+'">'+fmtMoney(fundedCycle,{plus:true,dec:0})+'</b><span>Funded cycle P&amp;L</span></div>'
+  const fcCur = _uniformCur(fundedFirms.map(x=>_firmCur(x))), pdCur = _uniformCur(propFirms.map(x=>_firmCur(x)));   // null = firms in different currencies: "Mixed", no sum
+  summaryEl.innerHTML = '<div><b class="'+(fcCur&&fundedCycle>0?'positive':fcCur&&fundedCycle<0?'negative':'')+'">'+(fcCur?fmtMoney(fundedCycle,{plus:true,dec:0},fcCur):'Mixed')+'</b><span>Funded cycle P&amp;L</span></div>'
     +'<div><b>'+(propFirms.length-fundedFirms.length)+'</b><span>In evaluation</span></div>'
-    +'<div><b class="'+(totalEarned>0?'positive':'')+'">'+fmtMoney(totalEarned,{dec:0})+'</b><span>Paid out</span></div>';
+    +'<div><b class="'+(pdCur&&totalEarned>0?'positive':'')+'">'+(pdCur?fmtMoney(totalEarned,{dec:0},pdCur):'Mixed')+'</b><span>Paid out</span></div>';
 
   const listEl = document.getElementById('propFirmList');
   if(!propFirms.length){
@@ -12221,7 +12386,7 @@ function renderPropFirms(){
   const _d = new Date(), todayStr = _d.getFullYear()+'-'+String(_d.getMonth()+1).padStart(2,'0')+'-'+String(_d.getDate()).padStart(2,'0');
 
   listEl.innerHTML = propFirms.map(f=>{
-    const pnl = getPropFirmPnL(f);
+    const pnl = getPropFirmPnL(f), fc = _firmCur(f);
     const totalFirmEarned = (f.payouts||[]).reduce((s,p)=>s+p.amount,0);
     const payoutCount = (f.payouts||[]).length;
     const isLinked = !!(f.linkedAccount && accounts.find(a=>a.id===f.linkedAccount));
@@ -12273,16 +12438,16 @@ function renderPropFirms(){
     const isChallengePhase = ['challenge','verification','phase3'].includes(phaseKey);
     const targetReached = isChallengePhase && f.profitTarget>0 && pnl>=f.profitTarget;
     if(targetReached) chips += _chip('Target reached','ok',_I.check);
-    if(f.dailyDD>0 && !(todayLoss>0)) chips += _chip('Daily limit '+fmtMoney(f.dailyDD,{dec:0}));
-    if(f.maxDD>0 && !(pnl<0)) chips += _chip('Max DD '+fmtMoney(f.maxDD,{dec:0}));
+    if(f.dailyDD>0 && !(todayLoss>0)) chips += _chip('Daily limit '+fmtMoney(f.dailyDD,{dec:0},fc));
+    if(f.maxDD>0 && !(pnl<0)) chips += _chip('Max DD '+fmtMoney(f.maxDD,{dec:0},fc));
 
     // Risk bars appear only when there is something to show
     let risk = '';
-    if(todayLoss>0) risk += _bar('Daily drawdown today', fmtMoney(todayLoss,{dec:0})+' / '+fmtMoney(f.dailyDD,{dec:0})+' \u00b7 '+Math.round(dailyPct)+'%', Math.round(dailyPct));
-    if(f.maxDD>0 && pnl<0) risk += _bar('Max drawdown used', fmtMoney(ddUsed)+' / '+fmtMoney(f.maxDD,{dec:0})+' \u00b7 '+Math.round(ddPct)+'%', Math.round(ddPct));
+    if(todayLoss>0) risk += _bar('Daily drawdown today', fmtMoney(todayLoss,{dec:0},fc)+' / '+fmtMoney(f.dailyDD,{dec:0},fc)+' \u00b7 '+Math.round(dailyPct)+'%', Math.round(dailyPct));
+    if(f.maxDD>0 && pnl<0) risk += _bar('Max drawdown used', fmtMoney(ddUsed,null,fc)+' / '+fmtMoney(f.maxDD,{dec:0},fc)+' \u00b7 '+Math.round(ddPct)+'%', Math.round(ddPct));
     if(maxDDBreach) risk += _msg('Account breached \u2014 max drawdown reached. This account is no longer valid.','bad');
-    else if(maxDDNear) risk += _msg(fmtMoney(f.maxDD-ddUsed)+' left before the max drawdown limit. Trade carefully.','warn');
-    if(dailyDDBreach) risk += _msg('Daily limit breached on '+dailyDDBreachDate+': lost '+fmtMoney(dailyDDBreachAmt)+' against a '+fmtMoney(f.dailyDD,{dec:0})+' limit.','bad');
+    else if(maxDDNear) risk += _msg(fmtMoney(f.maxDD-ddUsed,null,fc)+' left before the max drawdown limit. Trade carefully.','warn');
+    if(dailyDDBreach) risk += _msg('Daily limit breached on '+dailyDDBreachDate+': lost '+fmtMoney(dailyDDBreachAmt,null,fc)+' against a '+fmtMoney(f.dailyDD,{dec:0},fc)+' limit.','bad');
 
     // Payout section (funded only)
     let payoutSectionHTML = '';
@@ -12296,15 +12461,15 @@ function renderPropFirms(){
       const canRequest = earnableAmt>=minPayout && (!nextDate || nextDate<=now);
       const cycleLabel = {weekly:'Weekly',biweekly:'Bi-weekly',monthly:'Monthly',bimonthly:'Every 2mo',ondemand:'On Demand'}[f.payout?.cycle]||'';
       payoutSectionHTML = '<div class="pf-pay">'
-        +'<div class="pf-row"><span>Cycle P&amp;L'+(cycleLabel?' \u00b7 '+cycleLabel:'')+'</span><b class="'+(cyclePnL>0?'positive':cyclePnL<0?'negative':'')+'">'+fmtMoney(cyclePnL,{plus:true})+'</b></div>'
-        +(cyclePnL>0?'<div class="pf-row"><span>Est. payout \u00b7 '+split+'% split</span><b>'+fmtMoney(earnableAmt)+'</b></div>':'')
+        +'<div class="pf-row"><span>Cycle P&amp;L'+(cycleLabel?' \u00b7 '+cycleLabel:'')+'</span><b class="'+(cyclePnL>0?'positive':cyclePnL<0?'negative':'')+'">'+fmtMoney(cyclePnL,{plus:true},fc)+'</b></div>'
+        +(cyclePnL>0?'<div class="pf-row"><span>Est. payout \u00b7 '+split+'% split</span><b>'+fmtMoney(earnableAmt,null,fc)+'</b></div>':'')
         +(nextDate?'<div class="pf-row"><span>Next payout</span><b>'+nextDate.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</b></div>':'')
-        +(minPayout>0&&earnableAmt<minPayout?'<div class="pf-row"><span style="color:var(--amber)">Min payout '+fmtMoney(minPayout,{dec:0})+' not met</span></div>':'')
-        +'<div class="pf-payfoot"><span>Total earned <b class="'+(totalFirmEarned>0?'positive':'')+'">'+fmtMoney(totalFirmEarned)+'</b></span><button class="btn-sm '+(canRequest?'accent':'')+'" onclick="openPayoutLog(\''+f.id+'\')">'+_I.coins+' Payouts ('+payoutCount+')</button></div></div>';
+        +(minPayout>0&&earnableAmt<minPayout?'<div class="pf-row"><span style="color:var(--amber)">Min payout '+fmtMoney(minPayout,{dec:0},fc)+' not met</span></div>':'')
+        +'<div class="pf-payfoot"><span>Total earned <b class="'+(totalFirmEarned>0?'positive':'')+'">'+fmtMoney(totalFirmEarned,null,fc)+'</b></span><button class="btn-sm '+(canRequest?'accent':'')+'" onclick="openPayoutLog(\''+f.id+'\')">'+_I.coins+' Payouts ('+payoutCount+')</button></div></div>';
     }
 
     const cardPhaseClass = phaseKey==='funded'?'phase-funded-card':phaseKey==='verification'?'phase-verification-card':phaseKey==='phase3'?'phase-phase3-card':'phase-challenge-card';
-    const sub = (isLinked ? escapeHtml(linkedAcctName) : 'Manual P&amp;L') + ' \u00b7 ' + fmtMoney(f.acctSize||0,{dec:0});
+    const sub = (isLinked ? escapeHtml(linkedAcctName) : 'Manual P&amp;L') + ' \u00b7 ' + fmtMoney(f.acctSize||0,{dec:0},fc);
     return `<div class="prop-firm-card ${cardPhaseClass}">
       <div class="pf-top">
         <div style="flex:1;min-width:0"><div class="prop-firm-name">${escapeHtml(f.name)}</div><div class="pf-sub">${sub}</div></div>
@@ -12312,7 +12477,7 @@ function renderPropFirms(){
         <button class="ac-menu" aria-label="Firm actions" onclick="openFirmMenu(this,'${f.id}',event)">${_I.dots}</button>
       </div>
       ${consistBadgeHTML}
-      ${f.profitTarget>0?`<div class="pf-row" style="margin-top:12px"><span>Profit target</span><b class="${pnl<0?'negative':''}">${fmtMoney(pnl,{plus:true})} / ${fmtMoney(f.profitTarget,{dec:0})}${pnl>0?' \u00b7 '+Math.round(profitRaw)+'%':''}</b></div><div class="pf-bar"><i class="pf-gr" style="width:${profitPct}%"></i></div>`:''}
+      ${f.profitTarget>0?`<div class="pf-row" style="margin-top:12px"><span>Profit target</span><b class="${pnl<0?'negative':''}">${fmtMoney(pnl,{plus:true},fc)} / ${fmtMoney(f.profitTarget,{dec:0},fc)}${pnl>0?' \u00b7 '+Math.round(profitRaw)+'%':''}</b></div><div class="pf-bar"><i class="pf-gr" style="width:${profitPct}%"></i></div>`:''}
       ${risk}
       ${chips?`<div class="pf-chips">${chips}</div>`:''}
       ${payoutSectionHTML}
