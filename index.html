@@ -753,6 +753,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .cal-cell.win-day{background:rgba(0,229,160,0.13);border-color:rgba(0,229,160,0.3)}
 .cal-cell.loss-day{background:rgba(244,63,94,0.13);border-color:rgba(244,63,94,0.28)}
 .cal-cell.no-trade{background:var(--surface2);border-color:var(--border);opacity:.6;cursor:default;pointer-events:none}
+.cal-cell.mixed-day{background:var(--surface2);border-color:var(--border2)}
+.cs{display:block;font-style:normal;font-size:13px;line-height:1.35;white-space:nowrap}
+.cs.more{font-size:11px;opacity:.7}
+.cs small{font-size:10px;opacity:.6;margin-right:4px;letter-spacing:.04em}
+#acctHeaderBalanceVal.mixed-stack{font-size:13px;line-height:1.3;text-align:right}
+.mixed-note{padding:10px 12px;border:1px dashed var(--border2);border-radius:12px;font-size:12px;line-height:1.5;color:var(--text2);margin-bottom:12px}
+.mixed-note b{color:var(--text)}
 .cal-day-num{font-size:10px;font-weight:700;color:var(--text3)}
 .cal-day-roi{font-size:9px;font-weight:700;font-family:var(--mono);line-height:1.2;opacity:.85}.cal-day-roi.pos{color:var(--green)}.cal-day-roi.neg{color:var(--red)}
 .cal-day-pnl{font-size:10px;font-weight:800;font-family:var(--mono);letter-spacing:-.3px;line-height:1.2}
@@ -1391,6 +1398,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
 
 <!-- ══ TAB: Calendar ══ -->
 <div id="tabCalendar" class="tab">
+  <div id="calMixedNote" class="mixed-note" style="display:none"></div>
   <!-- Period filter -->
 
   <div class="chip-scroll" style="display:flex;gap:6px;margin-bottom:14px;padding-bottom:2px">
@@ -1479,7 +1487,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Account Size ($)</label>
+        <label class="form-label" id="pAcctSizeLbl">Account Size ($)</label>
         <input class="form-input" type="number" id="pAcctSize" placeholder="100000"/>
       </div>
     </div>
@@ -1489,7 +1497,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
       <div class="prop-modal-section-title">Rules &amp; Limits</div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Profit Target ($)</label>
+          <label class="form-label" id="pProfitTargetLbl">Profit Target ($)</label>
           <input class="form-input" type="number" id="pProfitTarget" placeholder="8000"/>
         </div>
         <div class="form-group">
@@ -1499,11 +1507,11 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Daily DD Limit ($)</label>
+          <label class="form-label" id="pDailyDDLbl">Daily DD Limit ($)</label>
           <input class="form-input" type="number" id="pDailyDD" placeholder="4000"/>
         </div>
         <div class="form-group">
-          <label class="form-label">Max Drawdown ($)</label>
+          <label class="form-label" id="pMaxDDLbl">Max Drawdown ($)</label>
           <input class="form-input" type="number" id="pMaxDD" placeholder="8000"/>
         </div>
       </div>
@@ -1513,7 +1521,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
         <select class="form-select" id="pConsistencyType" onchange="onConsistencyTypeChange()">
           <option value="none">None</option>
           <option value="best_day_pct">Best Day ≤ % of total profit</option>
-          <option value="daily_cap">Daily profit cap ($)</option>
+          <option value="daily_cap" id="pConsistencyCapOpt">Daily profit cap ($)</option>
         </select>
         <div id="consistencyValueGroup" style="display:none;margin-top:8px">
           <label class="form-label" id="consistencyValueLabel">Threshold</label>
@@ -1544,7 +1552,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Min Payout ($)</label>
+          <label class="form-label" id="pMinPayoutLbl">Min Payout ($)</label>
           <input class="form-input" type="number" id="pMinPayout" placeholder="500"/>
         </div>
         <div class="form-group">
@@ -1567,7 +1575,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
         <div style="font-size:11px;color:var(--text3);margin-top:5px;line-height:1.5">When linked, P&L is pulled live from your logged trades. Leave unlinked to enter P&L manually.</div>
       </div>
       <div class="form-group" id="pManualPnLGroup" style="margin-bottom:0">
-        <label class="form-label">Current P&L ($)</label>
+        <label class="form-label" id="pManualPnLLbl">Current P&L ($)</label>
         <input class="form-input" type="number" step="any" id="pManualPnL" placeholder="0.00"/>
       </div>
     </div>
@@ -1597,7 +1605,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
     <div class="section-header"><span class="section-title">Record Payout</span></div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Amount ($)</label>
+        <label class="form-label" id="plAmountLbl">Amount ($)</label>
         <input class="form-input" type="number" id="plAmount" placeholder="0"/>
       </div>
       <div class="form-group">
@@ -1703,6 +1711,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
     </div>
   </div>
 <div id="tabStats" class="tab">
+  <div id="statsMixedNote" class="mixed-note" style="display:none"></div>
   <!-- Time period filter. "Custom" is the same kind of control as the other
        four — it just gets its bounds from customRange (set in the date-range
        modal) instead of from the calendar math in _calendarBounds(). -->
@@ -1805,6 +1814,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
       <!-- One-off gesture hint: fades in the first time the user zooms, then
            never again (remembered in localStorage). -->
       <div id="balanceZoomHint" style="display:none;font-size:11px;color:var(--text3);margin-top:2px;transition:opacity .4s">Tip: double-tap an axis to reset the chart</div>
+      <div id="balMixedNote" class="mixed-note" style="display:none">Mixed currencies. Pick one account to see its balance curve.</div>
       <div class="balance-chart-scroll" id="balanceChartScroll"><div class="balance-chart-inner" id="balanceChartInner"><canvas id="equityChart" height="210"></canvas></div></div>
     </div>
   </div>
@@ -1997,6 +2007,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
     </div>
     <span id="storageStatusLabel" style="display:none">Not connected</span>
   </div>
+  <div class="st-card st-sync" id="fxReviewCard" style="display:none;margin:12px 0"></div>
   <div class="st-stats">
     <div><b id="settingsTrades">0</b><span>Trades</span></div>
     <div><b id="settingsAccts">0</b><span>Accounts</span></div>
@@ -2146,6 +2157,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
       <div class="form-group">
         <label class="form-label" id="fPnlLbl">Actual P&L ($)</label>
         <input class="form-input" id="fPnl" type="number" step="any" placeholder="Auto-calculated" oninput="manualPnl()"/>
+        <div id="fPnlFxHint" style="display:none;font-size:11px;color:var(--text3);margin-top:4px;line-height:1.35"></div>
       </div>
       <div class="form-group">
         <label class="form-label">R:R Result</label>
@@ -2936,7 +2948,7 @@ const DEFAULT_CHECKLIST = {
 // ─── Currency (Phase 2b, batch 2b-1) ───
 // CURRENCY_UI=false keeps the whole feature inert: no picker, every account reads as USD, output identical to before.
 // Flip to true only after batches 2b-2..2b-4 ship (the rest of the app still shows "$" everywhere else).
-const CURRENCY_UI=false;
+const CURRENCY_UI=true;
 const CUR_USD={code:'USD',sym:'$',pos:'prefix',dec:2};
 // AUD/CAD/NZD use the narrow "$" on purpose (most users read their own balance as "$"); the Accounts tab and the
 // Switch Account sheet add a code chip for any non-USD account. To disambiguate later, change the three symbols here to 'A$','CA$','NZ$'.
@@ -3034,6 +3046,162 @@ function _fmtBalLoc(n,ctx){ const c=ctx===undefined?CUR_USD:_ctxCur(ctx); if(c.m
 function fmtPnlSigned(v,ctx){ const n=Number(v)||0, c=ctx===undefined?CUR_USD:_ctxCur(ctx); if(c.mixed) return 'Mixed';
   return (n>=0?'+':'-')+_curWrap(Math.abs(n).toFixed(c===CUR_USD?2:c.dec),c); }
 let _statsScope=[];   // trades behind the Stats tab right now; rows that carry no trades of their own use this for their currency
+// ─── FX (batch 2b-2.1): P&L from the pair's quote currency into the account's currency ───
+// Only active when CURRENCY_UI is true. Rates: Frankfurter v2 (free, no key, daily reference rates). The rate used is stored on the trade
+// (trade.fx = {from,to,rate,date,src}) so history never moves. A failed fetch leaves the P&L blank for the user to type.
+const FX_PEG={USDT:'USD',USDC:'USD'};
+const FX_INDEX_CCY={NAS100:'USD',US100:'USD',NDX100:'USD',USTEC:'USD',US30:'USD',DJ30:'USD',DJI:'USD',WS30:'USD',SPX500:'USD',US500:'USD',SPX:'USD',GER40:'EUR',DE40:'EUR',DE30:'EUR',DAX:'EUR',DAX40:'EUR',FRA40:'EUR',EU50:'EUR',UK100:'GBP',FTSE100:'GBP',JP225:'JPY',NIKKEI:'JPY',NI225:'JPY',AUS200:'AUD',HK50:'HKD'};
+const FX_QUOTES=['USDT','USDC','USD','EUR','GBP','JPY','AUD','CAD','CHF','NZD','NGN','ZAR','MXN','TRY','SEK','NOK','DKK','PLN','CZK','HUF','SGD','HKD','CNH','CNY','THB','INR','KRW','BRL','ILS'];
+const _fxCache={}, _fxInflight={}, _fxFail={};
+let _fxCur=null;   // the conversion behind the value currently auto-filled in the trade form
+function fxQuoteOf(pair){   // currency the pair's P&L is naturally quoted in, or null when unknown
+  const p0=String(pair||'').toUpperCase().replace(/[^A-Z0-9]/g,''); if(!p0) return null;
+  const cands=[p0]; if(p0.length>3) cands.push(p0.slice(0,-1)); if(p0.length>6) cands.push(p0.slice(0,6));   // broker suffixes (EURUSD.m / EURUSDm / EURUSDpro)
+  for(const c of cands){
+    if(FX_INDEX_CCY[c]) return FX_INDEX_CCY[c];
+    for(const q of FX_QUOTES){ if(c.length>=q.length+3 && c.endsWith(q)) return q; }
+  }
+  return null;
+}
+function _fxNorm(c){ return FX_PEG[c]||c; }
+function _fxFmtRate(r){ r=Number(r); return r>=100?r.toFixed(2):r>=1?r.toFixed(4):r.toFixed(6); }
+function _fxKey(f,t,date){ const today=new Date().toISOString().slice(0,10); return f+'|'+t+'|'+((date&&date<today)?date:''); }
+function fxPlan(pair,accountId){
+  if(!CURRENCY_UI) return {needs:false};
+  const c=curOf(accountId); if(c.code==='CUSTOM') return {needs:false,custom:true};
+  const acct=c.code, a=_fxNorm(acct), q0=fxQuoteOf(pair), q=q0?_fxNorm(q0):null;
+  if(!q) return {needs:false,unknown:true,acct};
+  if(q===a) return {needs:false,acct,quote:q};
+  return {needs:true,from:q,to:a,acct,quote:q};
+}
+async function _fxGet(url){
+  const ctl=new AbortController(), tm=setTimeout(()=>ctl.abort(),7000);
+  try{ const r=await fetch(url,{signal:ctl.signal}); if(!r.ok) return null; return await r.json(); }catch(e){ return null; } finally{ clearTimeout(tm); }
+}
+function _fxPick(j){ if(Array.isArray(j)) j=j[0]; const r=Number(j&&j.rate); return (j&&isFinite(r)&&r>0)?{rate:r,date:j.date||''}:null; }
+async function fxFetch(from,to,date){
+  const f=_fxNorm(from), t=_fxNorm(to); if(!f||!t) return null;
+  if(f===t) return {rate:1,date:date||'',src:'same'};
+  const key=_fxKey(f,t,date); if(_fxCache[key]) return _fxCache[key]; if(_fxInflight[key]) return _fxInflight[key];
+  const d=key.split('|')[2], B='https://api.frankfurter.dev/v2';
+  _fxInflight[key]=(async()=>{
+    let got=null;
+    if(d){ got=_fxPick(await _fxGet(B+'/rate/'+f+'/'+t+'/'+d)); if(!got) got=_fxPick(await _fxGet(B+'/rates?date='+d+'&base='+f+'&quotes='+t)); }
+    else got=_fxPick(await _fxGet(B+'/rate/'+f+'/'+t));
+    delete _fxInflight[key];
+    if(got){ got.src='frankfurter'; _fxCache[key]=got; }
+    return got;
+  })();
+  return _fxInflight[key];
+}
+function _fxResolve(plan,date){   // synchronous view of the async fetch: ok | loading | fail (re-runs autoCalc when the fetch lands)
+  const k=_fxKey(plan.from,plan.to,date), hit=_fxCache[k];
+  if(hit) return {state:'ok',rate:hit.rate,date:hit.date,src:hit.src};
+  if(_fxFail[k]&&Date.now()-_fxFail[k]<30000) return {state:'fail'};
+  if(!_fxInflight[k]) fxFetch(plan.from,plan.to,date).then(r=>{ if(!r) _fxFail[k]=Date.now(); try{ autoCalc(); }catch(e){} });
+  return {state:'loading'};
+}
+function _fxHint(msg){ const el=document.getElementById('fPnlFxHint'); if(!el) return; el.textContent=msg||''; el.style.display=msg?'block':'none'; }
+function _fxSaved(fx){ return 'Converted from '+fx.from+' at 1 '+fx.from+' = '+_fxFmtRate(fx.rate)+' '+fx.to+(fx.date?' ('+fx.date+')':'')+' · estimate'; }
+// Trades whose P&L still equals the raw quote-currency figure on an account whose currency differs (never converted).
+function fxSuspects(){
+  if(!CURRENCY_UI) return [];
+  return trades.filter(t=>{
+    if(t.fx||t.fxPrev||!t.entry||!t.exit||!t.size) return false;
+    const plan=fxPlan(t.pair,t.accountId); if(!plan.needs) return false;
+    const e=parseFloat(t.entry), x=parseFloat(t.exit), s=parseFloat(t.size); if(!(e&&x&&s)) return false;
+    const raw=t.dir==='short'?(e-x)*s:(x-e)*s;
+    return Math.abs((parseFloat(t.pnl)||0)-raw)<0.011;
+  });
+}
+async function fxRecalcRun(){
+  const list=fxSuspects(); let ok=0, fail=0;
+  for(const t of list){
+    const plan=fxPlan(t.pair,t.accountId), r=await fxFetch(plan.from,plan.to,t.date);
+    if(!r){ fail++; continue; }
+    const e=parseFloat(t.entry), x=parseFloat(t.exit), s=parseFloat(t.size), raw=t.dir==='short'?(e-x)*s:(x-e)*s;
+    const np=+(raw*r.rate).toFixed(curOf(t.accountId).dec), risk=parseFloat(t.risk);
+    t.fxPrev={pnl:t.pnl,rr:t.rr}; t.pnl=np; t.rr=risk>0?+(np/risk).toFixed(2):null;
+    t.fx={from:plan.from,to:plan.to,rate:r.rate,date:r.date||t.date,src:r.src}; ok++;
+  }
+  if(ok){ tradesVersion++; saveTrades(); renderAll(); }
+  showToast(ok+' trade'+(ok===1?'':'s')+' converted'+(fail?' · '+fail+' failed (no rate, try again later)':''), fail&&!ok?'error':undefined);
+}
+function fxRecalcAll(){
+  const n=fxSuspects().length; if(!n) return;
+  showConfirm('Convert '+n+' trade'+(n===1?'':'s')+'?','Their P&L is still in the pair\'s quote currency. Each will be converted into its account\'s currency using that day\'s reference rate. You can undo this afterwards.',()=>{ fxRecalcRun(); },'Convert');
+}
+function fxUndoRecalc(){
+  const list=trades.filter(t=>t.fxPrev); if(!list.length) return;
+  showConfirm('Undo conversion?','Restores the original P&L and R on '+list.length+' trade'+(list.length===1?'':'s')+'.',()=>{
+    list.forEach(t=>{ t.pnl=t.fxPrev.pnl; t.rr=t.fxPrev.rr; delete t.fx; delete t.fxPrev; });
+    tradesVersion++; saveTrades(); renderAll(); showToast('Conversion undone');
+  },'Undo');
+}
+function fxKeepConversions(){
+  const n=trades.filter(t=>t.fxPrev).length; if(!n) return;
+  showConfirm('Keep converted figures?','The original P&L on '+n+' trade'+(n===1?'':'s')+' will be discarded, so this can no longer be undone. The stored exchange rate stays on each trade.',()=>{
+    trades.forEach(t=>{ delete t.fxPrev; }); tradesVersion++; saveTrades(); renderAll(); showToast('Conversion kept');
+  },'Keep');
+}
+function renderFxReviewCard(){
+  const el=document.getElementById('fxReviewCard'); if(!el) return;
+  const s=fxSuspects().length, u=trades.filter(t=>t.fxPrev).length;
+  if(!CURRENCY_UI||(!s&&!u)){ el.style.display='none'; return; }
+  el.style.display='';
+  el.innerHTML='<div class="st-sync-title">Currency review</div>'
+    +(s?'<p class="st-hint">'+s+' trade'+(s===1?'':'s')+' ha'+(s===1?'s':'ve')+' P&amp;L still in the pair\'s quote currency instead of the account\'s currency.</p><button class="btn btn-primary st-cta" onclick="fxRecalcAll()">Convert '+s+' trade'+(s===1?'':'s')+' at historical rates</button>':'')
+    +(u?'<p class="st-hint">'+u+' trade'+(u===1?' was':'s were')+' converted. Rates are daily reference rates, so figures can differ slightly from your broker.</p><div style="display:flex;gap:8px"><button class="btn btn-ghost st-cta" style="flex:1" onclick="fxUndoRecalc()">Undo</button><button class="btn btn-primary st-cta" style="flex:1" onclick="fxKeepConversions()">Keep</button></div>':'');
+}
+// Colour by sign unless the scope mixes currencies (the sign of a cross-currency sum means nothing).
+// Per-currency net P&L for a list of trades, e.g. "+$2,150.00 · -€7,673.50 · +¥321" (never a cross-currency sum).
+function fmtPnlByCur(list){
+  const g={}; (list||[]).forEach(t=>{ const c=curOf(t.accountId), k=_curKey(c); (g[k]||(g[k]={c,n:0})).n+=parseFloat(t.pnl)||0; });
+  return Object.keys(g).sort().map(k=>fmtPnl(g[k].n,g[k].c)).join(' · ');
+}
+function _setMixedNote(id,list){   // shown only when the trades in view span currencies
+  const el=document.getElementById(id); if(!el) return;
+  const h=(list&&list.length&&_mixedCtx(list))?'<b>Mixed currencies.</b> Net P&amp;L: '+fmtPnlByCur(list)+'. Pick one account for totals, averages and drawdown.':'';
+  el.innerHTML=h; el.style.display=h?'block':'none';
+}
+// Per-currency totals for "All" views: stacked lines (max 3, then "+N more") or one inline string. Never a cross-currency sum.
+function _groupByCur(items){
+  const g={}; items.forEach(it=>{ const k=_curKey(it.c); (g[k]||(g[k]={c:it.c,v:0})).v+=it.v; });
+  return Object.keys(g).map(k=>g[k]).sort((a,b)=>(a.c.code==='USD'?-1:b.c.code==='USD'?1:String(a.c.code).localeCompare(String(b.c.code))));
+}
+function _byCurLines(items,opts,sign){
+  const gs=_groupByCur(items); if(!gs.length) return '';
+  let h=gs.slice(0,5).map(x=>'<em class="cs'+(sign?(x.v>0?' positive':x.v<0?' negative':''):'')+'"><small>'+escapeHtml(x.c.code)+'</small> '+escapeHtml(fmtMoney(x.v,opts,x.c))+'</em>').join('');
+  if(gs.length>5) h+='<em class="cs more">+'+(gs.length-5)+' more</em>';
+  return h;
+}
+function _byCurInline(items,opts){ return _groupByCur(items).map(x=>x.c.code+' '+fmtMoney(x.v,opts,x.c)).join(' · '); }
+// ─── 2b-5: "All Accounts" exists only while it can be shown in one currency ───
+let _lastAcct='', _allNoticeShown=false;
+function accountsMixed(){ return CURRENCY_UI && !acctsCur(activeAccounts()); }   // active accounts span more than one currency
+function allViewAllowed(){ return !accountsMixed(); }                              // later: or a display currency is on
+function _rememberAcct(id){ if(id&&id!=='all'){ _lastAcct=id; try{ CS.set('last_account',id); }catch(e){} } }
+function enforceAllView(){   // if the saved filter is "All" but accounts now mix currencies, land on the last used account
+  if(activeAcctFilter!=='all'||allViewAllowed()) return false;
+  const act=activeAccounts(), pick=act.find(a=>a.id===_lastAcct)||act[0]; if(!pick) return false;
+  activeAcctFilter=pick.id; try{ CS.set('active_account',pick.id); }catch(e){}
+  if(!_allNoticeShown){ _allNoticeShown=true; try{ showToast('"All Accounts" is hidden while your accounts use different currencies. Showing '+pick.name+'.'); }catch(e){} }
+  return true;
+}
+// The one profit factor (money). Only meaningful inside one currency: a list spanning currencies returns {na:true}.
+function profitFactor(list){
+  if(list&&list.length&&_mixedCtx(list)) return {na:true,reason:'mixed'};
+  let gp=0, gl=0, wins=0;
+  (list||[]).forEach(t=>{ const v=parseFloat(t.pnl)||0; if(v>0){ gp+=v; wins++; } else if(v<0) gl-=v; });
+  return {gp,gl,wins,pf:gl>0?gp/gl:(wins?Infinity:null)};
+}
+// Unit-free profit factor: R won / R lost over trades that have a risk amount. Pools correctly across currencies.
+function rProfitFactor(list){
+  let w=0, l=0, n=0;
+  (list||[]).forEach(t=>{ const r=calcR(t); if(r===null) return; n++; const v=parseFloat(r); if(v>0) w+=v; else if(v<0) l-=v; });
+  return {pf:l>0?w/l:(w>0?Infinity:null), n, total:(list||[]).length};
+}
+function _sgn(v,ctx){ return _mixedCtx(ctx)?'':(v>=0?'positive':'negative'); }
 function syncTradeFormCur(){ const a=document.getElementById('fAccount'), v=a?a.value:''; _setCurLbl('fRiskLbl','Risk Amount',v); _setCurLbl('fPnlLbl','Actual P&L',v); }
 function syncQuickCur(){ const a=document.getElementById('qAccount'); _setCurLbl('qPnlLbl','Actual P&L',a?a.value:''); }
 let trades = [], accounts = [], strategy = {}, edgeTags = [];
@@ -5011,11 +5179,13 @@ async function saveUIState(){
 }
 
 async function loadUIState(){
-  const [acct, tab] = await Promise.all([
+  const [acct, tab, lastA] = await Promise.all([
     CS.get('active_account'),
     CS.get('active_tab'),
+    CS.get('last_account'),
   ]);
   if(acct) activeAcctFilter = acct;
+  if(lastA) _lastAcct = lastA;
   // Fixed landing tab: the app always opens on Trade Log (the HTML default), so there is nothing to restore.
 }
 
@@ -5997,9 +6167,9 @@ function renderSwitchAcctList(){
   const list = document.getElementById('switchAcctList');
   _openSwipeRow = null;
   const allActive = activeAcctFilter==='all';
-  let html = `<div class="switch-acct-row${allActive?' active':''}" onclick="selectSwitchAccount('all',this)">`
+  let html = !allViewAllowed() ? '' : `<div class="switch-acct-row${allActive?' active':''}" onclick="selectSwitchAccount('all',this)">`
     + `<div class="acct-header-icon">ALL</div>`
-    + `<div class="switch-acct-mid"><div class="switch-acct-name">All Accounts</div><div class="switch-acct-sub">${activeAccounts().length} account${activeAccounts().length!==1?'s':''}</div></div>`
+    + `<div class="switch-acct-mid"><div class="switch-acct-name">All Accounts</div><div class="switch-acct-sub">${activeAccounts().length} account${activeAccounts().length!==1?'s':''}${acctsCur(activeAccounts())?'':' · '+_groupByCur(activeAccounts().map(a=>({c:curOf(a),v:0}))).map(x=>x.c.code).join(', ')}</div></div>`
     + `</div>`;
   html += activeAccounts().map(a=>{
     const at = trades.filter(t=>t.accountId===a.id);
@@ -6077,7 +6247,8 @@ function _swipeEnd(e, row){
 }
 
 function setAcctFilter(id){
-  activeAcctFilter=id;
+  if(id==='all'&&!allViewAllowed()) return;   // mixed currencies: no All view
+  activeAcctFilter=id; _rememberAcct(id);
   // Persist selected account to Telegram CloudStorage (session state)
   CS.set('active_account', id);
   renderAcctBar();
@@ -6125,9 +6296,11 @@ function filteredTrades(){
 
 // ─── Render all ───
 function renderAll(){
+  enforceAllView();
   renderAcctBar(); renderHeader(); renderTradeList(); renderPreTradeList(); renderStrategyForm(); renderSetupPlaybook(); renderEdgeTags(); renderLibrary();
   // Mark Stats as dirty so the next time the Stats tab is opened it re-renders
   // with fresh data. If Stats is already active, markStatsDirty() will re-render now.
+  try{ renderFxReviewCard(); }catch(e){}
   markStatsDirty();
   // Re-render Prop tab if visible; mark Calendar dirty so switchTab re-renders it.
   if(activeTab==='Prop') renderPropFirms();
@@ -6154,12 +6327,13 @@ function renderHeader(){
     const pc = current ? hc : (ft.length ? _uniformCur([...new Set(ft.map(t=>t.accountId))].map(curOf)) : hc);   // 'All' P&L spans every trade, archived accounts included
     const newBalText = hc ? fmtMoney(bal,null,hc) : 'Mixed';
     const newBalClass = 'val '+(hc?(bal>=0?'positive':'negative'):'');
-    if(balEl.textContent!==newBalText){
+    if(!hc){ balEl.innerHTML=_byCurLines(activeAccounts().map(a=>({c:curOf(a),v:acctBalance(a)}))); balEl.className='val mixed-stack'; }
+    else if(balEl.textContent!==newBalText){
       balEl.textContent=newBalText; balEl.className=newBalClass;
       balEl.classList.add('pnl-flash');
       balEl.addEventListener('animationend',()=>balEl.classList.remove('pnl-flash'),{once:true});
     } else { balEl.className=newBalClass; }
-    pnlEl.textContent=pc?fmtMoney(total,{plus:true},pc):'Mixed';
+    pnlEl.textContent=pc?fmtMoney(total,{plus:true},pc):_groupByCur(activeAccounts().map(a=>({c:curOf(a),v:0}))).length+' currencies';
     pnlEl.className='acct-header-pnl '+(pc?(total>=0?'positive':'negative'):'');
   }
   // Only update the subtitle on the Journal tab — other tabs own their subtitle
@@ -6385,7 +6559,7 @@ function renderTradeList(){
   const desired=[]; // {type:'group',key,html} | {type:'trade',id,trade}
   Object.entries(groups).forEach(([date,dateTrades])=>{
     const dayPnl=dateTrades.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
-    const pnlColor=dayPnl>0?'var(--green)':dayPnl<0?'var(--red)':'var(--text3)';
+    const pnlColor=_mixedCtx(dateTrades)?'var(--text3)':dayPnl>0?'var(--green)':dayPnl<0?'var(--red)':'var(--text3)';
     const groupHtml=`<div class="date-group-label">
       <span>${fmtGroupDate(date)}</span>
       <span class="dg-count" style="color:${pnlColor};border-color:${dayPnl!==0?pnlColor+'44':'var(--border)'}">${dayPnl!==0&&!_mixedCtx(dateTrades)?fmtPnl(dayPnl,dateTrades):''} ${dateTrades.length} trade${dateTrades.length!==1?'s':''}</span>
@@ -7018,10 +7192,11 @@ function toggleDelMode(key){
 }
 
 function closeConfirmModal(){ document.getElementById('confirmModal').classList.remove('open'); updateNavVisibility(); }
-function showConfirm(title, msg, onOk){
+function showConfirm(title, msg, onOk, okLabel){
   document.getElementById('confirmTitle').textContent=title;
   document.getElementById('confirmMsg').textContent=msg;
-  document.getElementById('confirmOkBtn').onclick=()=>{ closeConfirmModal(); onOk(); };
+  const _ok=document.getElementById('confirmOkBtn'); _ok.textContent=okLabel||'Remove'; _ok.className=okLabel?'btn btn-primary':'btn btn-danger';
+  _ok.onclick=()=>{ closeConfirmModal(); onOk(); };
   document.getElementById('confirmModal').classList.add('open');
   updateNavVisibility();
 }
@@ -7145,7 +7320,7 @@ function openAddTrade(prefill){
   // selections in, so that data isn't hidden behind a tap.
   const hasChecklistData = CL_KEYS.some(k=>clSelections[k] && clSelections[k].length);
   if(hasChecklistData) expandClChecklist(); else collapseClChecklist();
-  delete document.getElementById('fRisk').dataset.auto; applyDefaultRisk(); syncTradeFormCur();
+  delete document.getElementById('fRisk').dataset.auto; applyDefaultRisk(); syncTradeFormCur(); _fxCur=null; _fxHint('');
   document.getElementById('tradeModal').classList.add('open');
   updateNavVisibility();
   setTimeout(()=>document.getElementById('fPair').focus(),120);
@@ -7214,7 +7389,7 @@ function openEditTrade(t){
   if(hasChecklistData) expandClChecklist(); else collapseClChecklist();
   // restore setup dropdown value
   if(t.setup) document.getElementById('fSetup').value=t.setup;
-  syncTradeFormCur();
+  syncTradeFormCur(); _fxCur=t.fx||null; _fxHint(t.fx?_fxSaved(t.fx):'');
   document.getElementById('tradeModal').classList.add('open');
   updateNavVisibility();
 }
@@ -7235,7 +7410,8 @@ function applyDefaultRisk(){
   el.value=String(r); el.dataset.auto='1'; autoCalc();
   if(hint){ hint.textContent='Default risk: '+(a.riskMode==='fixed'?fmtMoney(a.riskValue,null,a):(+a.riskValue)+'% of balance')+' · '+a.name; hint.style.display='block'; }
 }
-document.addEventListener('change',e=>{ if(e.target&&e.target.id==='fAccount'){ applyDefaultRisk(); syncTradeFormCur(); } if(e.target&&e.target.id==='qAccount') syncQuickCur(); });
+document.addEventListener('change',e=>{ if(e.target&&e.target.id==='fAccount'){ applyDefaultRisk(); syncTradeFormCur(); autoCalc(); } if(e.target&&e.target.id==='qAccount') syncQuickCur(); });
+['input','change'].forEach(ev=>document.addEventListener(ev,e=>{ const id=e.target&&e.target.id; if(id==='fPair'||id==='fDate') autoCalc(); }));
 document.addEventListener('input',e=>{ if(e.target&&e.target.id==='fRisk'){ delete e.target.dataset.auto; const h=document.getElementById('fRiskHint'); if(h)h.style.display='none'; } });
 function populateAccountDropdown(selectedId){
   document.getElementById('fAccount').innerHTML=selectableAccounts(selectedId).map(a=>`<option value="${a.id}"${selectedId===a.id?' selected':''}>${escapeHtml(a.name)}</option>`).join('');
@@ -7265,9 +7441,19 @@ function autoCalc(){
   const pnlField=document.getElementById('fPnl'), rrField=document.getElementById('fRR');
   let pnl=parseFloat(pnlField.value);
   if((!pnlField.value||pnlField.dataset.auto==='1')&&entry&&exit&&size){
-    pnl=tradeDir==='long'?(exit-entry)*size:(entry-exit)*size;
-    pnlField.value=pnl.toFixed(2); pnlField.dataset.auto='1';
-    pnlField.style.color=pnl>=0?'var(--green)':'var(--red)';
+    const raw=tradeDir==='long'?(exit-entry)*size:(entry-exit)*size;
+    const acctId=document.getElementById('fAccount').value, plan=fxPlan(document.getElementById('fPair').value,acctId);
+    const st=plan.needs?_fxResolve(plan,document.getElementById('fDate').value):null;
+    if(st&&st.state!=='ok'){
+      pnl=NaN; pnlField.value=''; pnlField.dataset.auto='1'; pnlField.style.color=''; _fxCur=null;
+      _fxHint(st.state==='loading'?'Getting '+plan.from+' → '+plan.to+' rate…':'Couldn\'t get a '+plan.from+' → '+plan.to+' rate. Enter P&L in '+_ctxCur(plan.acct).sym+' from your broker.');
+    } else {
+      pnl=st?raw*st.rate:raw;
+      pnlField.value=pnl.toFixed(st?curOf(acctId).dec:2); pnlField.dataset.auto='1';
+      pnlField.style.color=pnl>=0?'var(--green)':'var(--red)';
+      _fxCur=st?{from:plan.from,to:plan.to,rate:st.rate,date:st.date,src:st.src}:null;
+      _fxHint(st?_fxSaved(_fxCur):(plan.unknown&&plan.acct!=='USD'?'P&L currency unknown for this symbol, so no conversion was applied. Check it against your broker.':''));
+    }
   }
   if(!isNaN(pnl)&&!isNaN(risk)&&risk>0){
     const rv=(pnl/risk).toFixed(2);
@@ -7276,7 +7462,7 @@ function autoCalc(){
   } else { rrField.value='—'; rrField.style.color='var(--text2)'; }
 }
 
-function manualPnl(){ document.getElementById('fPnl').dataset.auto='0'; autoCalc(); }
+function manualPnl(){ document.getElementById('fPnl').dataset.auto='0'; _fxCur=null; _fxHint(''); autoCalc(); }
 
 // ─── Session auto-tag ───
 // Brackets are in local device time (whatever the user types into fTime) — no
@@ -7384,7 +7570,7 @@ function computePeriodStats(fromDate, toDate, acctId){
   const winRate = periodTrades.length ? (wins.length/periodTrades.length*100) : 0;
   const gp = wins.reduce((s,t)=>s+parseFloat(t.pnl),0);
   const gl = Math.abs(losses.reduce((s,t)=>s+parseFloat(t.pnl),0));
-  const pf = gl>0 ? (gp/gl) : (wins.length ? Infinity : null);
+  const _pfr=profitFactor(periodTrades), pf=_pfr.na?null:_pfr.pf;
   const avgWin = wins.length ? gp/wins.length : 0;
   const avgLoss = losses.length ? gl/losses.length : 0;
   const exp = periodTrades.length ? ((winRate/100*avgWin)-((1-winRate/100)*avgLoss)) : 0;
@@ -7619,7 +7805,7 @@ function renderMonthReportCanvas(){
   y += 34+20;
 
   // Net P&L block with accent bar
-  const pnlColor = stats.monthPnl>=0 ? C.accent : C.red;
+  const pnlColor = _mixedCtx(stats.cur) ? C.text2 : (stats.monthPnl>=0 ? C.accent : C.red);
   ctx.fillStyle = pnlColor;
   ctx.fillRect(x, y, 3, 58);
   ctx.fillStyle = C.text2; ctx.font = '700 11px -apple-system,Helvetica,Arial,sans-serif';
@@ -7913,6 +8099,10 @@ function saveTrade(){
     plannedSl: document.getElementById('fPlannedSl').value||'',
     plannedTp: document.getElementById('fPlannedTp').value||'',
   };
+  if(CURRENCY_UI){
+    if(document.getElementById('fPnl').dataset.auto==='1'&&_fxCur) trade.fx=_fxCur;
+    else if(editingTradeId){ const _o=trades.find(x=>x.id===editingTradeId); if(_o&&_o.pnl===trade.pnl){ if(_o.fx) trade.fx=_o.fx; if(_o.fxPrev) trade.fxPrev=_o.fxPrev; } }
+  }
   if(editingTradeId){ const idx=trades.findIndex(t=>t.id===editingTradeId); if(idx!==-1)trades[idx]=trade; }
   else trades.push(trade);
   tradesVersion++;
@@ -7935,7 +8125,7 @@ function saveTrade(){
   // user never has to switch accounts to see what they just saved.
   if(activeAcctFilter !== 'all' && activeAcctFilter !== trade.accountId){
     activeAcctFilter = trade.accountId;
-    CS.set('active_account', trade.accountId);
+    CS.set('active_account', trade.accountId); _rememberAcct(trade.accountId);
   }
   saveTrades(); closeModal(); renderAll();
   if(isNew){ const tl=document.getElementById('tradeList'); if(tl) tl.scrollIntoView({block:'start',behavior:'smooth'}); }
@@ -8422,7 +8612,7 @@ function djRenderPast(){
   const shown=all.slice(0,djPastCap);
   list.innerHTML='<div class="dj-card" style="padding:2px 4px">'+shown.map(e=>{
     const m=mp[e.date],snip=(['review','lessons','mindset','market','reflection'].map(k=>djTxt(e,k)).find(Boolean)||'').split('\n')[0];
-    return '<button class="dj-past'+(e.date===djSel?' cur':'')+'" onclick="djPick(\''+e.date+'\')"><span style="min-width:0;flex:1"><span class="dj-row" style="justify-content:flex-start;gap:7px"><b>'+escapeHtml(djFmt(e.date))+'</b>'+(e.tag?'<span class="dj-pill" style="padding:1px 8px">'+escapeHtml(e.tag)+'</span>':'')+'</span><span class="dj-sn">'+escapeHtml(snip)+'</span></span><span style="text-align:right;flex:none"><span class="trade-pnl '+(m&&m.n?(m.pnl>=0?'positive':'negative'):'')+'" style="display:block;'+(m&&m.n?'':'color:var(--text3)')+'">'+(m&&m.n?fmtPnl(m.pnl,m.ids):'No trades')+'</span>'+(e.rating?'<span class="dj-stars" style="font-size:11px;letter-spacing:1px">'+djStars(e.rating)+'</span>':'')+'</span></button>';
+    return '<button class="dj-past'+(e.date===djSel?' cur':'')+'" onclick="djPick(\''+e.date+'\')"><span style="min-width:0;flex:1"><span class="dj-row" style="justify-content:flex-start;gap:7px"><b>'+escapeHtml(djFmt(e.date))+'</b>'+(e.tag?'<span class="dj-pill" style="padding:1px 8px">'+escapeHtml(e.tag)+'</span>':'')+'</span><span class="dj-sn">'+escapeHtml(snip)+'</span></span><span style="text-align:right;flex:none"><span class="trade-pnl '+(m&&m.n?_sgn(m.pnl,m.ids):'')+'" style="display:block;'+(m&&m.n?'':'color:var(--text3)')+'">'+(m&&m.n?fmtPnl(m.pnl,m.ids):'No trades')+'</span>'+(e.rating?'<span class="dj-stars" style="font-size:11px;letter-spacing:1px">'+djStars(e.rating)+'</span>':'')+'</span></button>';
   }).join('')
   +(all.length>5?'<button class="dj-link" onclick="djMorePast()">'+(djPastCap>=all.length?'Show less':'Show '+Math.min(5,all.length-djPastCap)+' more')+'</button>':'')
   +'<button class="dj-link" onclick="openDailyCal(\'jr\')">Browse all in calendar</button></div>';
@@ -8442,7 +8632,7 @@ function djCloseSheet(){document.getElementById('dailyEntryModal').classList.rem
 function djSheetDraw(){
   const d=djDraft,day=tradesOnDate(djSel),n=day.length,pnl=day.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
   const w=day.filter(t=>(parseFloat(t.pnl)||0)>0).length,l=day.filter(t=>(parseFloat(t.pnl)||0)<0).length;
-  document.getElementById('djSheetHead').innerHTML='<div class="dj-day-title" style="font-size:17px">'+escapeHtml(djFmt(djSel))+'</div><div class="dj-sub">'+(n?'<span class="'+(pnl>=0?'positive':'negative')+'" style="font-family:var(--mono);font-weight:700">'+fmtPnl(pnl,day)+'</span> · '+n+' trade'+(n===1?'':'s')+' · '+w+'W '+l+'L':'No trades logged')+'</div>'
+  document.getElementById('djSheetHead').innerHTML='<div class="dj-day-title" style="font-size:17px">'+escapeHtml(djFmt(djSel))+'</div><div class="dj-sub">'+(n?'<span class="'+_sgn(pnl,day)+'" style="font-family:var(--mono);font-weight:700">'+fmtPnl(pnl,day)+'</span> · '+n+' trade'+(n===1?'':'s')+' · '+w+'W '+l+'L':'No trades logged')+'</div>'
     +(n?'<div class="dj-sh-chips">'+day.map(t=>{const r=calcR(t);return '<span class="dj-chip">'+escapeHtml(t.pair||'Trade')+(r!==null?' <span class="'+(parseFloat(r)>=0?'positive':'negative')+'">'+(parseFloat(r)>=0?'+':'')+r+'R</span>':'')+'</span>';}).join('')+'</div>':'');
   const moods=DJ_MOODS.includes(d.mood)||!d.mood?DJ_MOODS:DJ_MOODS.concat([d.mood]);   // keep a legacy mood (e.g. "Disciplined") visible
   const q=escapeForInlineHandler,sug=!d.tag&&d.rating>=4&&DJ_RULES.every(([id])=>d.rules.includes(id));
@@ -8537,7 +8727,7 @@ function djCalDraw(){
     +(mv==='m'?'<button class="filter-pill-btn" onclick="djCalView_(\'y\')">'+new Date(y,m-1,1).toLocaleDateString('en-GB',{month:'long'})+'</button>':'')
     +'<button class="filter-pill-btn" onclick="djCalView_(\''+(mv==='m'?'y':'m')+'\')">'+y+'</button></div><button class="dj-arrow" '+(ok?'':'disabled ')+'onclick="djCalShift(1)" aria-label="Next">'+djIc('cr',18)+'</button></div>'
     +'<div class="dj-seg"><button class="filter-pill-btn'+(mode==='pl'?' has-filter':'')+'" onclick="djCalSetMode(\'pl\')">P&amp;L heat</button><button class="filter-pill-btn'+(mode==='jr'?' has-filter':'')+'" onclick="djCalSetMode(\'jr\')">Reflection activity</button></div>'
-    +'<div class="dj-stats"><div><span>Net P&amp;L</span><strong class="'+(net>=0?'positive':'negative')+'">'+fmtPnl(net,nids)+'</strong></div><div><span>Trading days</span><strong>'+td+'</strong></div><div><span>Reflected</span><strong>'+rf+'/'+td+'</strong></div></div>'
+    +'<div class="dj-stats"><div><span>Net P&amp;L</span><strong class="'+_sgn(net,nids)+'">'+fmtPnl(net,nids)+'</strong></div><div><span>Trading days</span><strong>'+td+'</strong></div><div><span>Reflected</span><strong>'+rf+'/'+td+'</strong></div></div>'
     +body+lg
     +'<div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-ghost" onclick="djCalToday()">Today</button><button class="btn btn-ghost" onclick="djCalUnreflected()">Latest unreflected</button></div>';
 }
@@ -8838,12 +9028,12 @@ function renderAcctList(){
   if(sum){
     const tb=act.reduce((x,r)=>x+r.bal,0), tp=act.reduce((x,r)=>x+r.pl,0), sc=acctsCur(act.map(r=>r.a));   // sc null = mixed currencies
     sum.style.display='';
-    sum.innerHTML='<div><b>'+(sc?fmtMoney(tb,null,sc):'Mixed')+'</b><span>Total balance</span></div><div><b class="'+(sc&&tp>0?'positive':sc&&tp<0?'negative':'')+'">'+(sc?fmtMoney(tp,{plus:true},sc):'Mixed')+'</b><span>Total P&amp;L</span></div><div><b>'+act.length+'</b><span>'+(arch.length?'Active':'Accounts')+'</span></div>';
+    sum.innerHTML='<div><b>'+(sc?fmtMoney(tb,null,sc):_byCurLines(act.map(r=>({c:curOf(r.a),v:r.bal}))))+'</b><span>Total balance</span></div><div><b class="'+(sc&&tp>0?'positive':sc&&tp<0?'negative':'')+'">'+(sc?fmtMoney(tp,{plus:true},sc):_byCurLines(act.map(r=>({c:curOf(r.a),v:r.pl})),{plus:true},true))+'</b><span>Total P&amp;L</span></div><div><b>'+act.length+'</b><span>'+(arch.length?'Active':'Accounts')+'</span></div>';
   }
   let html=act.map(r=>_acctCard(r,false)).join('');
   if(arch.length){
     const ap=arch.reduce((x,r)=>x+r.pl,0), ac=acctsCur(arch.map(r=>r.a));
-    html+='<div class="ac-group" onclick="toggleArchivedGroup()"><span class="ac-chev'+(_archOpen?' open':'')+'">'+_I.chev+'</span><b>Archived · '+arch.length+'</b><span class="sp"></span><span class="'+(ac?(ap>=0?'positive':'negative'):'')+'">'+(ac?fmtMoney(ap,{plus:true,dec:0},ac):'Mixed')+'</span></div>';
+    html+='<div class="ac-group" onclick="toggleArchivedGroup()"><span class="ac-chev'+(_archOpen?' open':'')+'">'+_I.chev+'</span><b>Archived · '+arch.length+'</b><span class="sp"></span><span class="'+(ac?(ap>=0?'positive':'negative'):'')+'">'+(ac?fmtMoney(ap,{plus:true,dec:0},ac):_byCurInline(arch.map(r=>({c:curOf(r.a),v:r.pl})),{plus:true,dec:0}))+'</span></div>';
     if(_archOpen) html+=arch.map(r=>_acctCard(r,true)).join('');
   }
   list.innerHTML=html;
@@ -8949,10 +9139,14 @@ function _updateStrategyEmptyBanner(){
   if(el) el.style.display = isEmpty ? 'block' : 'none';
 }
 function renderStrategyPerformance(){
-  const scoped=filteredTrades(), wins=scoped.filter(t=>(parseFloat(t.pnl)||0)>0), losses=scoped.filter(t=>(parseFloat(t.pnl)||0)<0);
-  const grossWin=wins.reduce((v,t)=>v+(parseFloat(t.pnl)||0),0),grossLoss=-losses.reduce((v,t)=>v+(parseFloat(t.pnl)||0),0);
-  const pf=grossLoss?(grossWin/grossLoss).toFixed(2):grossWin?'∞':'—';
-  const metrics=[['Win Rate',scoped.length?Math.round(wins.length/scoped.length*100)+'%':'—'],['Profit Factor',pf],['Total Trades',scoped.length]];
+  // Accounts in different currencies: a strategy spans accounts, so use every trade and the unit-free R-based profit factor.
+  const rMode=CURRENCY_UI&&accountsMixed();
+  const scoped=rMode?[...trades]:filteredTrades(), wins=scoped.filter(t=>(parseFloat(t.pnl)||0)>0);
+  let pf, pfLabel='Profit Factor';
+  if(rMode){ const r=rProfitFactor(scoped); pfLabel='Profit Factor (R)'; pf=(r.pf===null?'—':r.pf===Infinity?'∞':r.pf.toFixed(2))+' <small style="opacity:.6;font-weight:400">'+r.n+' of '+r.total+' trades</small>'; }
+  else { const _p=profitFactor(scoped); pf=_p.na?'—':(_p.gl>0?_p.pf.toFixed(2):_p.wins?'∞':'—'); }
+  const metrics=[['Win Rate',scoped.length?Math.round(wins.length/scoped.length*100)+'%':'—'],[pfLabel,pf],['Total Trades',scoped.length]];
+  if(rMode) metrics.push(['Scope','All accounts']);
   document.getElementById('strategyPerformance').innerHTML=metrics.map(([label,value])=>'<div><span class="metric-label">'+label+'</span><span class="metric-value">'+value+'</span></div>').join('');
 }
 function renderStrategyRuleChecks(){
@@ -9130,16 +9324,16 @@ function yearlyPerfGrid(f){
     const cells = monthsArr.map((mo,i)=>{
       const cur = (y===nowYear && i===nowMonth) ? ' yp-current' : '';
       if(mo.count===0) return `<div class="yp-mcell yp-empty${cur}"><div class="yp-pnl">–</div></div>`;
-      const cls = mo.pnl>=0 ? 'yp-win' : 'yp-loss';
+      const cls = _mixedCtx(mo.ids) ? 'yp-mixed' : (mo.pnl>=0 ? 'yp-win' : 'yp-loss');
       return `<div class="yp-mcell ${cls}${cur}" onclick="openMonthReportFor(${y},${i})">
         <div class="yp-pnl">${_mixedCtx(mo.ids)?'Mixed':(mo.pnl>=0?'+':'-')+Math.abs(mo.pnl).toFixed(0)}</div>
-        <div class="yp-roi ${mo.pnl>=0?'positive':'negative'}">${fmtRoi(roiForPeriod(_ymd(y,i,1), _ymd(y,i,new Date(y,i+1,0).getDate())))}</div>
+        <div class="yp-roi ${_sgn(mo.pnl,mo.ids)}">${fmtRoi(roiForPeriod(_ymd(y,i,1), _ymd(y,i,new Date(y,i+1,0).getDate())))}</div>
         <div class="yp-count">${mo.count} trade${mo.count!==1?'s':''}</div>
       </div>`;
     }).join('');
     const totalCell = yearCount===0
       ? `<div class="yp-mcell yp-empty"><div class="yp-pnl">–</div></div>`
-      : `<div class="yp-mcell yp-total"><div class="yp-pnl ${yearTotal>=0?'positive':'negative'}">${_mixedCtx(monthsArr.flatMap(mo=>mo.ids||[]))?'Mixed':(yearTotal>=0?'+':'-')+Math.abs(yearTotal).toFixed(0)}</div><div class="yp-roi ${yearTotal>=0?'positive':'negative'}">${fmtRoi(roiForPeriod(y+'-01-01', y+'-12-31'))}</div><div class="yp-count">${yearCount} trades</div></div>`;
+      : `<div class="yp-mcell yp-total"><div class="yp-pnl ${_sgn(yearTotal,monthsArr.flatMap(mo=>mo.ids||[]))}">${_mixedCtx(monthsArr.flatMap(mo=>mo.ids||[]))?'Mixed':(yearTotal>=0?'+':'-')+Math.abs(yearTotal).toFixed(0)}</div><div class="yp-roi ${_sgn(yearTotal,monthsArr.flatMap(mo=>mo.ids||[]))}">${fmtRoi(roiForPeriod(y+'-01-01', y+'-12-31'))}</div><div class="yp-count">${yearCount} trades</div></div>`;
     return `<div class="yp-mcell yp-ycell">${y}</div>${cells}${totalCell}`;
   }).join('');
 
@@ -9192,7 +9386,7 @@ function monthlySummariesHtml(year){
     if(!ts.length) return `<div class="ms-card empty"><div class="ms-name">${n}</div><div class="ms-pnl" style="color:var(--text3)">—</div><div class="ms-meta"><span>No trades</span></div></div>`;
     const pnl=ts.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0), w=ts.filter(t=>parseFloat(t.pnl)>0).length;
     const roi=roiForPeriod(_ymd(year,i,1), _ymd(year,i,new Date(year,i+1,0).getDate()));
-    return `<div class="ms-card" onclick="openMonthReportFor(${year},${i})"><div class="ms-name">${n}</div><div class="ms-pnl ${pnl>=0?'positive':'negative'}">${fmtPnl(pnl,ts)}</div><div class="ms-meta"><span class="${pnl>=0?'positive':'negative'}">${fmtRoi(roi)}</span><span>${ts.length} trade${ts.length!==1?'s':''} · ${Math.round(w/ts.length*100)}%</span></div></div>`;
+    return `<div class="ms-card" onclick="openMonthReportFor(${year},${i})"><div class="ms-name">${n}</div><div class="ms-pnl ${_sgn(pnl,ts)}">${fmtPnl(pnl,ts)}</div><div class="ms-meta"><span class="${_sgn(pnl,ts)}">${fmtRoi(roi)}</span><span>${ts.length} trade${ts.length!==1?'s':''} · ${Math.round(w/ts.length*100)}%</span></div></div>`;
   }).join('');
   return `<div class="card" style="padding:14px"><div class="chart-title" style="margin-bottom:10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Monthly Performance</div><div class="ms-grid">${cards}</div></div>`;
 }
@@ -9220,6 +9414,7 @@ function renderCalSummaryView(f, fromVal, toVal){
   });
 
   const wins=ft.filter(t=>parseFloat(t.pnl)>0), losses=ft.filter(t=>parseFloat(t.pnl)<0);
+  _setMixedNote('calMixedNote',ft);
   const totalPnl=ft.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
   const winRate=ft.length?(wins.length/ft.length*100).toFixed(1):0;
   const avgWin=wins.length?wins.reduce((s,t)=>s+parseFloat(t.pnl),0)/wins.length:0;
@@ -9255,7 +9450,7 @@ function renderCalSummaryView(f, fromVal, toVal){
       const k=isoWk(parseLocalDate(date));
       if(k!==lastWk){
         lastWk=k; const w=weekTotals[k];
-        html+=`<div class="cal-week-sub"><span>Week ${k.split('-')[1]} · ${fmtMD(w.last)} – ${fmtMD(w.first)}</span><span class="v ${w.pnl>=0?'positive':'negative'}">${fmtPnl(w.pnl,w.ids)}</span></div>`;
+        html+=`<div class="cal-week-sub"><span>Week ${k.split('-')[1]} · ${fmtMD(w.last)} – ${fmtMD(w.first)}</span><span class="v ${_sgn(w.pnl,w.ids)}">${fmtPnl(w.pnl,w.ids)}</span></div>`;
       }
     }
     const pnl=data.pnl;
@@ -9263,7 +9458,7 @@ function renderCalSummaryView(f, fromVal, toVal){
       <span class="k" style="font-size:13px;font-weight:600">${fmtDayRow(date)}</span>
       <div style="display:flex;gap:12px;align-items:center">
         <span style="font-size:11px;color:var(--text3)">${data.count} trade${data.count!==1?'s':''}</span>
-        <span class="v ${pnl>=0?'positive':'negative'}">${fmtPnl(pnl,data.ids)}</span>
+        <span class="v ${_sgn(pnl,data.ids)}">${fmtPnl(pnl,data.ids)}</span>
       </div>
     </div>`;
     if(idx<CAP) visible+=html; else hidden+=html;
@@ -9286,7 +9481,7 @@ function renderCalSummaryView(f, fromVal, toVal){
     <div class="cal-summary-row">
       <div class="cal-stat ${totalPnl<0?'red-accent':''}">
         <div class="cal-stat-label">Total P&L</div>
-        <div class="cal-stat-value ${totalPnl>=0?'positive':'negative'}">${fmtPnl(totalPnl,ft)}</div>
+        <div class="cal-stat-value ${_sgn(totalPnl,ft)}">${fmtPnl(totalPnl,ft)}</div>
       </div>
       <div class="cal-stat">
         <div class="cal-stat-label">Win Rate</div>
@@ -9353,12 +9548,13 @@ function renderCalendar(){
 
   // Summary stats
   const wins=ft.filter(t=>parseFloat(t.pnl)>0), losses=ft.filter(t=>parseFloat(t.pnl)<0);
+  _setMixedNote('calMixedNote',ft);
   const totalPnl=ft.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
   const winRate=ft.length?(wins.length/ft.length*100).toFixed(0):0;
   document.getElementById('calSummaryRow').innerHTML=`
     <div class="cal-stat ${totalPnl<0?'red-accent':''}">
       <div class="cal-stat-label">Month P&L</div>
-      <div class="cal-stat-value ${totalPnl>=0?'positive':'negative'}">${fmtPnl(totalPnl,ft)}</div>
+      <div class="cal-stat-value ${_sgn(totalPnl,ft)}">${fmtPnl(totalPnl,ft)}</div>
     </div>
     <div class="cal-stat">
       <div class="cal-stat-label">Win Rate</div>
@@ -9386,7 +9582,7 @@ function renderCalendar(){
     goalFill.style.background='var(--accent)';
   }
   document.getElementById('goalCurrent').textContent=fmtPnl(totalPnl,ft);
-  document.getElementById('goalCurrent').className=totalPnl>=0?'positive':'negative';
+  document.getElementById('goalCurrent').className=_sgn(totalPnl,ft);
   document.getElementById('goalTarget').textContent=goal?(_mixedCtx(ft)?'pick one account':_curWrap(goal.toLocaleString(),_ctxCur(ft))):'Set a goal';
 
   // Build day map — store individual trades per day for pips
@@ -9448,7 +9644,7 @@ function renderCalendar(){
       if(data){ wkPnl+=data.pnl; wkCount+=data.count; data.trades.forEach(t=>wkTr.push(t)); }
       let cls='cal-cell';
       if(isToday) cls+=' today';
-      if(data){ cls+=data.pnl>=0?' win-day':' loss-day'; }
+      if(data){ cls+=_mixedCtx(data.trades)?' mixed-day':(data.pnl>=0?' win-day':' loss-day'); }
       else cls+=' no-trade';
 
       if(data){
@@ -9463,8 +9659,8 @@ function renderCalendar(){
         cells+=`<div class="${cls}" onclick="showDayTrades(${d})">
           <div class="cal-day-num">${d}</div>
           <div>
-            <div class="cal-day-pnl ${data.pnl>=0?'pos':'neg'}">${fmtPnl0(data.pnl,data.trades)}</div>
-            <div class="cal-day-roi ${data.pnl>=0?'pos':'neg'}">${fmtRoi(dailyRoi(_ymd(calYear,calMonth,d)))}</div>
+            <div class="cal-day-pnl ${_mixedCtx(data.trades)?'':(data.pnl>=0?'pos':'neg')}">${fmtPnl0(data.pnl,data.trades)}</div>
+            <div class="cal-day-roi ${_mixedCtx(data.trades)?'':(data.pnl>=0?'pos':'neg')}">${fmtRoi(dailyRoi(_ymd(calYear,calMonth,d)))}</div>
             <div class="cal-pips">${pips}${extraPip}</div>
           </div>
         </div>`;
@@ -9477,7 +9673,7 @@ function renderCalendar(){
     }
     // Weekly total column (visible ≥900px only, see .cal-week-total)
     cells+= wkCount
-      ? `<div class="cal-week-total"><div class="cal-week-total-pnl ${wkPnl>=0?'positive':'negative'}">${fmtPnl0(wkPnl,wkTr)}</div><div class="cal-week-total-count">${wkCount} trade${wkCount!==1?'s':''}</div></div>`
+      ? `<div class="cal-week-total"><div class="cal-week-total-pnl ${_sgn(wkPnl,wkTr)}">${fmtPnl0(wkPnl,wkTr)}</div><div class="cal-week-total-count">${wkCount} trade${wkCount!==1?'s':''}</div></div>`
       : `<div class="cal-week-total"><div class="cal-dash">—</div></div>`;
   }
   document.getElementById('calGrid').innerHTML=cells;
@@ -9498,7 +9694,7 @@ function _trendArrowSvg(isUp){
 }
 
 function dayReportHtml(stats){
-  const pnlCls = stats.dayPnl>=0 ? 'positive' : 'negative';
+  const pnlCls = _sgn(stats.dayPnl,stats.cur);
   const fmtSigned = v => v===null ? '—' : fmtPnl(v,stats.cur);
   const rows = [
     // Unconditional per row now — see the matching comment at the Month
@@ -9514,7 +9710,7 @@ function dayReportHtml(stats){
   rows.push(['Max Balance Drawdown', stats.maxDD>0?fmtPnl(-stats.maxDD,stats.cur):'—', stats.maxDD>0?'negative':'']);
   rows.push(['Win Rate', `${stats.winRate.toFixed(1)}%`, stats.winRate>=50?'positive':'negative', `${stats.winsCount}W / ${stats.lossesCount}L`]);
   rows.push(['Profit Factor', stats.pf===null?'—':stats.pf===Infinity?'∞':stats.pf.toFixed(2), stats.pf===null?'':(stats.pf===Infinity||stats.pf>=1)?'positive':'negative']);
-  rows.push(['Expectancy', fmtPnl(stats.exp,stats.cur), stats.exp>=0?'positive':'negative']);
+  rows.push(['Expectancy', fmtPnl(stats.exp,stats.cur), _sgn(stats.exp,stats.cur)]);
 
   const rowsMarkup = rows.map(([label,val,cls,sub])=>`
     <div class="info-row">
@@ -9529,7 +9725,7 @@ function dayReportHtml(stats){
     <div class="day-report-head"><div class="day-report-title" style="font-size:19px;font-weight:800;letter-spacing:-.3px">${stats.dateLabel}</div>
     <div class="day-report-account" style="font-size:12px;color:var(--text2);font-weight:600;margin-bottom:14px">${escapeHtml(stats.acctName)}</div></div>
     <div class="day-report-pnl" style="display:flex;align-items:flex-start;justify-content:space-between;padding:14px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:14px">
-      <div style="border-left:3px solid var(${stats.dayPnl>=0?'--accent':'--red'});padding-left:12px">
+      <div style="border-left:3px solid var(${_mixedCtx(stats.cur)?'--border2':stats.dayPnl>=0?'--accent':'--red'});padding-left:12px">
         <div style="font-size:11px;font-weight:700;color:var(--text2);letter-spacing:.3px">NET P&L</div>
         <div class="day-report-pnl-value ${pnlCls}" style="font-size:26px;font-weight:800;font-family:var(--mono)">${fmtPnl(stats.dayPnl,stats.cur)}</div>
       </div>
@@ -9903,6 +10099,7 @@ function renderStats(){
   if(wbEditMode) wbBuildChrome();
   const ft = statsFilteredTrades();
   _statsScope = ft;
+  _setMixedNote('statsMixedNote',ft);
   renderMonthStripCard();
 
   const wins   = ft.filter(t=>parseFloat(t.pnl)>0);
@@ -9913,7 +10110,7 @@ function renderStats(){
   const avgLoss  = losses.length ? Math.abs(losses.reduce((s,t)=>s+parseFloat(t.pnl),0)/losses.length) : 0;
   const gp = wins.reduce((s,t)=>s+parseFloat(t.pnl),0);
   const gl = Math.abs(losses.reduce((s,t)=>s+parseFloat(t.pnl),0));
-  const pf = gl>0 ? (gp/gl).toFixed(2) : wins.length ? '∞' : '—';
+  const _pfr=profitFactor(ft), pf=_pfr.na?'—':(_pfr.gl>0?_pfr.pf.toFixed(2):_pfr.wins?'∞':'—');
   const exp = ft.length ? ((winRate/100*avgWin)-((1-winRate/100)*avgLoss)).toFixed(2) : 0;
   const rVals = ft.map(t=>calcR(t)).filter(r=>r!==null).map(parseFloat);
   const avgR  = rVals.length ? (rVals.reduce((s,r)=>s+r,0)/rVals.length).toFixed(2) : '—';
@@ -9938,13 +10135,13 @@ function renderStats(){
   // (first two) plus borderless metric rows — see paintStatCards().
   const coreStatItems = [
     {label:'Win Rate', value:`${winRate}%`, tone:'accent', sub:`${wins.length}W / ${losses.length}L`},
-    {label:'Total P&L', value:fmtPnl(totalPnl,ft), tone:totalPnl>=0?'accent':'red', red:totalPnl<0,
+    {label:'Total P&L', value:fmtPnl(totalPnl,ft), tone:_mixedCtx(ft)?'':(totalPnl>=0?'accent':'red'), red:!_mixedCtx(ft)&&totalPnl<0,
      sub:`<span style="display:inline-flex;align-items:center;gap:6px"><span>${ft.length} trades</span>${pctHtml}</span>`},
     {label:'Avg Win', value:fmtPnl(avgWin,ft), tone:'accent', sub:'per winning trade'},
     {label:'Avg Loss', value:fmtPnl(-avgLoss,ft), tone:'red', red:true, sub:'per losing trade'},
     {label:'Profit Factor', value:pf, tone:(pf==='∞'||(pf!=='—'&&parseFloat(pf)>=1))?'accent':(pf==='—'?'':'red'),
      red:(pf!=='—'&&pf!=='∞'&&parseFloat(pf)<1), sub:'gross P / gross L'},
-    {label:'Expectancy', value:fmtPnl(exp,ft), tone:parseFloat(exp)>=0?'accent':'red', red:parseFloat(exp)<0, sub:'avg per trade'},
+    {label:'Expectancy', value:fmtPnl(exp,ft), tone:_mixedCtx(ft)?'':(parseFloat(exp)>=0?'accent':'red'), red:!_mixedCtx(ft)&&parseFloat(exp)<0, sub:'avg per trade'},
     {label:'Avg R', value:avgR==='—'?'—':avgR+'R', tone:parseFloat(avgR)>=0?'accent':'red', red:parseFloat(avgR)<0, sub:'average R multiple'},
     {label:'Best R', value:bestR==='—'?'—':'+'+bestR+'R', tone:'accent', sub:'best single trade'},
     {label:'Avg Trade Duration', value:avgDurMins===null?'—':minutesToDuration(avgDurMins), tone:'accent',
@@ -9997,7 +10194,7 @@ function renderStats(){
 
   const streakStatItems = [
     {label:'Max Drawdown', value:maxDD>0?fmtPnl(-maxDD,ft):'—', tone:'red', red:true,
-     sub:maxDDPct>0?maxDDPct.toFixed(1)+'% from peak':'no drawdown'},
+     sub:_mixedCtx(ft)?'pick one account':(maxDDPct>0?maxDDPct.toFixed(1)+'% from peak':'no drawdown')},
     {label:'Streaks', tone:'', listValue:`<span class="accent">${maxWin}</span> <span style="color:var(--text3);font-weight:400">/</span> <span class="red">${maxLoss}</span>`,
      sub:curWin>0?`🔥 ${curWin} win streak now`:curLoss>0?`❄️ ${curLoss} loss streak now`:ft.length?'best W / worst L':'best W / worst L',
      cardHtml:`
@@ -10127,8 +10324,8 @@ function renderMonthStripCard(){
   const fmtDay=s=>{ const d=parseLocalDate(s); return d?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):''; };
   el.innerHTML=head+`<div class="month-strip-grid">
     <div class="month-strip-cell"><div class="month-strip-label">Win Rate</div><div class="month-strip-value">${winRate}%</div></div>
-    <div class="month-strip-cell"><div class="month-strip-label">Best Day</div><div class="month-strip-value ${bestDay[1]>=0?'positive':'negative'}">${fmtPnl(bestDay[1],monthTrades)}</div><div class="month-strip-sub">${fmtDay(bestDay[0])}</div></div>
-    <div class="month-strip-cell"><div class="month-strip-label">Worst Day</div><div class="month-strip-value ${worstDay[1]>=0?'positive':'negative'}">${fmtPnl(worstDay[1],monthTrades)}</div><div class="month-strip-sub">${fmtDay(worstDay[0])}</div></div>
+    <div class="month-strip-cell"><div class="month-strip-label">Best Day</div><div class="month-strip-value ${_sgn(bestDay[1],monthTrades)}">${fmtPnl(bestDay[1],monthTrades)}</div><div class="month-strip-sub">${fmtDay(bestDay[0])}</div></div>
+    <div class="month-strip-cell"><div class="month-strip-label">Worst Day</div><div class="month-strip-value ${_sgn(worstDay[1],monthTrades)}">${fmtPnl(worstDay[1],monthTrades)}</div><div class="month-strip-sub">${fmtDay(worstDay[0])}</div></div>
   </div>`;
 }
 
@@ -10255,7 +10452,7 @@ let pairColVisible = {wins:true,losses:true,total:true,winrate:true,pnl:true,pf:
 function pairExtendedStats(d){
   const wins=d.trades.filter(t=>parseFloat(t.pnl)>0), losses=d.trades.filter(t=>parseFloat(t.pnl)<0);
   const gp=wins.reduce((s,t)=>s+parseFloat(t.pnl),0), gl=Math.abs(losses.reduce((s,t)=>s+parseFloat(t.pnl),0));
-  const pf = gl>0 ? (gp/gl) : (wins.length?null:null);
+  const _pfr=profitFactor(d.trades), pf=_pfr.na?null:(_pfr.gl>0?_pfr.pf:null);
   const avgWin = wins.length?gp/wins.length:0, avgLoss = losses.length?gl/losses.length:0;
   const rr = avgLoss>0 ? avgWin/avgLoss : null;
   const durs=d.trades.map(t=>tradeDurationMinutes(t)).filter(m=>m!==null);
@@ -10522,7 +10719,7 @@ function renderDailyPnlWidget(chronological){
   }).join('');
   el.innerHTML=`<div style="position:relative"><div class="dbar-tip" id="dbarTip"></div><div class="dbar-wrap">${cols}</div></div>
     <div class="dbar-labels">${labs}</div>
-    <div class="rhist-footer"><span>${days.length} day${days.length!==1?'s':''} · <span class="positive">${greenDays}</span>/<span class="negative">${days.length-greenDays}</span></span><span>Avg <span class="v ${avg>=0?'positive':'negative'}">${fmtPnl(avg,chronological)}</span></span></div>`;
+    <div class="rhist-footer"><span>${days.length} day${days.length!==1?'s':''} · <span class="positive">${greenDays}</span>/<span class="negative">${days.length-greenDays}</span></span><span>Avg <span class="v ${_sgn(avg,chronological)}">${fmtPnl(avg,chronological)}</span></span></div>`;
 }
 function _dailyMicroTip(d,data){
   const dt=parseLocalDate(d), dateText=dt?dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):d;
@@ -10819,6 +11016,9 @@ async function renderBalanceCard(){
       badgeEl.textContent='—'; badgeEl.style.background='transparent'; badgeEl.style.color='var(--text3)';
     }
   }
+  { const _n=document.getElementById('balMixedNote'), _s=document.getElementById('balanceChartScroll');
+    if(_n) _n.style.display=_bc.mixed?'block':'none'; if(_s) _s.style.display=_bc.mixed?'none':''; }
+  if(_bc.mixed){ destroyCharts(); return; }   // a balance curve summed across currencies would be meaningless
   if(points.length<2){ destroyCharts(); return; } // nothing to chart in this window yet
   const token = ++balanceRenderToken;
   destroyCharts();
@@ -10879,9 +11079,9 @@ async function renderBalanceCard(){
     const p=view[i]; if(!p || !p.date) return [];
     const evs=dayLedger[p.date]||[];
     return evs.map(e=>{
-      const amt=Math.abs(parseFloat(e.ref?.amount)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+      const amt=Math.abs(parseFloat(e.ref?.amount)||0).toLocaleString('en-US',{minimumFractionDigits:_bc.dec,maximumFractionDigits:_bc.dec});
       const label=e.kind==='deposit'?'Deposit':'Withdrawal';
-      return label+'  '+(e.kind==='deposit'?'+$':'-$')+amt;
+      return label+'  '+(e.kind==='deposit'?'+':'-')+_curWrap(amt,_bc);
     });
   };
   const chartInner=document.getElementById('balanceChartInner');
@@ -10905,7 +11105,7 @@ async function renderBalanceCard(){
     ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.fillStyle=T.accent; ctx.fill(); ctx.strokeStyle=T.bg; ctx.lineWidth=2; ctx.stroke(); ctx.restore();
   }};
   const canvas=document.getElementById('equityChart');
-  charts.equity=new Chart(canvas,{type:'line',plugins:[balanceGuide],data:{labels,datasets:[{data:view.map(p=>p.balance),borderColor:T.accent,backgroundColor:T.accentDim,borderWidth:2.5,fill:true,tension:0.28,pointRadius:pointRadii,pointHoverRadius:0,pointBackgroundColor:pointColors,pointBorderColor:T.bg,pointBorderWidth:2}]},options:chartOpts({prefix:'$',tooltipTitle,tooltipFooter,rightAxis:true,hideGrid:true,dateAxis:true})});
+  charts.equity=new Chart(canvas,{type:'line',plugins:[balanceGuide],data:{labels,datasets:[{data:view.map(p=>p.balance),borderColor:T.accent,backgroundColor:T.accentDim,borderWidth:2.5,fill:true,tension:0.28,pointRadius:pointRadii,pointHoverRadius:0,pointBackgroundColor:pointColors,pointBorderColor:T.bg,pointBorderWidth:2}]},options:chartOpts({prefix:'$',cur:_bc,tooltipTitle,tooltipFooter,rightAxis:true,hideGrid:true,dateAxis:true})});
   attachBalanceInteractions(canvas);
 }
 
@@ -11204,11 +11404,12 @@ function themeColors(){
   };
 }
 
-function chartOpts({prefix='',suffix='',tooltipTitle=null,tooltipFooter=null,rightAxis=false,hideGrid=false,dateAxis=false}={}){
+function chartOpts({prefix='',suffix='',cur=null,tooltipTitle=null,tooltipFooter=null,rightAxis=false,hideGrid=false,dateAxis=false}={}){
   const T=themeColors();
   function fmtVal(v){
     if(v===null||v===undefined) return '—';
     if(prefix==='$'){
+      if(cur&&cur!==CUR_USD&&!cur.mixed) return (v>=0?'+':'-')+_curWrap(Math.abs(v).toFixed(cur.dec),cur);
       const abs=Math.abs(v).toFixed(2);
       return (v>=0?'+$':'-$')+abs;
     }
@@ -11216,6 +11417,7 @@ function chartOpts({prefix='',suffix='',tooltipTitle=null,tooltipFooter=null,rig
   }
   function fmtTick(v){
     if(prefix==='$'){
+      if(cur&&cur!==CUR_USD&&!cur.mixed) return (v<0?'-':'')+_curWrap(Math.abs(v),cur);
       const abs=Math.abs(v);
       return (v<0?'-$':'$')+abs;
     }
@@ -11696,7 +11898,7 @@ function saveQuickTrade(){
   // user never has to switch accounts to see what they just saved.
   if(activeAcctFilter !== 'all' && activeAcctFilter !== trade.accountId){
     activeAcctFilter = trade.accountId;
-    CS.set('active_account', trade.accountId);
+    CS.set('active_account', trade.accountId); _rememberAcct(trade.accountId);
   }
   saveTrades(); closeQuickAdd(); renderAll();
   const tl=document.getElementById('tradeList'); if(tl) tl.scrollIntoView({block:'start',behavior:'smooth'});
@@ -11745,7 +11947,8 @@ function tradeToCSVRow(t){
 
 function exportCSV(){
   if(!trades.length){ showToast('No trades to export','error'); return; }
-  const lines = [CSV_HEADERS.join(','), ...trades.map(tradeToCSVRow)];
+  const _cc=CURRENCY_UI;   // trailing 'Currency' column only when per-account currencies are on; importCSV ignores it
+  const lines = [(_cc?CSV_HEADERS.concat(['Currency']):CSV_HEADERS).join(','), ...trades.map(t=>tradeToCSVRow(t)+(_cc?','+curOf(t.accountId).code:''))];
   const blob = new Blob([lines.join('\r\n')], {type:'text/csv;charset=utf-8;'});
   const ts = new Date().toISOString().slice(0,10);
   triggerDownload(blob, `trades_${ts}.csv`);
@@ -12065,6 +12268,7 @@ function calcTradingDaysInCycle(f){
 function calcConsistencyStatus(f){
   if(!f.consistency || f.consistency.type === 'none' || !f.consistency.type) return null;
   const { type, value } = f.consistency;
+  const _fc=_firmCur(f), _m=n=>_curWrap(Number(n).toFixed(_fc.dec),_fc), _mc=n=>_curWrap(Number(n).toLocaleString(),_fc);
   const linked = getLinkedTrades(f);
   if(linked === null) return null;
   const cutoff = getCycleCutoff(f);
@@ -12080,7 +12284,7 @@ function calcConsistencyStatus(f){
     const maxDayPct = totalProfit>0 ? (maxDay/totalProfit)*100 : 0;
     const bestDate = Object.keys(byDay).find(d=>byDay[d]===maxDay)||'';
     const pct = value||30;
-    if(maxDayPct > pct) return {status:'fail', msg:`Best day ${maxDayPct.toFixed(0)}% of profit (max ${pct}%)`, detail:`Best day: $${maxDay.toFixed(2)} = ${maxDayPct.toFixed(1)}% of $${totalProfit.toFixed(2)} total profit (${bestDate}). Limit is ${pct}%.`};
+    if(maxDayPct > pct) return {status:'fail', msg:`Best day ${maxDayPct.toFixed(0)}% of profit (max ${pct}%)`, detail:`Best day: ${_m(maxDay)} = ${maxDayPct.toFixed(1)}% of ${_m(totalProfit)} total profit (${bestDate}). Limit is ${pct}%.`};
     if(maxDayPct > pct*0.85) return {status:'warn', msg:`Best day ${maxDayPct.toFixed(0)}% of profit (near ${pct}% limit)`};
     return {status:'ok', msg:`Best day ${maxDayPct.toFixed(0)}% of profit \u2713`};
   }
@@ -12092,9 +12296,9 @@ function calcConsistencyStatus(f){
     const violations = Object.entries(byDay).filter(([,v])=>v>cap);
     if(violations.length){
       const worst = violations.sort((a,b)=>b[1]-a[1])[0];
-      return {status:'fail', msg:`${violations.length} day${violations.length>1?'s':''} exceeded $${cap.toLocaleString()} cap`, detail:`${violations.length} day${violations.length>1?'s':''} exceeded the $${cap.toLocaleString()} daily cap. Worst: $${worst[1].toFixed(2)} on ${worst[0]}.`};
+      return {status:'fail', msg:`${violations.length} day${violations.length>1?'s':''} exceeded ${_mc(cap)} cap`, detail:`${violations.length} day${violations.length>1?'s':''} exceeded the ${_mc(cap)} daily cap. Worst: ${_m(worst[1])} on ${worst[0]}.`};
     }
-    return {status:'ok', msg:`All days within $${cap.toLocaleString()} cap \u2713`};
+    return {status:'ok', msg:`All days within ${_mc(cap)} cap \u2713`};
   }
 
   return null;
@@ -12120,9 +12324,9 @@ function onConsistencyTypeChange(){
     input.placeholder='30';
     hint.textContent='No single day\u2019s profit should exceed this % of total cycle profit.';
   } else if(type==='daily_cap'){
-    label.textContent='Daily profit cap ($)';
+    label.textContent='Daily profit cap ('+_propSym+')';
     input.placeholder='1000';
-    hint.textContent='Flags any day where total P&L exceeds this dollar amount.';
+    hint.textContent='Flags any day where total P&L exceeds this '+(_propSym==='$'?'dollar ':'')+'amount.';
   }
 }
 
@@ -12137,7 +12341,16 @@ function onLinkedAccountChange(){
   _syncLinkedAccountUI(document.getElementById('pLinkedAccount').value);
 }
 
+let _propSym='$';
+function syncPropFormCur(linkedId){
+  _propSym=linkedId?(curOf(linkedId).sym||'$'):'$';
+  [['pAcctSizeLbl','Account Size'],['pProfitTargetLbl','Profit Target'],['pDailyDDLbl','Daily DD Limit'],['pMaxDDLbl','Max Drawdown'],['pMinPayoutLbl','Min Payout'],['pManualPnLLbl','Current P&L']]
+    .forEach(([id,b])=>{ const e=document.getElementById(id); if(e) e.textContent=b+' ('+_propSym+')'; });
+  const o=document.getElementById('pConsistencyCapOpt'); if(o) o.textContent='Daily profit cap ('+_propSym+')';
+  const t=document.getElementById('pConsistencyType'); if(t&&t.value!=='none') onConsistencyTypeChange();
+}
 function _syncLinkedAccountUI(linkedId){
+  syncPropFormCur(linkedId);
   const isLinked = !!linkedId;
   document.getElementById('pManualPnLGroup').style.display = isLinked ? 'none' : 'block';
   document.getElementById('pLinkStatusBadge').style.display = isLinked ? 'inline-flex' : 'none';
@@ -12275,6 +12488,7 @@ function openPayoutLog(id){
   const f = propFirms.find(x=>x.id===id); if(!f) return;
   document.getElementById('plFirmId').value = id;
   document.getElementById('plAmount').value = '';
+  { const _l=document.getElementById('plAmountLbl'); if(_l) _l.textContent='Amount ('+(f.linkedAccount?(curOf(f.linkedAccount).sym||'$'):'$')+')'; }
   document.getElementById('plDate').value = new Date().toISOString().slice(0,10);
   document.getElementById('plNote').value = '';
   renderPayoutLogList(f);
@@ -12292,6 +12506,7 @@ function closePayoutOnOverlay(e){ if(e.target===document.getElementById('payoutL
 function renderPayoutLogList(f){
   const payouts = (f.payouts||[]).slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
   const total = payouts.reduce((s,p)=>s+p.amount,0);
+  const _fc=_firmCur(f), _pf=n=>_curWrap(n.toLocaleString('en-US',{minimumFractionDigits:_fc.dec,maximumFractionDigits:_fc.dec}),_fc);
   const el = document.getElementById('payoutLogList');
   if(!payouts.length){
     el.innerHTML='<div style="text-align:center;padding:24px 0;color:var(--text3);font-size:13px">No payouts recorded yet</div>';
@@ -12299,11 +12514,11 @@ function renderPayoutLogList(f){
   }
   el.innerHTML=`<div style="padding:10px 12px;background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.2);border-radius:var(--radius-xs);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
     <span style="font-size:12px;color:var(--text2);font-weight:600">Total received</span>
-    <span style="font-family:var(--mono);font-weight:800;color:var(--accent);font-size:15px">$${total.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
+    <span style="font-family:var(--mono);font-weight:800;color:var(--accent);font-size:15px">${_pf(total)}</span>
   </div>`+
   payouts.map(p=>`<div class="payout-log-item">
     <div>
-      <div class="payout-log-amount">+$${p.amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+      <div class="payout-log-amount">+${_pf(p.amount)}</div>
       ${p.note?`<div style="font-size:11px;color:var(--text2)">${escapeHtml(p.note)}</div>`:''}
     </div>
     <div style="display:flex;align-items:center;gap:8px">
@@ -12358,9 +12573,9 @@ function renderPropFirms(){
   const fundedCycle = fundedFirms.reduce((x,f)=>x+(getCyclePnL(f)||0),0);
   summaryEl.style.display = propFirms.length ? '' : 'none';
   const fcCur = _uniformCur(fundedFirms.map(x=>_firmCur(x))), pdCur = _uniformCur(propFirms.map(x=>_firmCur(x)));   // null = firms in different currencies: "Mixed", no sum
-  summaryEl.innerHTML = '<div><b class="'+(fcCur&&fundedCycle>0?'positive':fcCur&&fundedCycle<0?'negative':'')+'">'+(fcCur?fmtMoney(fundedCycle,{plus:true,dec:0},fcCur):'Mixed')+'</b><span>Funded cycle P&amp;L</span></div>'
+  summaryEl.innerHTML = '<div><b class="'+(fcCur&&fundedCycle>0?'positive':fcCur&&fundedCycle<0?'negative':'')+'">'+(fcCur?fmtMoney(fundedCycle,{plus:true,dec:0},fcCur):_byCurLines(fundedFirms.map(x=>({c:_firmCur(x),v:getCyclePnL(x)||0})),{plus:true,dec:0},true))+'</b><span>Funded cycle P&amp;L</span></div>'
     +'<div><b>'+(propFirms.length-fundedFirms.length)+'</b><span>In evaluation</span></div>'
-    +'<div><b class="'+(pdCur&&totalEarned>0?'positive':'')+'">'+(pdCur?fmtMoney(totalEarned,{dec:0},pdCur):'Mixed')+'</b><span>Paid out</span></div>';
+    +'<div><b class="'+(pdCur&&totalEarned>0?'positive':'')+'">'+(pdCur?fmtMoney(totalEarned,{dec:0},pdCur):_byCurLines(propFirms.map(x=>({c:_firmCur(x),v:(x.payouts||[]).reduce((s,q)=>s+q.amount,0)})),{dec:0}))+'</b><span>Paid out</span></div>';
 
   const listEl = document.getElementById('propFirmList');
   if(!propFirms.length){
