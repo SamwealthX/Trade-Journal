@@ -1089,6 +1089,14 @@ body{min-height:100dvh}
 .acct-sync-dot.error{background:var(--red)}
 @keyframes acct-pulse{50%{transform:scale(.72);opacity:.55}}
 .acct-header-meta{display:flex;align-items:center;gap:6px;margin-top:3px;min-width:0;flex-wrap:wrap}
+.dc-chip{font-size:10px;line-height:1;padding:3px 7px;border-radius:99px;background:var(--surface3);color:var(--text2);font-weight:700;margin-left:6px;vertical-align:middle;white-space:nowrap;letter-spacing:.2px}
+.dc-chip.stale{background:var(--amber-dim);color:var(--amber)}
+.dc-note{border:1px solid var(--amber);border-radius:12px;padding:12px 14px;margin:0 0 10px;font-size:12.5px;color:var(--text2);line-height:1.45}
+.dc-note b{display:block;color:var(--text);font-size:14px;margin-bottom:3px}
+.dc-arch{opacity:.6;border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin:0 0 10px;background:var(--surface)}
+.dc-arch b{font-size:14px}.dc-arch small{display:block;color:var(--text2);font-size:12px;margin-top:3px}
+.del-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--border);font-size:13px}.del-row:first-child{border-top:0}.del-row span{color:var(--text2)}.del-row b{text-align:right}
+.del-warn{border-left:3px solid var(--amber);background:var(--amber-dim);border-radius:8px;padding:9px 11px;font-size:12.5px;margin:12px 0 4px;color:var(--text)}
 .acct-type-chip{font-size:9px;line-height:1;padding:3px 6px;border-radius:4px;background:var(--surface2);border:1px solid var(--border2);color:var(--text3);font-weight:800;text-transform:uppercase;letter-spacing:.5px}
 .acct-header-name{min-width:0}.acct-header-name-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .acct-header-right{display:block;flex:0 0 auto;min-width:0;text-align:right}
@@ -2027,6 +2035,14 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
     <select id="settingsTimeFormat" hidden onchange="saveAppPreference('time',this.value)"><option value="24">24-hour</option><option value="12">12-hour</option></select>
   </div>
 
+  <h3 class="st-h" id="dcHead">Display currency</h3>
+  <div class="st-card" id="dcCard">
+    <div class="st-row st-pref"><span class="st-rt"><b>Show “All Accounts” in one currency</b><small>Converted amounts are marked ≈. A single account always shows its own currency.</small></span><div class="st-seg" data-for="dcOnSel"><button type="button" data-v="off" onclick="stSeg('dcOnSel','off')">Off</button><button type="button" data-v="on" onclick="stSeg('dcOnSel','on')">On</button></div></div>
+    <div class="st-row st-pref" id="dcCurRow"><span class="st-rt"><b>Show totals in</b></span><select id="dcCurSel" onchange="dcSetCode(this.value)"></select></div>
+    <div id="dcInfo"></div>
+    <select id="dcOnSel" hidden onchange="dcSetOn(this.value==='on')"><option value="off">Off</option><option value="on">On</option></select>
+  </div>
+
   <h3 class="st-h">Backup &amp; data</h3>
   <div class="st-card">
     <button class="st-row " onclick="exportCSV()"><span class="st-ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span><span class="st-rt"><b>Export trades as CSV</b><small>Open in Excel or Google Sheets</small></span><svg class="st-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
@@ -2826,6 +2842,14 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
     <div class="tf-actions"><button class="tf-reset" onclick="resetTradeFilterModal()">Reset filters</button><button class="tf-apply" onclick="applyTradeFilterModal()">Apply filters</button></div>
   </div>
 </div>
+<div class="modal-overlay centered" id="delAcctModal">
+  <div class="modal" style="padding:22px 18px 24px">
+    <div style="font-size:18px;font-weight:800;margin-bottom:10px;letter-spacing:-.3px" id="delAcctTitle"></div>
+    <div style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:10px" id="delAcctMsg"></div>
+    <div id="delAcctList"></div>
+    <div id="delAcctBtns" style="display:flex;flex-direction:column;gap:10px;margin-top:14px"></div>
+  </div>
+</div>
 <div class="modal-overlay centered" id="confirmModal">
   <div class="modal" style="padding:22px 18px 28px">
     <div style="font-size:18px;font-weight:800;margin-bottom:10px;letter-spacing:-.3px" id="confirmTitle">Remove option?</div>
@@ -2988,6 +3012,7 @@ function _uniformCur(list){
   return list[0];
 }
 function acctsCur(accts){ return _uniformCur(accts.map(curOf)); }
+function _ap(c,signed){ return c&&c.approx?'≈'+(signed?'\u2009':''):''; }   // approximate marker (display-currency amounts only)
 function _curWrap(num,c){ return c.pos==='suffix'?num+'\u00a0'+c.sym:c.sym+(/[A-Za-z]{2,}$/.test(c.sym)?'\u00a0':'')+num; }
 function _curTag(a){ const c=curOf(a); return c.code==='USD'?'':(c.code==='CUSTOM'?c.sym:c.code); }
 function _withCur(base,a){ const t=_curTag(a); return t?(base?base+' · ':'')+t:base; }
@@ -3005,7 +3030,7 @@ const CUR_MIXED={code:'MIXED',sym:'',pos:'prefix',dec:2,mixed:true};
 function _scopeCurFilter(){   // currency of the current account filter ("All" = shared currency of the active accounts, else mixed)
   if(!CURRENCY_UI) return CUR_USD;
   if(activeAcctFilter!=='all') return curOf(activeAcctFilter);
-  return acctsCur(activeAccounts())||CUR_MIXED;
+  return allCur()||CUR_MIXED;
 }
 function _ctxCur(x){
   if(!CURRENCY_UI||x==null||x==='') return CUR_USD;
@@ -3023,6 +3048,7 @@ function _ctxCur(x){
     return c0||CUR_USD;
   }
   if(typeof x==='object'){
+    if(x._dc) return x._dc;                                                    // a trade already converted into the display currency
     if(x.code&&x.sym&&x.dec!=null) return x;                                   // already resolved
     if(x.accountId!==undefined&&x.balance===undefined) return curOf(x.accountId);   // a trade
     return _curFromAcct(x);                                                    // an account
@@ -3034,17 +3060,17 @@ function _ctxCur(x){
   return CUR_USD;
 }
 function _mixedCtx(ctx){ return _ctxCur(ctx).mixed===true; }
-function _amtRaw(s,ctx){ return _curWrap(String(s),_ctxCur(ctx)); }   // symbol around an already-formatted/raw number string
+function _amtRaw(s,ctx){ const c=_ctxCur(ctx); return _ap(c)+_curWrap(String(s),c); }   // symbol around an already-formatted/raw number string
 function _setCurLbl(id,base,ctx){ const el=document.getElementById(id); if(el){ const c=_ctxCur(ctx); el.textContent=c.mixed?base:base+' ('+c.sym+')'; } }
 // Whole-unit signed amount for tight cells (calendar days/weeks). USD: identical to the old `${sign}$${Math.abs(n).toFixed(0)}`.
 function fmtPnl0(v,ctx){ const n=Number(v)||0, c=ctx===undefined?CUR_USD:_ctxCur(ctx); if(c.mixed) return 'Mixed';
-  return (n>0?'+':n<0?'-':'')+_curWrap(Math.abs(n).toFixed(0),c); }
+  return _ap(c,n!==0)+(n>0?'+':n<0?'-':'')+_curWrap(Math.abs(n).toFixed(0),c); }
 // Balance in the old toLocaleString(undefined,…) style. USD: identical to '$'+n.toLocaleString(undefined,{2 dp}).
 function _fmtBalLoc(n,ctx){ const c=ctx===undefined?CUR_USD:_ctxCur(ctx); if(c.mixed) return 'Mixed'; const d=c===CUR_USD?2:c.dec;
-  return _curWrap(Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}),c); }
+  return _ap(c)+_curWrap(Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}),c); }
 // Always-signed amount (sign even at 0), for the P&L-bars footer. USD: identical to `${v>=0?'+':'-'}$${Math.abs(v).toFixed(2)}`.
 function fmtPnlSigned(v,ctx){ const n=Number(v)||0, c=ctx===undefined?CUR_USD:_ctxCur(ctx); if(c.mixed) return 'Mixed';
-  return (n>=0?'+':'-')+_curWrap(Math.abs(n).toFixed(c===CUR_USD?2:c.dec),c); }
+  return _ap(c,true)+(n>=0?'+':'-')+_curWrap(Math.abs(n).toFixed(c===CUR_USD?2:c.dec),c); }
 let _statsScope=[];   // trades behind the Stats tab right now; rows that carry no trades of their own use this for their currency
 // ─── FX (batch 2b-2.1): P&L from the pair's quote currency into the account's currency ───
 // Only active when CURRENCY_UI is true. Rates: Frankfurter v2 (free, no key, daily reference rates). The rate used is stored on the trade
@@ -3074,9 +3100,13 @@ function fxPlan(pair,accountId){
   if(q===a) return {needs:false,acct,quote:q};
   return {needs:true,from:q,to:a,acct,quote:q};
 }
-async function _fxGet(url){
-  const ctl=new AbortController(), tm=setTimeout(()=>ctl.abort(),7000);
-  try{ const r=await fetch(url,{signal:ctl.signal}); if(!r.ok) return null; return await r.json(); }catch(e){ return null; } finally{ clearTimeout(tm); }
+let _fxLastWhy='';   // why the most recent rate request failed (shown in Settings > Display currency when rates are missing)
+async function _fxGet(url,ms){
+  const ctl=new AbortController(), tm=setTimeout(()=>ctl.abort(),ms||7000); _fxLastWhy='';
+  try{ const r=await fetch(url,{signal:ctl.signal}); if(!r.ok){ _fxLastWhy='HTTP '+r.status; return null; }
+    try{ return await r.json(); }catch(e){ _fxLastWhy='unreadable response'; return null; } }
+  catch(e){ _fxLastWhy=(e&&e.name==='AbortError')?'timed out':'network error'; return null; }
+  finally{ clearTimeout(tm); }
 }
 function _fxPick(j){ if(Array.isArray(j)) j=j[0]; const r=Number(j&&j.rate); return (j&&isFinite(r)&&r>0)?{rate:r,date:j.date||''}:null; }
 async function fxFetch(from,to,date){
@@ -3156,7 +3186,7 @@ function renderFxReviewCard(){
 // Colour by sign unless the scope mixes currencies (the sign of a cross-currency sum means nothing).
 // Per-currency net P&L for a list of trades, e.g. "+$2,150.00 · -€7,673.50 · +¥321" (never a cross-currency sum).
 function fmtPnlByCur(list){
-  const g={}; (list||[]).forEach(t=>{ const c=curOf(t.accountId), k=_curKey(c); (g[k]||(g[k]={c,n:0})).n+=parseFloat(t.pnl)||0; });
+  const g={}; (list||[]).forEach(t=>{ const c=_ctxCur(t), k=_curKey(c); (g[k]||(g[k]={c,n:0})).n+=parseFloat(t.pnl)||0; });
   return Object.keys(g).sort().map(k=>fmtPnl(g[k].n,g[k].c)).join(' · ');
 }
 function _setMixedNote(id,list){   // shown only when the trades in view span currencies
@@ -3176,16 +3206,202 @@ function _byCurLines(items,opts,sign){
   return h;
 }
 function _byCurInline(items,opts){ return _groupByCur(items).map(x=>x.c.code+' '+fmtMoney(x.v,opts,x.c)).join(' · '); }
+// ─── 2b-6: universal display currency ───────────────────────────────────────────────────────────────────────────────
+// Off by default. When on, "All Accounts" shows every amount in ONE currency and marks it ≈. Trades convert at their own day's rate,
+// balances / starting balances at today's rate. Rates: Frankfurter v2 time series (/v2/rates?from=&base=&quotes=, a flat array of
+// {date,base,quote,rate}); one request per currency, cached in localStorage (past rates never change). Fetch fails: the last cached
+// rates are used and marked "Stale"; nothing cached: All stays hidden and says why. A single account is never converted.
+// RULE: money for "All" is aggregated only from allScopeTrades() / filteredTrades() (already converted) or via dcConvAcct(); never
+// from raw `trades` / `accounts`. tools/static_check.py flags new `reduce(...pnl...)` sites.
+const DC_KEY='tj_dc', FXS_KEY='tj_fx_series';
+let _dc={on:false,code:'USD'}, _fxs={}, _dcVer=0, _fxFailedAt=0, _fxBusy=null, _dcRestoreAll=false, _dcPairsMemo={k:'',v:null}, _dcCurMemo={k:'',v:null}, _astConv={k:'',v:null};
+try{ const j=JSON.parse(localStorage.getItem(DC_KEY)||'null'); if(j&&CURRENCIES[j.code]) _dc={on:!!j.on,code:j.code}; }catch(e){}
+try{ const j=JSON.parse(localStorage.getItem(FXS_KEY)||'null'); if(j&&typeof j==='object') _fxs=j; }catch(e){}
+function _dcSave(){ try{ localStorage.setItem(DC_KEY,JSON.stringify(_dc)); }catch(e){} }
+function _fxsSave(){ try{ localStorage.setItem(FXS_KEY,JSON.stringify(_fxs)); }catch(e){} }
+function dcOn(){ return CURRENCY_UI && _dc.on; }
+function _dcN(){ return _fxNorm(_dc.code); }
+function _isoToday(){ return new Date().toISOString().slice(0,10); }
+function _isoAdd(d,n){ const x=new Date(d+'T00:00:00Z'); x.setUTCDate(x.getUTCDate()+n); return x.toISOString().slice(0,10); }
+function _dcPairs(){   // one entry per currency (other than the display currency) used by an ACTIVE account
+  const k=tradesVersion+'|'+_allScopeSig()+'|'+_dc.code+'|'+_dc.on; if(_dcPairsMemo.k===k) return _dcPairsMemo.v;
+  const dn=_dcN(), m={}, custom=[], today=_isoToday();
+  activeAccounts().forEach(a=>{
+    const c=curOf(a); if(c.code==='CUSTOM'){ custom.push(c.sym); return; }
+    const n=_fxNorm(c.code); if(n===dn) return;
+    (m[n]||(m[n]={f:n,t:dn,key:n+'|'+dn,from:today,ids:new Set()})).ids.add(a.id);
+  });
+  const list=Object.keys(m).map(n=>m[n]);
+  list.forEach(q=>{
+    let min=today;
+    trades.forEach(t=>{ if(q.ids.has(t.accountId)&&t.date&&t.date<min) min=t.date; });
+    accounts.forEach(a=>{ if(q.ids.has(a.id)) (a.ledger||[]).forEach(e=>{ if(e.date&&e.date<min) min=e.date; }); });
+    q.from=_isoAdd(min,-7);   // a week of slack so weekends/holidays carry the previous fixing forward
+  });
+  _dcPairsMemo={k,v:{list,custom}}; return _dcPairsMemo.v;
+}
+function _fxSeriesRate(key,date){
+  const s=_fxs[key]; if(!s||!s.d||!s.d.length) return null; const d=s.d, r=s.r;
+  if(!date||date>=d[d.length-1]) return r[r.length-1];
+  let lo=0, hi=d.length-1, ans=0;
+  while(lo<=hi){ const mid=(lo+hi)>>1; if(d[mid]<=date){ ans=mid; lo=mid+1; } else hi=mid-1; }
+  return r[ans];   // last fixing on or before the date (before the whole series: the first one)
+}
+function fxRateAt(code,date){   // value of 1 unit of `code` in the display currency; null when no rate is cached
+  if(code==='CUSTOM') return null;
+  const n=_fxNorm(code), dn=_dcN(); if(n===dn) return 1;
+  return _fxSeriesRate(n+'|'+dn,date);
+}
+function dcConvAcct(v,acctOrId,date){   // convert an amount held in an account's currency (date null = today's rate)
+  const a=(acctOrId&&typeof acctOrId==='object')?acctOrId:accounts.find(z=>z.id===acctOrId);
+  const r=fxRateAt(a?curOf(a).code:'USD',date); return r==null?0:v*r;
+}
+function _dcStatus(){   // 'off' | 'ok' | 'stale' | 'none'
+  if(!dcOn()) return 'off';
+  const P=_dcPairs(); if(P.custom.length) return 'none';
+  for(let i=0;i<P.list.length;i++){ const s=_fxs[P.list[i].key]; if(!s||!s.d||!s.d.length) return 'none'; }
+  return _fxFailedAt?'stale':'ok';
+}
+function dispActive(){ const st=_dcStatus(); return st==='ok'||st==='stale'; }
+function _dcNoneReason(){ const P=_dcPairs(); return P.custom.length?'The custom currency “'+P.custom[0]+'” has no exchange rate.':'No exchange rates could be loaded.'; }
+function _dcStaleLabel(){
+  let min=''; _dcPairs().list.forEach(q=>{ const s=_fxs[q.key]; if(s&&s.d&&s.d.length){ const d=s.d[s.d.length-1]; if(!min||d<min) min=d; } });
+  if(!min) return '';
+  try{ return 'rates '+new Date(min+'T00:00:00Z').toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'UTC'}); }catch(e){ return 'rates '+min; }
+}
+function dcCur(){   // the display currency; flagged approx only when something actually gets converted
+  const conv=_dcPairs().list.length>0, k=_dc.code+'|'+conv; if(_dcCurMemo.k===k) return _dcCurMemo.v;
+  const base=CURRENCIES[_dc.code]||CUR_USD, v=conv?Object.assign({},base,{approx:true}):base; _dcCurMemo={k,v}; return v;
+}
+function allCur(){ return dispActive()?dcCur():acctsCur(activeAccounts()); }   // currency of the "All" view; null = mixed, All unavailable
+function _dcShadow(t){   // a copy of a trade with pnl/risk converted at the trade day's rate
+  const a=accounts.find(z=>z.id===t.accountId); if(!a) return null;
+  const r=fxRateAt(curOf(a).code,t.date); if(r==null) return null;
+  const o=Object.assign({},t), has=v=>!(v===''||v==null);
+  if(has(t.pnl)) o.pnl=(parseFloat(t.pnl)||0)*r;
+  if(has(t.risk)) o.risk=(parseFloat(t.risk)||0)*r;
+  o._dc=dcCur(); return o;
+}
+function allScopeTrades(){   // trades of active accounts, converted into the display currency when it is active
+  if(!CURRENCY_UI) return trades;
+  const raw=allScopeTradesRaw(); if(!dispActive()) return raw;
+  const k=tradesVersion+'|'+_allScopeSig()+'|'+_dcVer+'|'+_dc.code; if(_astConv.k===k) return _astConv.v;
+  const v=[]; raw.forEach(t=>{ const x=_dcShadow(t); if(x) v.push(x); }); _astConv={k,v}; return v;
+}
+let _fxDiag={range:'',daily:''};
+async function _fxSeriesFetch(f,t,from){   // one request for the whole date range (fast path)
+  const j=await _fxGet('https://api.frankfurter.dev/v2/rates?from='+from+'&base='+f+'&quotes='+t,15000);
+  const got=j?_fxParseSeries(j,t):null;
+  _fxDiag.range=got?'':(_fxLastWhy||(j?'unexpected response format':'no data'));
+  return got;
+}
+// Fallback: one single-day request per distinct trade/ledger date (the same endpoints the trade form's P&L converter uses) plus today's rate.
+async function _fxPerDate(q,force){
+  const old=_fxs[q.key], map={}; if(old&&old.d) old.d.forEach((d,i)=>{ map[d]=old.r[i]; });
+  const need=new Set(), today=_isoToday();
+  trades.forEach(t=>{ if(q.ids.has(t.accountId)&&t.date) need.add(t.date); });
+  accounts.forEach(a=>{ if(q.ids.has(a.id)) (a.ledger||[]).forEach(e=>{ if(e.date) need.add(e.date); }); });
+  need.delete(today);
+  const todo=[...need].filter(d=>map[d]==null).sort(); let i=0, miss=0, why='', gotLatest=false;
+  const worker=async()=>{ while(i<todo.length){ const d=todo[i++]; const r=await fxFetch(q.f,q.t,d); if(r&&r.rate>0) map[d]=r.rate; else { miss++; why=_fxLastWhy||'no rate returned'; } } };
+  delete _fxCache[q.f+'|'+q.t+'|'];   // today's rate is re-read every time (the cache would pin it for the whole session)
+  const latest=fxFetch(q.f,q.t,'').then(r=>{ if(r&&r.rate>0){ map[today]=r.rate; gotLatest=true; } else why=_fxLastWhy||'no rate returned'; });
+  await Promise.all([worker(),worker(),worker(),latest]);
+  const d=Object.keys(map).sort();
+  _fxDiag.daily=(gotLatest&&!miss)?'':why;
+  if(!d.length||!gotLatest) return false;   // today's rate must be fresh from this run, never inherited from the cache
+  _fxs[q.key]={d,r:d.map(x=>map[x]),from:q.from,at:Date.now(),m:'daily'}; return true;
+}
+async function _fxLoadPair(q,force){
+  const got=await _fxSeriesFetch(q.f,q.t,q.from);
+  if(got){ _fxs[q.key]={d:got.d,r:got.r,from:q.from,at:Date.now(),m:'range'}; _fxDiag.daily=''; return true; }
+  return _fxPerDate(q,force);
+}
+function _fxParseSeries(j,quote){
+  const rows=[];
+  if(Array.isArray(j)) j.forEach(x=>{ const r=Number(x&&x.rate); if(x&&x.date&&(!x.quote||x.quote===quote)&&isFinite(r)&&r>0) rows.push([String(x.date).slice(0,10),r]); });
+  else if(j&&j.rates&&typeof j.rates==='object') Object.keys(j.rates).forEach(d=>{ const v=j.rates[d], r=Number(v&&typeof v==='object'?v[quote]:v); if(isFinite(r)&&r>0) rows.push([d.slice(0,10),r]); });
+  rows.sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:0);
+  const d=[], r=[]; rows.forEach(x=>{ if(d.length&&d[d.length-1]===x[0]) r[r.length-1]=x[1]; else { d.push(x[0]); r.push(x[1]); } });
+  return d.length?{d,r}:null;
+}
+function _dcNeedsFetch(){
+  if(!dcOn()||_fxBusy) return false;
+  if(_fxFailedAt&&Date.now()-_fxFailedAt<60000) return false;   // don't hammer a failing API; retried on a later render
+  return _dcPairs().list.some(q=>{ const s=_fxs[q.key]; return !s||!s.d||s.from>q.from||Date.now()-(s.at||0)>6*3600e3; });
+}
+function fxEnsure(force){
+  if(!dcOn()) return Promise.resolve();
+  if(_fxBusy) return _fxBusy;
+  const run=(async()=>{
+    let fail=false;
+    try{
+      for(const q of _dcPairs().list){
+        const s0=_fxs[q.key];
+        if(!force&&s0&&s0.d&&s0.from<=q.from&&Date.now()-(s0.at||0)<6*3600e3) continue;
+        if(!(await _fxLoadPair(q,force))) fail=true;
+      }
+    }catch(e){ fail=true; _fxDiag.daily='internal error: '+String((e&&e.message)||e).slice(0,80); }
+    return fail;
+  })();
+  const p=run.then(fail=>{
+    _fxBusy=null; _fxFailedAt=fail?Date.now():0; _fxsSave(); _dcVer++;
+    if(_dcRestoreAll&&allViewAllowed()){ _dcRestoreAll=false; activeAcctFilter='all'; try{ CS.set('active_account','all'); }catch(e){} }
+    try{ renderAll(); renderDcCard(); }catch(e){}
+  });
+  _fxBusy=p; return p;   // assigned before any callback can run, so the flag can never be left stuck
+}
+function dcSetOn(on){ _dc.on=!!on; _dcSave(); _dcVer++; if(_dc.on) fxEnsure(true); else _dcRestoreAll=false; try{ renderAll(); renderDcCard(); }catch(e){} }
+function dcSetCode(c){ if(!CURRENCIES[c]) return; _dc.code=c; _dcSave(); _dcVer++; if(_dc.on) fxEnsure(); try{ renderAll(); renderDcCard(); }catch(e){} }
+function dcRetry(){ fxEnsure(true); }
+function dcRefreshRates(){ showToast('Refreshing rates…'); fxEnsure(true).then(()=>{ const st=_dcStatus(); showToast(st==='ok'?'Rates updated ✓':'Could not refresh — using saved rates',st==='ok'?undefined:'error'); }); }
+function _dcChipsHtml(current){   // header chips next to "All Accounts"
+  if(current||!dispActive()) return ''; const c=dcCur(); if(!c.approx) return '';
+  return '<span class="dc-chip">≈ '+escapeHtml(c.code)+'</span>'+(_dcStatus()==='stale'?'<span class="dc-chip stale">Stale · '+escapeHtml(_dcStaleLabel())+'</span>':'');
+}
+function _dcSwitchNote(){
+  if(!dcOn()||!accountsMixed()||dispActive()) return '';
+  return '<div class="dc-note"><b>Can’t show “All Accounts” yet</b>'+escapeHtml(_dcNoneReason())+' Pick one account for now — All comes back as soon as rates load.<button class="btn btn-ghost" style="margin-top:10px;width:100%" onclick="dcRetry()">Retry</button></div>';
+}
+function _dcDiagHtml(){
+  const pr=_dcPairs().list.map(q=>_fxs[q.key]).filter(Boolean), daily=pr.some(x=>x.m==='daily');
+  const bits=[]; if(_fxDiag.daily) bits.push('single-day rates: '+_fxDiag.daily); if(_fxDiag.range&&(_fxDiag.daily||_dcStatus()!=='ok')) bits.push('date-range request: '+_fxDiag.range);
+  if(!bits.length&&!daily) return '';
+  return '<div style="padding:4px 14px 8px;font-size:11.5px;line-height:1.5;color:var(--text3)">'+(bits.length?'Last problem — '+escapeHtml(bits.join(' · '))+'.':'Loaded day by day (the date-range request was unavailable).')+'</div>';
+}
+function renderDcCard(){
+  const el=document.getElementById('dcCard'), hd=document.getElementById('dcHead'); if(!el) return;
+  if(!CURRENCY_UI){ el.style.display='none'; if(hd) hd.style.display='none'; return; }
+  const sel=document.getElementById('dcCurSel'), onSel=document.getElementById('dcOnSel');
+  if(sel&&!sel.options.length) sel.innerHTML=Object.keys(CURRENCIES).map(c=>'<option value="'+c+'">'+c+'</option>').join('');
+  if(sel) sel.value=_dc.code; if(onSel) onSel.value=_dc.on?'on':'off';
+  const row=document.getElementById('dcCurRow'); if(row) row.style.display=_dc.on?'':'none';
+  const info=document.getElementById('dcInfo'); if(!info) return;
+  if(!_dc.on){ info.innerHTML=''; syncSettingsSeg(); return; }
+  const st=_dcStatus();
+  let h='';
+  if(st==='none') h+='<div class="dc-note" style="margin:10px 14px"><b>Can’t show “All Accounts” yet</b>'+escapeHtml(_dcNoneReason())+' Pick one account for now — All comes back as soon as rates load.</div>';
+  else {
+    const lab=st==='stale'?'<span class="dc-chip stale" style="margin:0">Stale · '+escapeHtml(_dcStaleLabel())+'</span>':(_dcPairs().list.length?'Up to date':'Not needed — one currency');
+    h+='<div class="st-row st-pref"><span class="st-rt"><b>Rates</b></span><span style="font-size:12.5px;color:var(--text2)">'+lab+'</span></div>';
+  }
+  h+=_dcDiagHtml();
+  h+='<div class="st-row st-pref"><span class="st-rt"><b>Trades converted at</b></span><span style="font-size:12.5px;color:var(--text2)">each trade’s own date</span></div>'
+   +'<div class="st-row st-pref"><span class="st-rt"><b>Balances converted at</b></span><span style="font-size:12.5px;color:var(--text2)">today’s rate</span></div>'
+   +'<div style="padding:6px 14px 14px"><button class="btn btn-ghost" style="width:100%" onclick="dcRefreshRates()">Refresh rates</button></div>';
+  info.innerHTML=h; syncSettingsSeg();
+}
 // ─── 2b-5: "All Accounts" exists only while it can be shown in one currency ───
 let _lastAcct='', _allNoticeShown=false;
 function accountsMixed(){ return CURRENCY_UI && !acctsCur(activeAccounts()); }   // active accounts span more than one currency
-function allViewAllowed(){ return !accountsMixed(); }                              // later: or a display currency is on
+function allViewAllowed(){ return !accountsMixed() || dispActive(); }              // mixed accounts need a working display currency
 function _rememberAcct(id){ if(id&&id!=='all'){ _lastAcct=id; try{ CS.set('last_account',id); }catch(e){} } }
 function enforceAllView(){   // if the saved filter is "All" but accounts now mix currencies, land on the last used account
   if(activeAcctFilter!=='all'||allViewAllowed()) return false;
   const act=activeAccounts(), pick=act.find(a=>a.id===_lastAcct)||act[0]; if(!pick) return false;
   activeAcctFilter=pick.id; try{ CS.set('active_account',pick.id); }catch(e){}
-  if(!_allNoticeShown){ _allNoticeShown=true; try{ showToast('"All Accounts" is hidden while your accounts use different currencies. Showing '+pick.name+'.'); }catch(e){} }
+  if(dcOn()) _dcRestoreAll=true;
+  if(!_allNoticeShown&&!(dcOn()&&(_fxBusy||_dcNeedsFetch()))){ _allNoticeShown=true; try{ showToast(dcOn()?'"All Accounts" needs exchange rates and none are saved yet. Showing '+pick.name+'.':'"All Accounts" is hidden while your accounts use different currencies. Showing '+pick.name+'.'); }catch(e){} }
   return true;
 }
 // The one profit factor (money). Only meaningful inside one currency: a list spanning currencies returns {na:true}.
@@ -5469,7 +5685,7 @@ function accountLedgerEntries(accountId){
   return [...manual, ...derivedPropWithdrawals(accountId)].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
 }
 function allAccountsLedgerEntries(){
-  return accounts.flatMap(a=>accountLedgerEntries(a.id)).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  return allScopeAccounts().flatMap(a=>accountLedgerEntries(a.id).map(e=>dispActive()?{...e,amount:dcConvAcct(Math.abs(parseFloat(e.amount)||0),a,e.date)}:e)).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
 }
 let ledgerType='deposit';
 function setLedgerType(t){
@@ -6139,7 +6355,7 @@ function renderAcctBar(){
   const initials=current?current.name.trim().slice(0,2).toUpperCase():'ALL';
   const type=current?((current.type||current.accountType||'Trading')+''):'Portfolio';
   const balanceHtml=`<div class="acct-header-balance" id="acctHeaderBalance"><div class="lbl">Balance</div><div class="val" id="acctHeaderBalanceVal">$0.00</div><div class="acct-header-pnl" id="acctHeaderPnl">+$0.00</div></div>`;
-  bar.innerHTML=`<div class="acct-header-left"><div class="acct-header-icon-wrap"><div class="acct-header-icon">${escapeHtml(initials)}</div><span class="acct-sync-dot" id="acctSyncDot"></span></div><div class="acct-header-mid"><div class="acct-header-name"><span class="acct-header-name-text">${escapeHtml(current?current.name:'All Accounts')}</span><span class="acct-header-chevron"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></span></div><div class="acct-header-meta"><span class="acct-type-chip">${escapeHtml(type)}</span><button class="acct-header-refresh" onclick="event.stopPropagation();refreshAccountHeader(this)" aria-label="Refresh account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button><span class="acct-header-sync-status" id="acctSyncStatus">${accountSyncLabel()}</span></div></div></div><div class="acct-header-right">${balanceHtml}</div>`;
+  bar.innerHTML=`<div class="acct-header-left"><div class="acct-header-icon-wrap"><div class="acct-header-icon">${escapeHtml(initials)}</div><span class="acct-sync-dot" id="acctSyncDot"></span></div><div class="acct-header-mid"><div class="acct-header-name"><span class="acct-header-name-text">${escapeHtml(current?current.name:'All Accounts')}</span>${_dcChipsHtml(current)}<span class="acct-header-chevron"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></span></div><div class="acct-header-meta"><span class="acct-type-chip">${escapeHtml(type)}</span><button class="acct-header-refresh" onclick="event.stopPropagation();refreshAccountHeader(this)" aria-label="Refresh account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button><span class="acct-header-sync-status" id="acctSyncStatus">${accountSyncLabel()}</span></div></div></div><div class="acct-header-right">${balanceHtml}</div>`;
 }
 function refreshAccountHeader(btn){
   btn.classList.add('spinning'); document.getElementById('acctSyncDot')?.classList.add('syncing');
@@ -6167,10 +6383,10 @@ function renderSwitchAcctList(){
   const list = document.getElementById('switchAcctList');
   _openSwipeRow = null;
   const allActive = activeAcctFilter==='all';
-  let html = !allViewAllowed() ? '' : `<div class="switch-acct-row${allActive?' active':''}" onclick="selectSwitchAccount('all',this)">`
+  let html = _dcSwitchNote() + (!allViewAllowed() ? '' : `<div class="switch-acct-row${allActive?' active':''}" onclick="selectSwitchAccount('all',this)">`
     + `<div class="acct-header-icon">ALL</div>`
     + `<div class="switch-acct-mid"><div class="switch-acct-name">All Accounts</div><div class="switch-acct-sub">${activeAccounts().length} account${activeAccounts().length!==1?'s':''}${acctsCur(activeAccounts())?'':' · '+_groupByCur(activeAccounts().map(a=>({c:curOf(a),v:0}))).map(x=>x.c.code).join(', ')}</div></div>`
-    + `</div>`;
+    + `</div>`);
   html += activeAccounts().map(a=>{
     const at = trades.filter(t=>t.accountId===a.id);
     const ap = at.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
@@ -6279,24 +6495,40 @@ function setAcctFilter(id){
 // every trades mutation) or `activeAcctFilter` changes — both are cheap to
 // compare, so this turns the common case (called repeatedly within one render
 // cycle, with neither input changed) into a no-op instead of a full re-filter.
-let _filteredTradesCache = { version: -1, acct: undefined, result: null };
+let _filteredTradesCache = { version: -1, acct: undefined, sig: '', result: null };
+// The ONE definition of "All Accounts" (user decision, Session 51): active accounts only. Archived accounts (any currency) are out of
+// every All figure: header, Journal, Calendar + day/month reports, Stats, balance curve, ROI. Flag off = old behaviour (every account).
+function allScopeAccounts(){ return CURRENCY_UI ? activeAccounts() : accounts; }
+function _inAllScope(t){ if(!CURRENCY_UI) return true; const a=accounts.find(x=>x.id===t.accountId); return !(a&&a.status==='archived'); }
+let _astRaw={k:'',v:null};
+function allScopeTradesRaw(){   // trades of active accounts, each in its own currency (Journal lists, trade cards)
+  if(!CURRENCY_UI) return trades;
+  const k=tradesVersion+'|'+accounts.map(a=>a.id+':'+(a.status||'')).join('|'); if(_astRaw.k===k) return _astRaw.v;
+  const arch=new Set(accounts.filter(a=>a.status==='archived').map(a=>a.id));
+  _astRaw={k,v:trades.filter(t=>!arch.has(t.accountId))}; return _astRaw.v;
+}
+function _allScopeSig(){ return CURRENCY_UI ? accounts.map(a=>a.id+':'+(a.status||'')+':'+(a.currency||'')+':'+(a.currencySymbol||'')).join('|')+(_dc.on?'|dc'+_dcVer+_dc.code:'') : ''; }
+function filteredTradesRaw(){ return activeAcctFilter==='all' ? allScopeTradesRaw() : filteredTrades(); }
 function filteredTrades(){
-  const c = _filteredTradesCache;
-  if(c.version === tradesVersion && c.acct === activeAcctFilter) return c.result;
+  const c = _filteredTradesCache, sig = _allScopeSig();
+  if(c.version === tradesVersion && c.acct === activeAcctFilter && c.sig === sig) return c.result;
   // Always return a new array (never the raw `trades` reference) so that
   // _journalFilterCache's reference-equality check on `base` correctly busts
   // whenever tradesVersion changes — if we returned `trades` directly, a
   // push/splice would mutate the same reference and the journal filter cache
   // would never see a new `base`, causing newly added trades to be invisible
   // until something else (e.g. switching accounts) forced a fresh render.
-  const result = activeAcctFilter==='all' ? [...trades] : trades.filter(t=>t.accountId===activeAcctFilter);
-  _filteredTradesCache = { version: tradesVersion, acct: activeAcctFilter, result };
+  let result;
+  if(activeAcctFilter!=='all') result = trades.filter(t=>t.accountId===activeAcctFilter);
+  else result = [...allScopeTrades()];
+  _filteredTradesCache = { version: tradesVersion, acct: activeAcctFilter, sig, result };
   return result;
 }
 
 // ─── Render all ───
 function renderAll(){
   enforceAllView();
+  if(_dcNeedsFetch()) fxEnsure();
   renderAcctBar(); renderHeader(); renderTradeList(); renderPreTradeList(); renderStrategyForm(); renderSetupPlaybook(); renderEdgeTags(); renderLibrary();
   // Mark Stats as dirty so the next time the Stats tab is opened it re-renders
   // with fresh data. If Stats is already active, markStatsDirty() will re-render now.
@@ -6322,9 +6554,11 @@ function renderHeader(){
   const current = activeAcctFilter==='all' ? null : accounts.find(a=>a.id===activeAcctFilter);
   const balEl=document.getElementById('acctHeaderBalanceVal'), pnlEl=document.getElementById('acctHeaderPnl');
   if(balEl && pnlEl){
-    const bal = current ? acctBalance(current) : activeAccounts().reduce((sum,a)=>sum+acctBalance(a),0);   // includes deposits/withdrawals/payouts
-    const hc = current ? curOf(current) : acctsCur(activeAccounts());   // null = mixed currencies: show "Mixed", never a cross-currency sum
-    const pc = current ? hc : (ft.length ? _uniformCur([...new Set(ft.map(t=>t.accountId))].map(curOf)) : hc);   // 'All' P&L spans every trade, archived accounts included
+    const _da = !current && dispActive();
+    const bal = current ? acctBalance(current) : activeAccounts().reduce((sum,a)=>sum+(_da?dcConvAcct(acctBalance(a),a,null):acctBalance(a)),0);   // includes deposits/withdrawals/payouts; display currency: at today's rate
+    const hc = current ? curOf(current) : allCur();   // null = mixed currencies: show "Mixed", never a cross-currency sum
+    const _pcx = current||!ft.length ? null : _ctxCur(ft);
+    const pc = current ? hc : (ft.length ? (_pcx.mixed?null:_pcx) : hc);   // 'All' P&L spans every trade, archived accounts included
     const newBalText = hc ? fmtMoney(bal,null,hc) : 'Mixed';
     const newBalClass = 'val '+(hc?(bal>=0?'positive':'negative'):'');
     if(!hc){ balEl.innerHTML=_byCurLines(activeAccounts().map(a=>({c:curOf(a),v:acctBalance(a)}))); balEl.className='val mixed-stack'; }
@@ -6333,13 +6567,13 @@ function renderHeader(){
       balEl.classList.add('pnl-flash');
       balEl.addEventListener('animationend',()=>balEl.classList.remove('pnl-flash'),{once:true});
     } else { balEl.className=newBalClass; }
-    pnlEl.textContent=pc?fmtMoney(total,{plus:true},pc):_groupByCur(activeAccounts().map(a=>({c:curOf(a),v:0}))).length+' currencies';
+    pnlEl.textContent=pc?fmtMoney(total,{plus:true},pc):(n=>n+' currenc'+(n===1?'y':'ies'))(_groupByCur(activeAccounts().map(a=>({c:curOf(a),v:0}))).length);
     pnlEl.className='acct-header-pnl '+(pc?(total>=0?'positive':'negative'):'');
   }
   // Only update the subtitle on the Journal tab — other tabs own their subtitle
   if(activeTab==='Journal'){
     const acctName=activeAcctFilter!=='all'?' · '+(accounts.find(a=>a.id===activeAcctFilter)?.name||''):'';
-    const shown=applyJournalFilters(ft).length;
+    const shown=applyJournalFilters(filteredTradesRaw()).length;
     document.getElementById('headerSub').textContent=(hasActiveFilters()||tradeQuickFilter!=='all'?'Showing '+shown+' of '+ft.length+' trade'+(ft.length!==1?'s':''):ft.length+' trade'+(ft.length!==1?'s':''))+acctName;
   }
   updateJournalBadge(ft.length);
@@ -6504,7 +6738,7 @@ const _tradeCardCache=new Map();
 function renderTradeList(){
   updateFilterPillBtn();
   const list=document.getElementById('tradeList');
-  const base=filteredTrades();
+  const base=filteredTradesRaw();
   const ft=applyJournalFilters(base);
 
   if(activeTab==='Journal'){
@@ -6866,7 +7100,7 @@ function closePeek(){
 // ─── Peek panel prev/next navigation ───
 function peekNav(dir){
   // Navigate within the currently filtered+sorted trade list
-  const ft=applyJournalFilters(filteredTrades());
+  const ft=applyJournalFilters(filteredTradesRaw());
   const sorted=[...ft].sort((a,b)=>{
     const da=(a.date||'')+(a.time?'T'+a.time:''), db=(b.date||'')+(b.time?'T'+b.time:'');
     return db.localeCompare(da); // newest first (same as trade list)
@@ -6878,7 +7112,7 @@ function peekNav(dir){
   openPeek(next.id);
 }
 function _updatePeekNavBtns(){
-  const ft=applyJournalFilters(filteredTrades());
+  const ft=applyJournalFilters(filteredTradesRaw());
   const sorted=[...ft].sort((a,b)=>{
     const da=(a.date||'')+(a.time?'T'+a.time:''), db=(b.date||'')+(b.time?'T'+b.time:'');
     return db.localeCompare(da);
@@ -7547,7 +7781,8 @@ let _monthReportRenderId = 0;
 const _reportMonthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 function computePeriodStats(fromDate, toDate, acctId){
-  const scoped = acctId==='all' ? trades : trades.filter(t=>t.accountId===acctId);
+  const _da=acctId==='all'&&dispActive();   // display currency: trades arrive converted, starting balances convert at today's rate
+  const scoped = acctId==='all' ? allScopeTrades() : trades.filter(t=>t.accountId===acctId);
   const chrono = [...scoped].sort((a,b)=>{
     const da=(a.date||'')+(a.time?'T'+a.time:''), db=(b.date||'')+(b.time?'T'+b.time:'');
     return da.localeCompare(db);
@@ -7556,12 +7791,12 @@ function computePeriodStats(fromDate, toDate, acctId){
   const beforeTrades = chrono.filter(t=>t.date && t.date<fromDate);
 
   const startBase = acctId==='all'
-    ? accounts.reduce((s,a)=>s+(a.balance||0),0)
+    ? allScopeAccounts().reduce((s,a)=>s+(_da?dcConvAcct(a.balance||0,a,null):(a.balance||0)),0)
     : (accounts.find(a=>a.id===acctId)?.balance || 0);
   const startBalance = startBase + beforeTrades.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
   const periodPnl = periodTrades.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
   const endBalance = startBalance + periodPnl;
-  const pct = (startBalance>0 && !(acctId==='all' && _ctxCur(accounts).mixed)) ? (periodPnl/startBalance*100) : null;
+  const pct = (startBalance>0 && !(acctId==='all' && !_da && _ctxCur(allScopeAccounts()).mixed)) ? (periodPnl/startBalance*100) : null;
 
   const longs = periodTrades.filter(t=>t.dir==='long').length;
   const shorts = periodTrades.filter(t=>t.dir==='short').length;
@@ -7613,7 +7848,7 @@ function computePeriodStats(fromDate, toDate, acctId){
     longs, shorts, total: periodTrades.length,
     winsCount: wins.length, lossesCount: losses.length,
     winRate, pf, exp, bestTrade, worstTrade, avgHold, hasHoldData, maxDD,
-    cur: acctId==='all' ? (accounts.length?_ctxCur(accounts):CUR_USD) : curOf(acctId)
+    cur: acctId==='all' ? (_da?dcCur():(allScopeAccounts().length?_ctxCur(allScopeAccounts()):CUR_USD)) : curOf(acctId)
   };
 }
 
@@ -8948,26 +9183,60 @@ function saveAccount(){
   updateNavVisibility();
   renderAll(); renderAcctList(); renderSettings(); showToast(editingAcctId?'Account updated ✓':'Account added ✓');
 }
+function _closeDelAcct(){ document.getElementById('delAcctModal').classList.remove('open'); updateNavVisibility(); }
+function _delDlg(title,msgHtml,rowsHtml,btns){
+  document.getElementById('delAcctTitle').textContent=title;
+  document.getElementById('delAcctMsg').innerHTML=msgHtml;
+  document.getElementById('delAcctList').innerHTML=rowsHtml||'';
+  const box=document.getElementById('delAcctBtns'); box.innerHTML='';
+  btns.forEach(b=>{ const e=document.createElement('button'); e.className=b.c; e.textContent=b.l; e.onclick=b.f; box.appendChild(e); });
+  document.getElementById('delAcctModal').classList.add('open'); updateNavVisibility();
+}
+// Deleting never moves trades into another account (that would mix currencies and rewrite history). Archive is the safe default;
+// a permanent delete removes the account, its trades, its prop firm(s) and its trade plans, and says so before it happens.
 function deleteAccount(){
   if(!editingAcctId)return;
   const id=editingAcctId, acct=accounts.find(a=>a.id===id); if(!acct)return;
-  const remaining=accounts.filter(a=>a.id!==id), n=trades.filter(t=>t.accountId===id).length, tgt=remaining.find(a=>a.status!=='archived')||remaining[0];
-  const firm=(typeof _linkedFirm==='function')?_linkedFirm(id):null;
-  let msg='Delete "'+acct.name+'"?';
-  if(n) msg+=' Its '+n+' trade'+(n!==1?'s':'')+' will be moved to "'+(tgt?tgt.name:'')+'".';
-  if(firm) msg+=' The linked prop firm "'+firm.name+'" will no longer be linked to it.';
-  showConfirm('Delete account?',msg,()=>{ _deleteAccountNow(id); });
+  const isArch=acct.status==='archived';
+  if(!isArch&&activeAccounts().length<=1){ showToast('Keep at least one active account','error'); return; }
+  const n=trades.filter(t=>t.accountId===id).length, firms=_firmsOfAccount(id), plans=preTrades.filter(p=>p.accountId===id).length;
+  const nm='“'+acct.name+'”', cancel={l:'Cancel',c:'btn btn-ghost',f:_closeDelAcct};
+  if(!n&&!firms.length&&!plans){
+    _delDlg('Delete '+nm+'?','It has no trades. This removes the account only.','',[{l:'Delete',c:'btn btn-danger',f:()=>{ _closeDelAcct(); _deleteAccountNow(id); }},cancel]); return;
+  }
+  const bits=[]; if(n) bits.push('<b>'+n+' trade'+(n!==1?'s':'')+'</b>');
+  if(firms.length) bits.push('a linked prop firm <b>'+firms.map(f=>'“'+escapeHtml(f.name)+'”').join(', ')+'</b>');
+  if(plans) bits.push('<b>'+plans+' trade plan'+(plans!==1?'s':'')+'</b>');
+  const btns=[];
+  if(!isArch) btns.push({l:'Archive instead (recommended)',c:'btn btn-primary',f:()=>{ _closeDelAcct(); _archiveNow(id); }});
+  btns.push({l:'Delete account'+(n?' and its '+n+' trade'+(n!==1?'s':''):'')+'…',c:'btn btn-danger',f:()=>_deleteStep2(id)}); btns.push(cancel);
+  _delDlg('Delete '+nm+'?','This account has '+bits.join(' and ')+'. '+(isArch?'It is already archived, so it is hidden from lists and totals.':'Archiving keeps everything and hides it from lists and totals.'),'',btns);
+}
+function _deleteStep2(id){
+  const acct=accounts.find(a=>a.id===id); if(!acct) return;
+  const mine=trades.filter(t=>t.accountId===id), n=mine.length, shots=mine.reduce((x,t)=>x+((t.images&&t.images.length)||0),0);
+  const firms=_firmsOfAccount(id), plans=preTrades.filter(p=>p.accountId===id).length;
+  let rows='<div class="del-row"><span>Account</span><b>'+escapeHtml(acct.name)+'</b></div>';
+  if(n) rows+='<div class="del-row"><span>Trades</span><b>'+n+(shots?' (and their screenshots)':'')+'</b></div>';
+  firms.forEach(f=>{ rows+='<div class="del-row"><span>Prop firm “'+escapeHtml(f.name)+'”</span><b>incl. payout log</b></div>'; });
+  if(plans) rows+='<div class="del-row"><span>Trade plans</span><b>'+plans+'</b></div>';
+  rows+='<div class="del-warn">Can’t be undone. Tip: export a backup first (Settings → Backup &amp; data).</div>';
+  _delDlg('Delete permanently?','This will remove:',rows,[{l:'Delete permanently',c:'btn btn-danger',f:()=>{ _closeDelAcct(); _deleteAccountNow(id); }},{l:'Cancel',c:'btn btn-ghost',f:_closeDelAcct}]);
 }
 function _deleteAccountNow(id){
+  const firms=_firmsOfAccount(id), gone=new Set(trades.filter(t=>t.accountId===id).map(t=>t.id));
   accounts=accounts.filter(a=>a.id!==id);
-  trades=trades.map(t=>t.accountId===id?{...t,accountId:(activeAccounts()[0]||accounts[0])?.id||''}:t); tradesVersion++;
+  trades=trades.filter(t=>t.accountId!==id); tradesVersion++;
+  if(firms.length){ const fid=new Set(firms.map(f=>f.id)); propFirms=propFirms.filter(f=>!fid.has(f.id)); savePropFirms(); }
+  preTrades=preTrades.filter(p=>p.accountId!==id);
+  try{ let ch=false; Object.values((strategy&&strategy.playbooks)||{}).forEach(b=>{ if(b&&Array.isArray(b.pinned)&&b.pinned.some(x=>gone.has(x))){ b.pinned=b.pinned.filter(x=>!gone.has(x)); ch=true; } }); if(ch) saveStrategyData(); }catch(e){}
   if(activeAcctFilter===id){
     activeAcctFilter='all';
     CS.set('active_account', 'all'); // keep CloudStorage in sync so next session doesn't restore the deleted account id
   }
   saveAccounts(); saveTrades(); document.getElementById('acctModal').classList.remove('open');
   updateNavVisibility();
-  renderAll(); renderAcctList(); renderSettings(); showToast('Account deleted');
+  renderAll(); renderAcctList(); renderSettings(); try{ renderPropFirms(); }catch(e){} showToast('Account deleted');
 }
 // Trading Accounts tab — the editable account list. Split out from
 // renderSettings() so it can be rendered on its own tab (switchTab's
@@ -8988,14 +9257,18 @@ function openAcctMenu(btn,id,ev){
   }
   openActionMenu(btn,items,ev);
 }
+function _archiveNow(id){
+  const a=accounts.find(x=>x.id===id); if(!a) return;
+  a.status='archived';
+  if(activeAcctFilter===id){ activeAcctFilter='all'; CS.set('active_account','all'); }
+  document.getElementById('acctModal').classList.remove('open'); updateNavVisibility();
+  saveAccounts(); renderAll(); renderAcctList(); try{ renderPropFirms(); }catch(e){} showToast('Account archived');
+}
 function archiveAccount(id){
   const a=accounts.find(x=>x.id===id); if(!a)return;
   if(activeAccounts().length<=1){ showToast('Keep at least one active account','error'); return; }
-  showConfirm('Archive account?','"'+a.name+'" will be hidden from account lists and totals. Its trades and history are kept, and you can restore it any time.',()=>{
-    a.status='archived';
-    if(activeAcctFilter===id){ activeAcctFilter='all'; CS.set('active_account','all'); }
-    saveAccounts(); renderAll(); renderAcctList(); showToast('Account archived');
-  });
+  const firms=_firmsOfAccount(id);
+  showConfirm('Archive account?','"'+a.name+'" will be hidden from account lists and totals. Its trades and history are kept, and you can restore it any time.'+(firms.length?' Its prop firm "'+firms.map(f=>f.name).join('", "')+'" moves to the archived list with it.':''),()=>{ _archiveNow(id); });
 }
 function restoreAccount(id){
   const a=accounts.find(x=>x.id===id); if(!a)return;
@@ -9026,7 +9299,8 @@ function renderAcctList(){
   const all=accounts.map(a=>({a,...acctBalanceNow(a),n:trades.filter(t=>t.accountId===a.id).length}));
   const act=all.filter(r=>r.a.status!=='archived'), arch=all.filter(r=>r.a.status==='archived');
   if(sum){
-    const tb=act.reduce((x,r)=>x+r.bal,0), tp=act.reduce((x,r)=>x+r.pl,0), sc=acctsCur(act.map(r=>r.a));   // sc null = mixed currencies
+    const _da=dispActive();   // display currency: balances at today's rate, P&L from the already-converted trades
+    const tb=act.reduce((x,r)=>x+(_da?dcConvAcct(r.bal,r.a,null):r.bal),0), tp=_da?allScopeTrades().reduce((x,t)=>x+(parseFloat(t.pnl)||0),0):act.reduce((x,r)=>x+r.pl,0), sc=_da?dcCur():acctsCur(act.map(r=>r.a));   // sc null = mixed currencies
     sum.style.display='';
     sum.innerHTML='<div><b>'+(sc?fmtMoney(tb,null,sc):_byCurLines(act.map(r=>({c:curOf(r.a),v:r.bal}))))+'</b><span>Total balance</span></div><div><b class="'+(sc&&tp>0?'positive':sc&&tp<0?'negative':'')+'">'+(sc?fmtMoney(tp,{plus:true},sc):_byCurLines(act.map(r=>({c:curOf(r.a),v:r.pl})),{plus:true},true))+'</b><span>Total P&amp;L</span></div><div><b>'+act.length+'</b><span>'+(arch.length?'Active':'Accounts')+'</span></div>';
   }
@@ -9061,6 +9335,7 @@ function renderSettings(){
     const el=document.getElementById(id),saved=localStorage.getItem('tj_pref_'+key);
     if(saved&&[...el.options].some(o=>o.value===saved))el.value=saved;
   }
+  try{ renderDcCard(); }catch(e){}
   syncSettingsSeg();
   const local=localStorage.getItem(LOCAL_DATA_KEY);
   const _on=settingsAutoBackup(), _kb=local?(new Blob([local]).size/1024).toFixed(0)+' KB':'';
@@ -9205,6 +9480,14 @@ document.getElementById('edgeTagInput').addEventListener('keydown',e=>{ if(e.key
 // is used. Personal accounts always use the dynamic start-of-day balance
 // (starting balance + deposits/withdrawals + closed P&L before that day).
 function _linkedFirm(acctId){ return propFirms.find(f=>f.linkedAccount===acctId) || null; }
+function _firmAcct(f){ let a=f.linkedAccount?accounts.find(x=>x.id===f.linkedAccount):null; if(!a) a=accounts.find(x=>x.name===f.name)||null; return a; }   // same lookup as _firmCur
+function _firmsOfAccount(id){ return propFirms.filter(f=>{ const a=_firmAcct(f); return !!a&&a.id===id; }); }
+function _firmArchived(f){ const a=_firmAcct(f); return !!a&&a.status==='archived'; }   // a firm is archived exactly when its account is
+function _archFirmsHtml(list){
+  if(!list.length) return '';
+  return '<div class="lbl" style="margin:14px 2px 8px;font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--text3)">Archived · '+list.length+'</div>'
+    +list.map(f=>{ const a=_firmAcct(f); return '<div class="dc-arch"><b>'+escapeHtml(f.name)+'</b><span class="dc-chip">Archived with account</span><small>Restore “'+escapeHtml(a?a.name:'its account')+'” to bring it back.</small></div>'; }).join('');
+}
 function _hasActiveConsistency(f){ const c=f&&f.consistency; if(!c) return false; if(c.type) return c.type!=='none'; return !!c.enabled; }
 function _roiMethod(acctId){ const f=_linkedFirm(acctId); if(!f) return 'dynamic'; return _hasActiveConsistency(f)?'dynamic':'fixed'; }
 function _acctStartOfDayBalance(acctId, dateStr){
@@ -9225,14 +9508,14 @@ function _acctRoiBase(acctId, dateStr){
 // For 'all' accounts: sum of P&L / sum of each traded account's base.
 function roiForPeriod(fromDate, toDate, acctId){
   acctId = acctId || activeAcctFilter;
-  const ids = acctId==='all' ? accounts.map(a=>a.id) : [acctId];
-  let pnl=0, base=0; const _rc=[];
+  const ids = acctId==='all' ? allScopeAccounts().map(a=>a.id) : [acctId];
+  let pnl=0, base=0; const _rc=[], _da=acctId==='all'&&dispActive();
   ids.forEach(id=>{
     const ts=trades.filter(t=>t.accountId===id && t.date && t.date>=fromDate && t.date<=toDate);
     if(!ts.length) return;
-    _rc.push(curOf(id));
-    pnl+=ts.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
-    base+=_acctRoiBase(id, fromDate);
+    _rc.push(_da?dcCur():curOf(id));
+    pnl+=_da?ts.reduce((s,t)=>{ const x=_dcShadow(t); return s+(x?(parseFloat(x.pnl)||0):0); },0):ts.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
+    base+=_da?dcConvAcct(_acctRoiBase(id, fromDate),id,null):_acctRoiBase(id, fromDate);
   });
   if(_uniformCur(_rc)===null) return null;   // mixed currencies: no cross-currency percentage
   return base>0 ? pnl/base*100 : null;
@@ -10124,8 +10407,8 @@ function renderStats(){
   // % change vs starting balance
   let pctHtml = '';
   if(activeAcctFilter==='all'){
-    const totalStart = accounts.reduce((s,a)=>s+(a.balance||0),0);
-    if(totalStart>0 && !_ctxCur(accounts).mixed){ const pct=(totalPnl/totalStart*100); pctHtml=`<span style="font-size:12px;font-weight:700;color:${pct>=0?'var(--green)':'var(--red)'}">(${pct>=0?'+':''}${pct.toFixed(2)}%)</span>`; }
+    const _da=dispActive(), totalStart = allScopeAccounts().reduce((s,a)=>s+(_da?dcConvAcct(a.balance||0,a,null):(a.balance||0)),0);
+    if(totalStart>0 && (_da||!_ctxCur(allScopeAccounts()).mixed)){ const pct=(totalPnl/totalStart*100); pctHtml=`<span style="font-size:12px;font-weight:700;color:${pct>=0?'var(--green)':'var(--red)'}">(${pct>=0?'+':''}${pct.toFixed(2)}%)</span>`; }
   } else {
     const acct = accounts.find(a=>a.id===activeAcctFilter);
     if(acct&&acct.balance>0){ const pct=(totalPnl/acct.balance*100); pctHtml=`<span style="font-size:12px;font-weight:700;color:${pct>=0?'var(--green)':'var(--red)'}">(${pct>=0?'+':''}${pct.toFixed(2)}%)</span>`; }
@@ -10950,7 +11233,7 @@ function setSetupFocus(name){
 function computeBalanceSeries(){
   const scope = activeAcctFilter;
   const startingBalance = scope==='all'
-    ? accounts.reduce((s,a)=>s+(parseFloat(a.balance)||0),0)
+    ? allScopeAccounts().reduce((s,a)=>s+(dispActive()?dcConvAcct(parseFloat(a.balance)||0,a,null):(parseFloat(a.balance)||0)),0)
     : (parseFloat(accounts.find(a=>a.id===scope)?.balance)||0);
   const ledgerEntries = scope==='all' ? allAccountsLedgerEntries() : accountLedgerEntries(scope);
   const allTrades = filteredTrades(); // account-scoped only — NOT period-filtered
@@ -11005,7 +11288,7 @@ async function renderBalanceCard(){
   // reflects whatever window is selected, so it can't look stale/wrong while
   // someone's browsing an older period. Only the % badge is window-scoped.
   const _bc=_scopeCurFilter();
-  if(amountEl) amountEl.textContent = _bc.mixed ? 'Mixed' : (currentBalance<0?'-':'')+_curWrap(Math.abs(currentBalance).toLocaleString('en-US',{minimumFractionDigits:_bc.dec,maximumFractionDigits:_bc.dec}),_bc);
+  if(amountEl) amountEl.textContent = _bc.mixed ? 'Mixed' : _ap(_bc,currentBalance<0)+(currentBalance<0?'-':'')+_curWrap(Math.abs(currentBalance).toLocaleString('en-US',{minimumFractionDigits:_bc.dec,maximumFractionDigits:_bc.dec}),_bc);
   if(badgeEl){
     if(startingBalance>0 && !_bc.mixed){
       const pct=(tradingPnL/startingBalance)*100;
@@ -11449,8 +11732,8 @@ function irow(k,v){ return `<div class="info-row"><span class="k">${k}</span><sp
 function fmtPnl(v,ctx){ const n=parseFloat(v)||0, c=ctx===undefined?CUR_USD:_ctxCur(ctx);
   if(c.mixed) return 'Mixed';
   if(c===CUR_USD){ if(n===0)return '$0.00'; return (n>0?'+$':'-$')+Math.abs(n).toFixed(2); }
-  const t=Math.abs(n).toFixed(c.dec); if(!(+t)) return _curWrap(t,c);
-  return (n>0?'+':'-')+_curWrap(t,c); }
+  const t=Math.abs(n).toFixed(c.dec); if(!(+t)) return _ap(c)+_curWrap(t,c);
+  return _ap(c,true)+(n>0?'+':'-')+_curWrap(t,c); }
 // Shared row renderer for Best Day of Week / Session Performance — both
 // blocks compute the same {wins,losses,total,pnl} shape per bucket, so one
 // function keeps them visually identical instead of two near-duplicate
@@ -11529,7 +11812,7 @@ function refreshPairSuggestions(){
 // ─── Money formatting (single place). cur = account | accountId | resolved currency; omitted = USD, so older calls are unchanged ───
 function fmtMoney(n,o,cur){ o=o||{}; const c=curOf(cur), v=Number(n)||0, d=o.dec==null?c.dec:o.dec;
   const t=Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
-  return (v<0?'-':(o.plus&&v>0?'+':''))+_curWrap(t,c); }
+  const sg=(v<0?'-':(o.plus&&v>0?'+':'')); return _ap(c,!!sg)+sg+_curWrap(t,c); }
 const PROP_PHASE_LABEL={funded:'Funded',challenge:'Phase 1',verification:'Phase 2',phase3:'Phase 3'};
 
 // ─── Small action menu (the "⋯" on account / firm cards); styled like the pickers ───
@@ -12562,24 +12845,27 @@ function deletePayoutEntry(firmId, payoutId){
 // ── Render ──
 
 function renderPropFirms(){
+  const _archFirms=propFirms.filter(_firmArchived), firms=propFirms.filter(f=>!_firmArchived(f));
+  const _da=dispActive(), _cvF=(v,f)=>_da?v*(fxRateAt(_firmCur(f).code,null)||0):v;   // display currency: firm figures at today's rate
   const summaryEl = document.getElementById('propSummaryGrid');
-  const totalAccts = propFirms.length;
-  const liveCount = propFirms.filter(f=>f.phase==='funded').length;
-  const totalEarned = propFirms.reduce((s,f)=>(f.payouts||[]).reduce((ss,p)=>ss+p.amount,0)+s,0);
-  const livePnL = propFirms.reduce((s,f)=>s+(getPropFirmPnL(f)||0),0);
+  const totalAccts = firms.length;
+  const liveCount = firms.filter(f=>f.phase==='funded').length;
+  const totalEarned = firms.reduce((s,f)=>_cvF((f.payouts||[]).reduce((ss,p)=>ss+p.amount,0),f)+s,0);
+  const livePnL = firms.reduce((s,f)=>s+(getPropFirmPnL(f)||0),0);
 
   // Summary strip: only funded accounts have a payout cycle, so the cycle figure counts funded firms only
-  const fundedFirms = propFirms.filter(f=>f.phase==='funded');
-  const fundedCycle = fundedFirms.reduce((x,f)=>x+(getCyclePnL(f)||0),0);
-  summaryEl.style.display = propFirms.length ? '' : 'none';
-  const fcCur = _uniformCur(fundedFirms.map(x=>_firmCur(x))), pdCur = _uniformCur(propFirms.map(x=>_firmCur(x)));   // null = firms in different currencies: "Mixed", no sum
+  const fundedFirms = firms.filter(f=>f.phase==='funded');
+  const fundedCycle = fundedFirms.reduce((x,f)=>x+_cvF(getCyclePnL(f)||0,f),0);
+  summaryEl.style.display = firms.length ? '' : 'none';
+  const fcCur = _da?dcCur():_uniformCur(fundedFirms.map(x=>_firmCur(x))), pdCur = _da?dcCur():_uniformCur(firms.map(x=>_firmCur(x)));   // null = firms in different currencies: "Mixed", no sum
   summaryEl.innerHTML = '<div><b class="'+(fcCur&&fundedCycle>0?'positive':fcCur&&fundedCycle<0?'negative':'')+'">'+(fcCur?fmtMoney(fundedCycle,{plus:true,dec:0},fcCur):_byCurLines(fundedFirms.map(x=>({c:_firmCur(x),v:getCyclePnL(x)||0})),{plus:true,dec:0},true))+'</b><span>Funded cycle P&amp;L</span></div>'
-    +'<div><b>'+(propFirms.length-fundedFirms.length)+'</b><span>In evaluation</span></div>'
-    +'<div><b class="'+(pdCur&&totalEarned>0?'positive':'')+'">'+(pdCur?fmtMoney(totalEarned,{dec:0},pdCur):_byCurLines(propFirms.map(x=>({c:_firmCur(x),v:(x.payouts||[]).reduce((s,q)=>s+q.amount,0)})),{dec:0}))+'</b><span>Paid out</span></div>';
+    +'<div><b>'+(firms.length-fundedFirms.length)+'</b><span>In evaluation</span></div>'
+    +'<div><b class="'+(pdCur&&totalEarned>0?'positive':'')+'">'+(pdCur?fmtMoney(totalEarned,{dec:0},pdCur):_byCurLines(firms.map(x=>({c:_firmCur(x),v:(x.payouts||[]).reduce((s,q)=>s+q.amount,0)})),{dec:0}))+'</b><span>Paid out</span></div>';
 
   const listEl = document.getElementById('propFirmList');
-  if(!propFirms.length){
+  if(!firms.length){
     listEl.innerHTML='<div class="empty"><div class="empty-icon">'+_I.chart+'</div><div class="empty-title">No prop firms added</div><div class="empty-sub">Track challenge and funded accounts, monitor drawdown limits, consistency rules, and payout cycles.</div><button class="empty-cta-btn" onclick="openAddFirm()">Add Prop Firm <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></div>';
+    listEl.innerHTML+=_archFirmsHtml(_archFirms);
     return;
   }
 
@@ -12600,7 +12886,7 @@ function renderPropFirms(){
   const _msg = (txt,k) => '<div class="pf-msg '+k+'">'+_I.alert+'<span>'+txt+'</span></div>';
   const _d = new Date(), todayStr = _d.getFullYear()+'-'+String(_d.getMonth()+1).padStart(2,'0')+'-'+String(_d.getDate()).padStart(2,'0');
 
-  listEl.innerHTML = propFirms.map(f=>{
+  listEl.innerHTML = firms.map(f=>{
     const pnl = getPropFirmPnL(f), fc = _firmCur(f);
     const totalFirmEarned = (f.payouts||[]).reduce((s,p)=>s+p.amount,0);
     const payoutCount = (f.payouts||[]).length;
@@ -12697,7 +12983,7 @@ function renderPropFirms(){
       ${chips?`<div class="pf-chips">${chips}</div>`:''}
       ${payoutSectionHTML}
     </div>`;
-  }).join('');
+  }).join('')+_archFirmsHtml(_archFirms);
 }
 
 themeInit();
