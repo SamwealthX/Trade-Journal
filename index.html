@@ -1321,12 +1321,12 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
 .ac-chev{display:inline-flex;transition:transform .15s}.ac-chev.open{transform:rotate(90deg)}.ac-chev svg{width:15px;height:15px}
 
 /* ─── Batch 2b-8: small-screen fit (375px / 320px) ─── */
-.mf,.acct-header-balance .val,.acct-header-pnl,.cal-stat-value,.stat-value,.month-strip-value,.ls-pnl,.metric-row-val,.ac-strip b,.ac-bal b,.ac-pl .mf,.ac-group>span:last-child,#balanceAmount,.perf-row-pnl,.cal-week-total-pnl,.cal-day-pnl,.cal-day-roi,.yp-pnl,.yp-roi,.ms-pnl,.ms-meta>span:first-child,.goal-amounts>*,.cal-week-sub .v,.info-row .v,.pf-strip b,.pf-sum b,.rt-pnl,.peek-pnl,.mf-auto{white-space:nowrap;overflow:hidden;text-overflow:clip;min-width:0;max-width:100%}
+.mf,.acct-header-balance .val,.acct-header-pnl,.cal-stat-value,.stat-value,.month-strip-value,.ls-pnl,.metric-row-val,.ac-bal b,.ac-pl .mf,.ac-group>span:last-child,#balanceAmount,.perf-row-pnl,.cal-week-total-pnl,.cal-day-pnl,.cal-day-roi,.yp-pnl,.yp-roi,.ms-pnl,.ms-meta>span:first-child,.goal-amounts>*,.cal-week-sub .v,.info-row .v,.pf-strip b,.pf-sum b,.rt-pnl,.peek-pnl,.mf-auto{white-space:nowrap;overflow:hidden;text-overflow:clip;min-width:0;max-width:100%}
 .mf.mfi{display:inline-block;vertical-align:bottom}
 .nw{white-space:nowrap}
 .month-strip-cell,.stat-card,.cal-stat,.ms-card,.ls-tile,.stat-grid>*,.cal-summary-row>*,.ls-grid>*,.ms-grid>*{min-width:0}
 /* header (Option B): the name is never truncated; the balance column shrinks/compacts instead */
-.acct-header-right{flex:0 1 auto;max-width:56%}
+.acct-header-right{flex:0 0 auto;max-width:56%}
 .acct-header-balance{max-width:100%;min-width:0}
 .acct-header-name-text{overflow:visible;text-overflow:clip;white-space:normal;overflow-wrap:anywhere;line-height:1.2}
 .acct-header-balance .lbl{white-space:nowrap}
@@ -1341,7 +1341,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
 .yp-ycell::after{content:'';position:absolute;top:0;bottom:0;left:calc(100% + 6px);width:12px;background:linear-gradient(to right,var(--surface),transparent);pointer-events:none}
 .yp-mcell{padding:8px 2px;min-width:0}
 /* balance card: below ~400px the zoom/period controls get their own row under the amount */
-@media (max-width:400px){.balance-head{flex-wrap:wrap}.balance-head>.balance-head-main{flex:1 1 100%}.balance-controls{flex:1 1 100%;justify-content:flex-start}}
+@media (max-width:430px){.balance-head{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:8px;align-items:center}.balance-head>.balance-head-main{display:contents}.balance-head-main>div:first-child{grid-column:1;grid-row:1;min-width:0}.balance-controls{grid-column:2;grid-row:1;justify-content:flex-end}#balanceAmount{grid-column:1 / -1;grid-row:2;min-width:0}}
 /* trade rows: the amount absorbs the squeeze, the date keeps its width */
 .rt-row .rt-when{flex:0 0 auto;overflow:visible;text-overflow:clip;padding:0 2px}
 .rt-row .rt-pnl{flex:1 1 0;min-width:0}
@@ -1359,6 +1359,16 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
 .ac-group .sp{flex:1 1 0;min-width:4px}
 .ac-group>span:last-child{overflow:visible;white-space:normal;text-align:right;max-width:100%}
 .dbar-labels div{overflow:visible;text-overflow:clip}
+
+/* ─── Batch 2b-9: strips, one shared size ─── */
+.ac-strip{grid-template-columns:repeat(3,auto)}
+.ac-strip>div{display:grid;grid-template-rows:1fr auto;align-items:center;row-gap:4px;min-width:0}
+.ac-strip b{display:block;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:clip}
+.ac-strip .cs{font-size:inherit}
+.ac-strip .cs small{font-size:.72em}
+/* info rows (ledger list etc.): the amount group keeps its width, the label wraps */
+.info-row>.k{min-width:0;overflow-wrap:anywhere}
+.info-row>div{flex:0 0 auto;max-width:62%}
 </style>
 </head>
 <body>
@@ -2788,6 +2798,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
       <button class="cal-nav-btn" onclick="document.getElementById('monthReportModal').classList.remove('open')" style="width:28px;height:28px">✕</button>
     </div>
     <label id="monthReportPayoutControl" style="display:none;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:12px;font-weight:700;color:var(--text2)">Payouts <span style="display:flex;align-items:center;gap:8px"><span id="monthReportPayoutState">ON</span><input id="monthReportPayoutToggle" type="checkbox" checked onchange="toggleMonthReportPayouts()" aria-label="Include payouts in month report" style="accent-color:var(--accent);width:17px;height:17px;margin:0;cursor:pointer"/></span></label>
+    <label id="monthReportLedgerControl" style="display:none;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:12px;font-weight:700;color:var(--text2)">Deposits &amp; withdrawals <span style="display:flex;align-items:center;gap:8px"><span id="monthReportLedgerState">ON</span><input id="monthReportLedgerToggle" type="checkbox" checked onchange="toggleMonthReportLedger()" aria-label="Show deposits and withdrawals in month report" style="accent-color:var(--accent);width:17px;height:17px;margin:0;cursor:pointer"/></span></label>
     <div id="monthReportCanvasWrap" style="border-radius:var(--radius);overflow:hidden;background:var(--surface2);display:flex;justify-content:center">
       <canvas id="monthReportCanvas" style="display:none"></canvas>
       <img id="monthReportImg" alt="Month report" style="width:100%;height:auto;display:block"/>
@@ -3086,9 +3097,10 @@ function _cmpFromText(t){
 }
 // Money elements that hold ONLY an amount (or a percentage). They never wrap, never clip, never truncate: font shrinks (0.5px steps, down to 60%),
 // then the compact text replaces the full one. Anything can opt in with class="mf"; inline helper: mfHtml(text).
-const MF_SEL='.mf,.acct-header-balance .val,.acct-header-pnl,.cal-stat-value,.stat-value,.month-strip-value,.ls-pnl,.metric-row-val,.ac-strip b,.ac-bal b,.ac-pl .mf,.ac-group>span:last-child,#balanceAmount,.perf-row-pnl,.cal-week-total-pnl,.cal-day-pnl,.cal-day-roi,.yp-pnl,.yp-roi,.ms-pnl,.ms-meta>span:first-child,.goal-amounts>*,.cal-week-sub .v,.info-row .v,.pf-strip b,.pf-sum b,.rt-pnl,.peek-pnl,.mf-auto';
+const MF_SEL='.mf,.acct-header-balance .val,.acct-header-pnl,.cal-stat-value,.stat-value,.month-strip-value,.ls-pnl,.metric-row-val,.ac-bal b,.ac-pl .mf,.ac-group>span:last-child,#balanceAmount,.perf-row-pnl,.cal-week-total-pnl,.cal-day-pnl,.cal-day-roi,.yp-pnl,.yp-roi,.ms-pnl,.ms-meta>span:first-child,.goal-amounts>*,.cal-week-sub .v,.info-row .v,.pf-strip b,.pf-sum b,.rt-pnl,.peek-pnl,.mf-auto';
 function mfHtml(t,cls){ return '<span class="mf mfi'+(cls?' '+cls:'')+'">'+t+'</span>'; }
 function _mfFit(el){
+  if(el.__mfg) return;   // sized by its row group (_mfFitRows)
   if(el.__mfOn){ if(el.textContent===el.__mfShown) el.textContent=el.__mfFull; el.__mfOn=false; }
   el.style.fontSize='';
   const cw=el.clientWidth; if(!cw) return;
@@ -3105,11 +3117,38 @@ function _mfFit(el){
     if(cmp){ el.__mfFull=el.textContent; el.textContent=cmp; el.__mfShown=cmp; el.__mfOn=true; el.style.fontSize=''; shrink(); }
   }
 }
+
+// Strips (.ac-strip on Accounts and Prop): every value shares ONE font size; if the shared size would drop below 13px, every amount in the strip
+// switches to its compact form together (never one full and one compact), then the shared size may shrink again (down to 60%).
+function _mfGroupRun(bs,T){
+  if(!bs.length) return;
+  T.forEach(e=>{ if(e.__gOn){ const n=e.lastChild; if(n&&n.nodeType===3) n.nodeValue=e.__gFull; e.__gOn=false; } });
+  bs.forEach(b=>b.style.fontSize='');
+  const base=parseFloat(getComputedStyle(bs[0]).fontSize)||14;
+  const fits=sz=>{ bs.forEach(b=>b.style.fontSize=sz+'px'); return T.every(e=>e.scrollWidth<=e.clientWidth+0.5); };
+  const run=lo=>{ let sz=base; while(!fits(sz)){ if(sz-0.5<lo) return false; sz-=0.5; } return true; };
+  if(run(13)){ if(bs[0].style.fontSize===base+'px') bs.forEach(b=>b.style.fontSize=''); return; }
+  T.forEach(e=>{ const n=e.lastChild; if(n&&n.nodeType===3&&!/%\s*$/.test(n.nodeValue)){ const c=_cmpFromText(n.nodeValue); if(c){ e.__gFull=n.nodeValue; n.nodeValue=c; e.__gOn=true; } } });
+  run(Math.floor(base*0.6*2)/2);
+}
+function _mfGroupTargets(g){ const T=[]; g.querySelectorAll('b').forEach(b=>{ const cs=b.querySelectorAll('.cs'); if(cs.length) cs.forEach(c=>T.push(c)); else T.push(b); }); return T; }
+function _mfFitGroup(g){ if(!g.clientWidth) return; _mfGroupRun([...g.querySelectorAll('b')],_mfGroupTargets(g)); }
+// Paired cards: values that sit in the same row of a card grid share one size and one compact decision (percentages are never compacted).
+const MF_ROWS='.stat-grid,.month-strip-grid,.cal-summary-row', MF_ROWVAL='.stat-value,.month-strip-value,.cal-stat-value';
+function _mfFitRows(root){
+  root.querySelectorAll(MF_ROWS).forEach(g=>{
+    const vals=[...g.querySelectorAll(MF_ROWVAL)]; vals.forEach(v=>{ v.__mfg=false; });
+    if(!g.clientWidth||vals.length<2) return;
+    vals.forEach(v=>{ if(v.__gOn){ const n=v.lastChild; if(n&&n.nodeType===3) n.nodeValue=v.__gFull; v.__gOn=false; } v.style.fontSize=''; });
+    const rows={}; vals.forEach(v=>{ const k=Math.round(v.getBoundingClientRect().top); (rows[k]=rows[k]||[]).push(v); });
+    Object.keys(rows).forEach(k=>{ const r=rows[k]; if(r.length<2) return; r.forEach(v=>{ v.__mfg=true; }); _mfGroupRun(r,r); });
+  });
+}
 function mfText(el){ return el.__mfOn&&el.textContent===el.__mfShown?el.__mfFull:el.textContent; }   // the full text, even while the compact one is shown
 let _mfBusy=false, _mfRaf=0;
 function fitMoney(root){
   if(_mfBusy) return; _mfBusy=true;
-  try{ (root||document).querySelectorAll(MF_SEL).forEach(el=>{ try{ _mfFit(el); }catch(e){} }); }
+  try{ (root||document).querySelectorAll('.ac-strip').forEach(g=>{ try{ _mfFitGroup(g); }catch(e){} }); try{ _mfFitRows(root||document); }catch(e){} (root||document).querySelectorAll(MF_SEL).forEach(el=>{ try{ _mfFit(el); }catch(e){} }); }
   finally{ _mfBusy=false; try{ _mfObs.takeRecords(); }catch(e){} }   // our own text/size changes are not "renders"
 }
 function scheduleFitMoney(){ if(_mfRaf) return; _mfRaf=requestAnimationFrame(()=>{ _mfRaf=0; fitMoney(); }); }
@@ -7955,15 +7994,15 @@ function computePeriodStats(fromDate, toDate, acctId){
 
   // Deposits, withdrawals and payouts move the BALANCE, never the P&L: start/end balance include them (End = header balance = balance curve);
   // net P&L, win rate, profit factor, drawdown and the % stay trade-only. With a display currency each entry converts at its own date's rate.
-  let ledBefore=0, ledPeriod=0, ledN=0;
+  let ledBefore=0, ledPeriod=0, ledN=0, ledDep=0, ledWd=0, manN=0, manNet=0;
   (acctId==='all'?allScopeAccounts():[accounts.find(a=>a.id===acctId)].filter(Boolean)).forEach(a=>accountLedgerEntries(a.id).forEach(e=>{
     if(!e.date||e.date>toDate) return;
     const amt=Math.abs(parseFloat(e.amount)||0), v=(e.type==='deposit'?1:-1)*(_da?dcConvAcct(amt,a,e.date):amt);
-    if(e.date<fromDate) ledBefore+=v; else { ledPeriod+=v; ledN++; }
+    if(e.date<fromDate) ledBefore+=v; else { ledPeriod+=v; ledN++; if(v>=0) ledDep+=v; else ledWd+=-v; if(e.source==='manual'){ manN++; manNet+=v; } }
   }));
   return {
     acctName: acctId==='all' ? 'All Accounts' : (accounts.find(a=>a.id===acctId)?.name || ''),
-    startBalance: startBalance+ledBefore, endBalance: endBalance+ledBefore+ledPeriod, ledgerNet: ledPeriod, ledgerCount: ledN, periodPnl, pct,
+    startBalance: startBalance+ledBefore, endBalance: endBalance+ledBefore+ledPeriod, ledgerNet: ledPeriod, ledgerDep: ledDep, ledgerWd: ledWd, manualCount: manN, manualNet: manNet, ledgerCount: ledN, periodPnl, pct,
     longs, shorts, total: periodTrades.length,
     winsCount: wins.length, lossesCount: losses.length,
     winRate, pf, exp, bestTrade, worstTrade, avgHold, hasHoldData, maxDD,
@@ -8045,6 +8084,16 @@ function renderMonthReportCanvas(){
   payoutControl.style.display = stats.isProp ? 'flex' : 'none';
   document.getElementById('monthReportPayoutState').textContent = document.getElementById('monthReportPayoutToggle').checked ? 'ON' : 'OFF';
   const showPayout = stats.isProp && document.getElementById('monthReportPayoutToggle').checked;
+  // Deposits & withdrawals strip. Logged payouts are withdrawals in the ledger (they reduce the balance), so on a prop account whose Payout
+  // column is shown the strip covers the MANUAL movements only (payouts are already in the Payout column). With Payouts OFF, or on All
+  // Accounts / non-prop accounts, the strip includes them. Own toggle (default ON, remembered); hidden when there is nothing to show.
+  // Prop account: the Payouts toggle is the only control (payouts ARE its withdrawals). ON = Payout column + strip of manual movements only
+  // (if any); OFF = neither. All Accounts / non-prop: the strip includes payouts and has its own toggle.
+  if(stats.isProp){ if(showPayout){ stats.ledgerNet=stats.manualNet; stats.ledgerCount=stats.manualCount; } else { stats.ledgerNet=0; stats.ledgerCount=0; } }
+  const _ledCtl = document.getElementById('monthReportLedgerControl'), _ledTog = document.getElementById('monthReportLedgerToggle');
+  _ledCtl.style.display = (!stats.isProp && stats.ledgerCount>0) ? 'flex' : 'none';
+  document.getElementById('monthReportLedgerState').textContent = _ledTog.checked ? 'ON' : 'OFF';
+  stats.showLedger = stats.ledgerCount>0 && (stats.isProp || _ledTog.checked);
   const empty = document.getElementById('monthReportEmpty');
   const actions = document.getElementById('monthReportActions');
   const wrap = document.getElementById('monthReportCanvasWrap');
@@ -8135,7 +8184,7 @@ function renderMonthReportCanvas(){
   const rows = ['Best Trade','Worst Trade'];
   if(stats.hasHoldData) rows.push('Avg Hold Time');
   rows.push('Max Balance Drawdown','Win Rate','Profit Factor','Expectancy');
-  const ROW_H = 42, hasLed = stats.ledgerCount>0, LED_H = hasLed?30:0;
+  const ROW_H = 42, hasLed = stats.showLedger!==undefined ? stats.showLedger : stats.ledgerCount>0, LED_H = hasLed?30:0;
   const H = LED_H + PAD + 34 + 20 + 20 + 64 + 26 + 20 + 20 + 22 + 16 + 58 + 22 + 20 + 22 + 16 + 68 + 10 + rows.length*ROW_H + 16 + 28 + PAD;
 
   const canvas = document.getElementById('monthReportCanvas');
@@ -8315,9 +8364,14 @@ function renderMonthReportCanvas(){
 function toggleMonthReportPayouts(){
   renderMonthReportCanvas();
 }
+function toggleMonthReportLedger(){
+  try{ localStorage.setItem('tj_pref_mrLedger', document.getElementById('monthReportLedgerToggle').checked?'1':'0'); }catch(e){}
+  renderMonthReportCanvas();
+}
 
 function openMonthReport(){
   document.getElementById('monthReportPayoutToggle').checked = true;
+  try{ document.getElementById('monthReportLedgerToggle').checked = localStorage.getItem('tj_pref_mrLedger')!=='0'; }catch(e){}
   document.getElementById('monthReportModal').classList.add('open');
   renderMonthReportCanvas();
 }
@@ -8330,7 +8384,7 @@ function _monthReportFilename(){
 
 function _monthReportShareText(){
   const s = _lastReportStats; if(!s) return '';
-  return `${s.monthLabel} — ${s.acctName}\nNet P&L: ${fmtPnl(s.monthPnl,s.cur)}${s.pct!==null?` (${s.pct>=0?'+':''}${s.pct.toFixed(2)}%)`:''}\nWin Rate: ${s.winRate.toFixed(1)}% · ${s.total} trades${s.ledgerCount>0?`\nDeposits & withdrawals: ${fmtPnl(s.ledgerNet,s.cur)}`:''}`;
+  return `${s.monthLabel} — ${s.acctName}\nNet P&L: ${fmtPnl(s.monthPnl,s.cur)}${s.pct!==null?` (${s.pct>=0?'+':''}${s.pct.toFixed(2)}%)`:''}\nWin Rate: ${s.winRate.toFixed(1)}% · ${s.total} trades${(s.showLedger!==undefined?s.showLedger:s.ledgerCount>0)?`\nDeposits & withdrawals: ${fmtPnl(s.ledgerNet,s.cur)}`:''}`;
 }
 
 function _canShareReportFile(){
@@ -11327,7 +11381,7 @@ function renderMonthlyGoalWidget(){
   const paceDelta=pct-linearPace;
   el.innerHTML=`<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:9px">
       <div class="stat-value accent" style="font-size:22px">${fmtPnl(made,gcx)}</div>
-      <div style="font-size:12px;color:var(--text2);font-family:var(--mono)">${gMixed?'pick one account':(gi&&gi.noRate)?fmtMoney(gi.raw,{dec:0},gi.gc)+' · no rate':pct.toFixed(0)+'% of '+fmtPnl(goal,gcg).replace('+','')}</div>
+      <div style="font-size:12px;color:var(--text2);font-family:var(--mono);min-width:0;white-space:nowrap">${gMixed?'pick one account':(gi&&gi.noRate)?fmtMoney(gi.raw,{dec:0},gi.gc)+' · no rate':pct.toFixed(0)+'% of '+mfHtml(fmtPnl(goal,gcg).replace('+',''))}</div>
     </div>
     <div class="goal-progress"><div class="goal-fill" style="width:${pct}%"></div></div>
     <div class="goal-amounts"><span style="color:var(--text3)">${monthStart.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span><span style="color:var(--text3)">${monthEnd.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span></div>${_goalNote(gi)?'<div class="goal-note">'+escapeHtml(_goalNote(gi))+'</div>':''}
@@ -11514,13 +11568,13 @@ async function renderBalanceCard(){
     return fmtFullDate(p.date)+(clock?', '+clock:'');
   };
   const tooltipFooter = i=>{
-    const p=view[i]; if(!p || !p.date) return [];
-    const evs=dayLedger[p.date]||[];
-    return evs.map(e=>{
-      const amt=Math.abs(parseFloat(e.ref?.amount)||0).toLocaleString('en-US',{minimumFractionDigits:_bc.dec,maximumFractionDigits:_bc.dec});
-      const label=e.kind==='deposit'?'Deposit':'Withdrawal';
-      return label+'  '+(e.kind==='deposit'?'+':'-')+_curWrap(amt,_bc);
-    });
+    const p=view[i]; if(!p || (p.kind!=='deposit' && p.kind!=='withdrawal')) return [];   // a movement explains itself; trades and the start point add nothing
+    const e=p.ref||{}, amt=Math.abs(parseFloat(e.amount)||0).toLocaleString('en-US',{minimumFractionDigits:_bc.dec,maximumFractionDigits:_bc.dec});
+    const out=[(p.kind==='deposit'?'Deposit  +':'Withdrawal  -')+_curWrap(amt,_bc)];
+    const note=String(e.note||'').trim(), acct=(activeAcctFilter==='all'&&e.accountId)?((accounts.find(x=>x.id===e.accountId)||{}).name||''):'';
+    const line=[(acct&&note.indexOf(acct)<0)?acct:'',note].filter(Boolean).join(' · ');
+    if(line) out.push(line.length>34?line.slice(0,33)+'…':line);
+    return out;
   };
   const chartInner=document.getElementById('balanceChartInner');
   if(chartInner) chartInner.style.width='100%';
@@ -11861,7 +11915,13 @@ function chartOpts({prefix='',suffix='',cur=null,tooltipTitle=null,tooltipFooter
     }
     return prefix+v+suffix;
   }
-  return{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},events:['mousemove','mouseout'],plugins:{legend:{display:false},tooltip:{enabled:true,position:'nearest',animation:{duration:0},animations:{opacity:{duration:0}},backgroundColor:T.surface2,borderColor:T.border2,borderWidth:1,titleColor:T.text2,bodyColor:T.text,footerColor:T.text2,footerFont:{size:10,weight:'600'},footerMarginTop:6,padding:10,displayColors:true,callbacks:Object.assign({label:ctx=>'Balance  '+fmtVal(ctx.parsed.y)},tooltipTitle?{title:items=>tooltipTitle(items[0].dataIndex)}:{},tooltipFooter?{footer:items=>tooltipFooter(items[0].dataIndex)}:{})}},scales:{x:{grid:{display:!hideGrid,color:T.border2},ticks:{color:T.text3,font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:6,callback:function(value){if(!dateAxis)return this.getLabelForValue(value);const raw=this.getLabelForValue(value),d=raw?parseLocalDate(raw):null;return d?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';}}},y:{position:rightAxis?'right':'left',grid:{display:!hideGrid,color:T.border2},border:{display:false},ticks:{color:T.text2,font:{size:10},callback:v=>fmtTick(v)}}}};
+  return{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},events:['mousemove','mouseout'],plugins:{legend:{display:false},tooltip:{enabled:true,position:'nearest',animation:{duration:0},animations:{opacity:{duration:0}},backgroundColor:T.surface2,borderColor:T.border2,borderWidth:1,titleColor:T.text2,bodyColor:T.text,footerColor:T.text2,footerFont:{size:10,weight:'600'},footerMarginTop:6,padding:10,displayColors:true,callbacks:Object.assign({label:ctx=>'Balance  '+fmtVal(ctx.parsed.y)},tooltipTitle?{title:items=>tooltipTitle(items[0].dataIndex)}:{},tooltipFooter?{footer:items=>tooltipFooter(items[0].dataIndex)}:{})}},scales:{x:{grid:{display:!hideGrid,color:T.border2},ticks:{color:T.text3,font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:6,callback:function(value,index,ticks){if(!dateAxis)return this.getLabelForValue(value);
+      const f=v=>{const raw=this.getLabelForValue(v),d=raw?parseLocalDate(raw):null;return d?{t:d.toLocaleDateString('en-US',{month:'short',day:'numeric'}),y:d.getFullYear()}:null;};
+      const cur=f(value); if(!cur) return '';
+      const labs=(this.chart.data.labels||[]).filter(Boolean), y0=labs.length?f(0):null, yN=labs.length?parseLocalDate(labs[labs.length-1]):null;
+      const spans=!!(y0&&yN&&y0.y!==yN.getFullYear());
+      return cur.t+(spans?" '"+String(cur.y).slice(2):'');}},
+      afterBuildTicks:function(scale){ if(!dateAxis) return; const seen=new Set(); scale.ticks=scale.ticks.filter(t=>{ const k=scale.getLabelForValue(t.value)||''; if(seen.has(k)) return false; seen.add(k); return true; }); }},y:{position:rightAxis?'right':'left',grid:{display:!hideGrid,color:T.border2},border:{display:false},ticks:{color:T.text2,font:{size:10},callback:v=>fmtTick(v)}}}};
 }
 
 function destroyCharts(){
