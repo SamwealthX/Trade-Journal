@@ -868,6 +868,28 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .cycle-info{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;font-size:12px;color:var(--text2)}
 .prop-modal-section{margin-bottom:4px;padding-bottom:14px;border-bottom:1px solid var(--border)}
 .prop-modal-section:last-of-type{border-bottom:none;padding-bottom:0}
+
+/* ── Prop modal: collapsible sections (Batch 3a) ── */
+.pm-sec{border-bottom:1px solid var(--border)}
+.pm-hd{display:flex;align-items:center;gap:10px;width:100%;min-height:58px;padding:9px 2px;background:none;border:none;color:var(--text);font-family:var(--font);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.pm-hd .tx{flex:1;min-width:0}
+.pm-hd .t{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.9px}
+.pm-hd .sum{display:block;font-size:13px;color:var(--text2);margin-top:3px;line-height:1.35;overflow-wrap:anywhere}
+.pm-hd .sum.warn{color:var(--amber)} .pm-hd .sum.dim{color:var(--text3)}
+.pm-chev{width:15px;height:15px;color:var(--text3);flex-shrink:0;transition:transform .15s}
+.pm-sec.open .pm-chev{transform:rotate(90deg)}
+.pm-sec.open .pm-hd .sum{display:none}
+.pm-sec.open .pm-hd{min-height:44px}
+.pm-bd{display:none;padding:2px 0 14px}
+.pm-sec.open .pm-bd{display:block}
+.pm-sec:not(.open) .pm-live{display:none!important}
+.pm-live{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(0,229,160,.12);color:var(--accent);border:1px solid rgba(0,229,160,.25);text-transform:none;letter-spacing:0}
+.pm-amt{display:flex;align-items:center;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);transition:border-color .15s}
+.pm-amt:focus-within{border-color:var(--accent)}
+.pm-amt .pm-cur{padding-left:13px;color:var(--text3);font-weight:700;font-size:15px;white-space:nowrap}
+.pm-amt .form-input{border:none;background:none;box-shadow:none;padding-left:8px;flex:1;min-width:0;width:auto}
+.pm-help{font-size:11px;color:var(--text3);line-height:1.5;margin-top:5px}
+.pm-help b{color:var(--accent);font-weight:700}
 .prop-modal-section-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.9px;margin-bottom:10px}
 
 /* ── Scrollbar ──
@@ -1531,13 +1553,13 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
     <div class="modal-title" id="propModalTitle">Add Prop Firm</div>
     <input type="hidden" id="pFirmId"/>
 
-    <!-- Section 1: Basic Info -->
-    <div class="prop-modal-section">
-      <div class="prop-modal-section-title">Basic Info</div>
-      <div class="form-row">
-        <div class="form-group" style="flex:2">
+    <!-- Section 1: Basics -->
+    <div class="pm-sec" data-pm="basics">
+      <button type="button" class="pm-hd" onclick="pmToggle('basics')" aria-expanded="false"><span class="tx"><span class="t">Basics<span id="pLinkStatusBadge" class="pm-live" style="display:none">● Live P&amp;L</span></span><span class="sum" id="pmSum_basics"></span></span><svg class="pm-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+      <div class="pm-bd">
+        <div class="form-group">
           <label class="form-label">Firm Name</label>
-          <input class="form-input" id="pFirmName" placeholder="e.g. FTMO, E8, The5ers"/>
+          <input class="form-input" id="pFirmName" placeholder="Firm or account name"/>
         </div>
         <div class="form-group">
           <label class="form-label">Phase</label>
@@ -1548,107 +1570,111 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
             <option value="funded">Funded</option>
           </select>
         </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label" id="pAcctSizeLbl">Account Size ($)</label>
-        <input class="form-input" type="number" id="pAcctSize" placeholder="100000"/>
+        <div class="form-group">
+          <label class="form-label">Linked journal account</label>
+          <select class="form-select" id="pLinkedAccount" onchange="onLinkedAccountChange()">
+            <option value="">— No link (manual entry) —</option>
+          </select>
+          <div class="pm-help">Linked: P&amp;L comes live from the trades you log. Not linked: you enter P&amp;L yourself.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" id="pAcctSizeLbl">Account Size</label>
+          <div class="pm-amt"><span class="pm-cur">$</span><input class="form-input" type="number" id="pAcctSize" placeholder="Starting size of the account" oninput="this._pmAuto=false;pmAcctHint();pmRefresh()"/></div>
+          <div class="pm-help" id="pAcctSizeHint" style="display:none"><b>From the account’s starting balance</b> · edit if the firm’s size differs</div>
+        </div>
+        <div id="pManualPnLGroup" style="margin-top:0">
+        <div class="form-group">
+          <label class="form-label" id="pManualPnLLbl">Current P&amp;L</label>
+          <div class="pm-amt"><span class="pm-cur">$</span><input class="form-input" type="number" id="pManualPnL" placeholder="0.00" step="any"/></div>
+          <div class="pm-help">Only used while this firm is not linked.</div>
+        </div>
+        </div>
       </div>
     </div>
 
-    <!-- Section 2: Rules & Limits -->
-    <div class="prop-modal-section">
-      <div class="prop-modal-section-title">Rules &amp; Limits</div>
-      <div class="form-row">
+    <!-- Section 2: Rules -->
+    <div class="pm-sec" data-pm="rules">
+      <button type="button" class="pm-hd" onclick="pmToggle('rules')" aria-expanded="false"><span class="tx"><span class="t">Rules</span><span class="sum" id="pmSum_rules"></span></span><svg class="pm-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+      <div class="pm-bd">
         <div class="form-group">
-          <label class="form-label" id="pProfitTargetLbl">Profit Target ($)</label>
-          <input class="form-input" type="number" id="pProfitTarget" placeholder="8000"/>
+          <label class="form-label" id="pProfitTargetLbl">Profit Target</label>
+          <div class="pm-amt"><span class="pm-cur">$</span><input class="form-input" type="number" id="pProfitTarget" placeholder="Amount to reach"/></div>
+          <div class="pm-help">Profit needed to pass or reach the payout.</div>
         </div>
         <div class="form-group">
           <label class="form-label">Min Trading Days</label>
-          <input class="form-input" type="number" id="pMinDays" placeholder="3"/>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" id="pDailyDDLbl">Daily DD Limit ($)</label>
-          <input class="form-input" type="number" id="pDailyDD" placeholder="4000"/>
+          <input class="form-input" type="number" id="pMinDays" placeholder="Days"/>
         </div>
         <div class="form-group">
-          <label class="form-label" id="pMaxDDLbl">Max Drawdown ($)</label>
-          <input class="form-input" type="number" id="pMaxDD" placeholder="8000"/>
+          <label class="form-label" id="pDailyDDLbl">Daily Drawdown Limit</label>
+          <div class="pm-amt"><span class="pm-cur">$</span><input class="form-input" type="number" id="pDailyDD" placeholder="Per day"/></div>
+          <div class="pm-help">Most you may lose in one day.</div>
         </div>
-      </div>
-      <!-- Consistency Rule -->
-      <div class="form-group" style="margin-bottom:0">
-        <label class="form-label">Consistency Rule</label>
-        <select class="form-select" id="pConsistencyType" onchange="onConsistencyTypeChange()">
-          <option value="none">None</option>
-          <option value="best_day_pct">Best Day ≤ % of total profit</option>
-          <option value="daily_cap" id="pConsistencyCapOpt">Daily profit cap ($)</option>
-        </select>
-        <div id="consistencyValueGroup" style="display:none;margin-top:8px">
-          <label class="form-label" id="consistencyValueLabel">Threshold</label>
-          <input class="form-input" type="number" id="pConsistencyValue" placeholder="30" min="0"/>
-          <div id="consistencyHint" style="font-size:11px;color:var(--text3);margin-top:4px;line-height:1.5"></div>
+        <div class="form-group">
+          <label class="form-label" id="pMaxDDLbl">Max Drawdown</label>
+          <div class="pm-amt"><span class="pm-cur">$</span><input class="form-input" type="number" id="pMaxDD" placeholder="Total"/></div>
+          <div class="pm-help">Most you may lose in total.</div>
         </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Consistency Rule</label>
+          <select class="form-select" id="pConsistencyType" onchange="onConsistencyTypeChange()">
+            <option value="none">None</option>
+            <option value="best_day_pct">Best Day ≤ % of total profit</option>
+            <option value="daily_cap" id="pConsistencyCapOpt">Daily profit cap ($)</option>
+          </select>
+          <div id="consistencyValueGroup" style="display:none;margin-top:8px">
+            <label class="form-label" id="consistencyValueLabel">Threshold</label>
+            <input class="form-input" type="number" id="pConsistencyValue" placeholder="Percent" min="0"/>
+            <div id="consistencyHint" style="font-size:11px;color:var(--text3);margin-top:4px;line-height:1.5"></div>
+          </div>
+        </div>
+        <div class="pm-help" style="margin-top:10px">Leave a rule blank if your firm doesn’t use it.</div>
       </div>
     </div>
 
-    <!-- Section 3: Payout Settings (funded only) -->
-    <div class="prop-modal-section" id="payoutSettingsSection">
-      <div class="prop-modal-section-title">Payout Settings</div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Profit Split (%)</label>
-          <input class="form-input" type="number" id="pProfitSplit" placeholder="80" min="1" max="100"/>
+    <!-- Section 3: Payout (funded only) -->
+    <div class="pm-sec" data-pm="payout" id="payoutSettingsSection">
+      <button type="button" class="pm-hd" onclick="pmToggle('payout')" aria-expanded="false"><span class="tx"><span class="t">Payout</span><span class="sum" id="pmSum_payout"></span></span><svg class="pm-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+      <div class="pm-bd">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Profit Split (%)</label>
+            <input class="form-input" type="number" id="pProfitSplit" placeholder="Percent" min="1" max="100"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Payout Cycle</label>
+            <select class="form-select" id="pPayoutCycle" onchange="pmRefresh()">
+              <option value="weekly">Weekly</option>
+              <option value="biweekly">Bi-weekly</option>
+              <option value="monthly" selected>Monthly</option>
+              <option value="bimonthly">Every 2 months</option>
+              <option value="ondemand">On Demand</option>
+            </select>
+          </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Payout Cycle</label>
-          <select class="form-select" id="pPayoutCycle">
-            <option value="weekly">Weekly</option>
-            <option value="biweekly">Bi-weekly</option>
-            <option value="monthly" selected>Monthly</option>
-            <option value="bimonthly">Every 2 months</option>
-            <option value="ondemand">On Demand</option>
-          </select>
+          <label class="form-label" id="pMinPayoutLbl">Min Payout</label>
+          <div class="pm-amt"><span class="pm-cur">$</span><input class="form-input" type="number" id="pMinPayout" placeholder="None"/></div>
+          <div class="pm-help">Smallest payout the firm will release.</div>
         </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" id="pMinPayoutLbl">Min Payout ($)</label>
-          <input class="form-input" type="number" id="pMinPayout" placeholder="500"/>
-        </div>
-        <div class="form-group">
+        <div class="form-group" style="margin-bottom:0">
           <label class="form-label">Last Payout Date</label>
           <input class="form-input" type="date" id="pLastPayoutDate"/>
         </div>
       </div>
     </div>
 
-    <!-- Section 4: Link to Journal -->
-    <div class="prop-modal-section">
-      <div class="prop-modal-section-title" style="display:flex;align-items:center;justify-content:space-between">
-        <span>Link to Journal</span>
-        <span id="pLinkStatusBadge" style="display:none;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(0,229,160,.12);color:var(--accent);border:1px solid rgba(0,229,160,.25)">● Live P&L</span>
-      </div>
-      <div class="form-group">
-        <select class="form-select" id="pLinkedAccount" onchange="onLinkedAccountChange()">
-          <option value="">— No link (manual entry) —</option>
-        </select>
-        <div style="font-size:11px;color:var(--text3);margin-top:5px;line-height:1.5">When linked, P&L is pulled live from your logged trades. Leave unlinked to enter P&L manually.</div>
-      </div>
-      <div class="form-group" id="pManualPnLGroup" style="margin-bottom:0">
-        <label class="form-label" id="pManualPnLLbl">Current P&L ($)</label>
-        <input class="form-input" type="number" step="any" id="pManualPnL" placeholder="0.00"/>
+    <!-- Section 4: Notes -->
+    <div class="pm-sec" data-pm="notes">
+      <button type="button" class="pm-hd" onclick="pmToggle('notes')" aria-expanded="false"><span class="tx"><span class="t">Notes</span><span class="sum" id="pmSum_notes"></span></span><svg class="pm-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+      <div class="pm-bd">
+        <div class="form-group" style="margin-bottom:0">
+          <textarea class="form-textarea" id="pNotes" placeholder="Anything worth remembering about this account" oninput="pmRefresh()"></textarea>
+        </div>
       </div>
     </div>
 
-    <div class="form-group" style="margin-top:4px">
-      <label class="form-label">Notes</label>
-      <textarea class="form-textarea" id="pNotes" placeholder="Any notes about this account..."></textarea>
-    </div>
-
-    <div style="display:flex;gap:8px;margin-top:4px">
+    <div style="display:flex;gap:8px;margin-top:14px">
       <button class="btn btn-primary" style="flex:1" onclick="savePropFirm()">Save Firm</button>
       <button class="btn btn-ghost" style="flex:1" onclick="closePropModal()">Cancel</button>
     </div>
@@ -11915,13 +11941,31 @@ function chartOpts({prefix='',suffix='',cur=null,tooltipTitle=null,tooltipFooter
     }
     return prefix+v+suffix;
   }
-  return{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},events:['mousemove','mouseout'],plugins:{legend:{display:false},tooltip:{enabled:true,position:'nearest',animation:{duration:0},animations:{opacity:{duration:0}},backgroundColor:T.surface2,borderColor:T.border2,borderWidth:1,titleColor:T.text2,bodyColor:T.text,footerColor:T.text2,footerFont:{size:10,weight:'600'},footerMarginTop:6,padding:10,displayColors:true,callbacks:Object.assign({label:ctx=>'Balance  '+fmtVal(ctx.parsed.y)},tooltipTitle?{title:items=>tooltipTitle(items[0].dataIndex)}:{},tooltipFooter?{footer:items=>tooltipFooter(items[0].dataIndex)}:{})}},scales:{x:{grid:{display:!hideGrid,color:T.border2},ticks:{color:T.text3,font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:6,callback:function(value,index,ticks){if(!dateAxis)return this.getLabelForValue(value);
+  return{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},events:['mousemove','mouseout'],plugins:{legend:{display:false},tooltip:{enabled:true,position:'nearest',animation:{duration:0},animations:{opacity:{duration:0}},backgroundColor:T.surface2,borderColor:T.border2,borderWidth:1,titleColor:T.text2,bodyColor:T.text,footerColor:T.text2,footerFont:{size:10,weight:'600'},footerMarginTop:6,padding:10,displayColors:true,callbacks:Object.assign({label:ctx=>'Balance  '+fmtVal(ctx.parsed.y)},tooltipTitle?{title:items=>tooltipTitle(items[0].dataIndex)}:{},tooltipFooter?{footer:items=>tooltipFooter(items[0].dataIndex)}:{})}},scales:{x:{grid:{display:!hideGrid,color:T.border2},ticks:{color:T.text3,font:{size:10},maxRotation:0,autoSkip:!dateAxis,maxTicksLimit:6,callback:function(value,index,ticks){if(!dateAxis)return this.getLabelForValue(value);
       const f=v=>{const raw=this.getLabelForValue(v),d=raw?parseLocalDate(raw):null;return d?{t:d.toLocaleDateString('en-US',{month:'short',day:'numeric'}),y:d.getFullYear()}:null;};
       const cur=f(value); if(!cur) return '';
       const labs=(this.chart.data.labels||[]).filter(Boolean), y0=labs.length?f(0):null, yN=labs.length?parseLocalDate(labs[labs.length-1]):null;
       const spans=!!(y0&&yN&&y0.y!==yN.getFullYear());
       return cur.t+(spans?" '"+String(cur.y).slice(2):'');}},
-      afterBuildTicks:function(scale){ if(!dateAxis) return; const seen=new Set(); scale.ticks=scale.ticks.filter(t=>{ const k=scale.getLabelForValue(t.value)||''; if(seen.has(k)) return false; seen.add(k); return true; }); }},y:{position:rightAxis?'right':'left',grid:{display:!hideGrid,color:T.border2},border:{display:false},ticks:{color:T.text2,font:{size:10},callback:v=>fmtTick(v)}}}};
+      afterBuildTicks:function(scale){ if(!dateAxis) return;
+      // The axis is per trade (category), so a busy day takes much more width than a quiet one. Chart.js autoSkip assumes even spacing
+      // and let neighbouring labels collide once the year was added. Choose labels by PIXEL position instead: one per date, as many as
+      // fit side by side (measured width + gap), spread evenly across the range.
+      const all=scale.ticks||[]; if(all.length<2){ return; }
+      const raw=v=>scale.getLabelForValue(v)||'';
+      const labs=(scale.chart.data.labels||[]).filter(Boolean);
+      const a=labs.length?parseLocalDate(labs[0]):null, z=labs.length?parseLocalDate(labs[labs.length-1]):null, spans=!!(a&&z&&a.getFullYear()!==z.getFullYear());
+      const text=v=>{ const d=raw(v)?parseLocalDate(raw(v)):null; return d?d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+(spans?" '"+String(d.getFullYear()).slice(2):''):''; };
+      const seen=new Set(), first=[]; all.forEach(t=>{ const k=raw(t.value); if(!seen.has(k)){ seen.add(k); first.push(t); } });
+      const base=all[0].value, last=all[all.length-1].value-base||1;
+      const L=(scale.maxWidth||scale.width||200);
+      let wMax=0; try{ const cx=scale.chart.ctx; cx.save(); cx.font='10px '+((window.Chart&&Chart.defaults&&Chart.defaults.font&&Chart.defaults.font.family)||'sans-serif'); first.forEach(t=>{ wMax=Math.max(wMax,cx.measureText(text(t.value)).width); }); cx.restore(); }catch(e){ wMax=60; }
+      const slot=(wMax||60)+14, n=Math.max(2,Math.min(6,Math.floor(L/slot)+1));
+      let pick=first;
+      if(first.length>n){ pick=[]; const used=new Set(); for(let j=0;j<n;j++){ const target=base+Math.round(j*last/(n-1)); let best=null,bd=1e9; first.forEach(t=>{ const d=Math.abs(t.value-target); if(d<bd){ bd=d; best=t; } }); if(best&&!used.has(best.value)){ used.add(best.value); pick.push(best); } } }
+      const px=t=>(t.value-base)/last*L; const out=[];
+      pick.forEach((t,i)=>{ if(out.length&&px(t)-px(out[out.length-1])<slot){ if(i===pick.length-1&&out.length>1) out.pop(); else return; } out.push(t); });
+      scale.ticks=out; }},y:{position:rightAxis?'right':'left',grid:{display:!hideGrid,color:T.border2},border:{display:false},ticks:{color:T.text2,font:{size:10},callback:v=>fmtTick(v)}}}};
 }
 
 function destroyCharts(){
@@ -12808,6 +12852,7 @@ function calcConsistencyStatus(f){
 function onPhaseChange(){
   const phase = document.getElementById('pPhase').value;
   document.getElementById('payoutSettingsSection').style.display = phase==='funded' ? 'block' : 'none';
+  pmRefresh();
 }
 
 function onConsistencyTypeChange(){
@@ -12820,11 +12865,11 @@ function onConsistencyTypeChange(){
   group.style.display='block';
   if(type==='best_day_pct'){
     label.textContent='Max single-day % of total profit';
-    input.placeholder='30';
+    input.placeholder='Percent';
     hint.textContent='No single day\u2019s profit should exceed this % of total cycle profit.';
   } else if(type==='daily_cap'){
     label.textContent='Daily profit cap ('+_propSym+')';
-    input.placeholder='1000';
+    input.placeholder='Amount';
     hint.textContent='Flags any day where total P&L exceeds this '+(_propSym==='$'?'dollar ':'')+'amount.';
   }
 }
@@ -12837,16 +12882,57 @@ function populateLinkedAccountDropdown(selectedId){
 }
 
 function onLinkedAccountChange(){
-  _syncLinkedAccountUI(document.getElementById('pLinkedAccount').value);
+  const id=document.getElementById('pLinkedAccount').value;
+  _syncLinkedAccountUI(id);
+  // Account size: prefill from the linked account's starting balance ONLY when the field is empty; never overwrite a typed value.
+  const sz=document.getElementById('pAcctSize');
+  if(id&&sz&&!String(sz.value).trim()){ const a=accounts.find(x=>x.id===id); const bal=a?Number(a.balance):0; if(bal>0){ sz.value=String(bal); sz._pmAuto=true; } }
+  pmAcctHint(); pmRefresh();
+}
+function pmAcctHint(){
+  const sz=document.getElementById('pAcctSize'), h=document.getElementById('pAcctSizeHint'), l=document.getElementById('pLinkedAccount');
+  if(h) h.style.display=(sz&&sz._pmAuto&&l&&l.value)?'block':'none';
+}
+function pmSet(key,on){
+  const sec=document.querySelector('#propFirmModal .pm-sec[data-pm="'+key+'"]'); if(!sec) return;
+  sec.classList.toggle('open',!!on);
+  const h=sec.querySelector('.pm-hd'); if(h) h.setAttribute('aria-expanded',on?'true':'false');
+}
+function pmToggle(key){
+  const sec=document.querySelector('#propFirmModal .pm-sec[data-pm="'+key+'"]'); if(!sec) return;
+  pmSet(key,!sec.classList.contains('open'));
+  if(sec.classList.contains('open')) setTimeout(()=>{ try{ sec.scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(e){} },30);
+}
+function pmReset(isEdit){
+  ['basics','rules','payout','notes'].forEach(k=>pmSet(k, isEdit ? k==='rules' : k==='basics'));
+  const sz=document.getElementById('pAcctSize'); if(sz) sz._pmAuto=false;
+  pmAcctHint(); pmRefresh();
+  const m=document.querySelector('#propFirmModal .modal'); if(m) m.scrollTop=0;
+}
+function pmRefresh(){
+  const g=id=>{ const e=document.getElementById(id); return e?String(e.value||''):''; }, sym=(typeof _propSym!=='undefined'&&_propSym)||'$';
+  const n=id=>parseFloat(g(id))||0;
+  const K=x=>{ const a=Math.abs(x), f=(v,u)=>{ const r=Math.round(v*10)/10; return (r%1===0?String(Math.round(r)):r.toFixed(1))+u; }; return sym+(a>=1e9?f(a/1e9,'B'):a>=1e6?f(a/1e6,'M'):a>=1e3?f(a/1e3,'K'):String(Math.round(a))); };
+  const put=(key,txt,cls)=>{ const e=document.getElementById('pmSum_'+key); if(e){ e.textContent=txt; e.className='sum'+(cls?' '+cls:''); } };
+  const phaseShort={challenge:'Phase 1',verification:'Phase 2',phase3:'Phase 3',funded:'Funded'}[g('pPhase')]||'';
+  const name=g('pFirmName').trim(), size=n('pAcctSize');
+  put('basics',[name||'Name required',phaseShort,size>0?sym+_sep(String(Math.round(size))):''].filter(Boolean).join(' \u00b7 '),name?'':'warn');
+  const r=[]; if(n('pProfitTarget')>0) r.push('Target '+K(n('pProfitTarget'))); if(n('pDailyDD')>0) r.push('Daily '+K(n('pDailyDD'))); if(n('pMaxDD')>0) r.push('Max '+K(n('pMaxDD')));
+  put('rules',r.length?r.join(' \u00b7 '):'Not set yet \u00b7 add any time',r.length?'':'dim');
+  const cyc={weekly:'Weekly',biweekly:'Bi-weekly',monthly:'Monthly',bimonthly:'Every 2 months',ondemand:'On demand'}[g('pPayoutCycle')]||'';
+  const split=g('pProfitSplit'), mp=n('pMinPayout');
+  put('payout',[split?split+'%':'',cyc,mp>0?'min '+K(mp):'no minimum'].filter(Boolean).join(' \u00b7 '));
+  const nt=g('pNotes').trim().replace(/\s+/g,' ');
+  put('notes',nt?(nt.length>40?nt.slice(0,40)+'\u2026':nt):'None',nt?'':'dim');
 }
 
 let _propSym='$';
 function syncPropFormCur(linkedId){
   _propSym=linkedId?(curOf(linkedId).sym||'$'):'$';
-  [['pAcctSizeLbl','Account Size'],['pProfitTargetLbl','Profit Target'],['pDailyDDLbl','Daily DD Limit'],['pMaxDDLbl','Max Drawdown'],['pMinPayoutLbl','Min Payout'],['pManualPnLLbl','Current P&L']]
-    .forEach(([id,b])=>{ const e=document.getElementById(id); if(e) e.textContent=b+' ('+_propSym+')'; });
+  document.querySelectorAll('#propFirmModal .pm-cur').forEach(e=>{ e.textContent=_propSym; });
   const o=document.getElementById('pConsistencyCapOpt'); if(o) o.textContent='Daily profit cap ('+_propSym+')';
   const t=document.getElementById('pConsistencyType'); if(t&&t.value!=='none') onConsistencyTypeChange();
+  pmRefresh();
 }
 function _syncLinkedAccountUI(linkedId){
   syncPropFormCur(linkedId);
@@ -12878,7 +12964,7 @@ function openAddFirm(){
   document.getElementById('pMinPayout').value = '';
   document.getElementById('pLastPayoutDate').value = '';
   document.getElementById('pDeleteBtnWrap').style.display = 'none';
-  onPhaseChange();
+  onPhaseChange(); pmReset(false);
   document.getElementById('propFirmModal').classList.add('open');
   updateNavVisibility();
 }
@@ -12916,7 +13002,7 @@ function openEditFirm(id){
   document.getElementById('pMinPayout').value = py.minPayout||'';
   document.getElementById('pLastPayoutDate').value = py.lastPayoutDate||'';
   document.getElementById('pDeleteBtnWrap').style.display = 'block';
-  onPhaseChange();
+  onPhaseChange(); pmReset(true);
   document.getElementById('propFirmModal').classList.add('open');
   updateNavVisibility();
 }
@@ -12931,7 +13017,7 @@ function closePropOnOverlay(e){ if(e.target===document.getElementById('propFirmM
 
 function savePropFirm(){
   const name = document.getElementById('pFirmName').value.trim();
-  if(!name){ showToast('Enter a firm name','error'); return; }
+  if(!name){ pmSet('basics',true); showToast('Enter a firm name','error'); const _fn=document.getElementById('pFirmName'); if(_fn) _fn.focus(); return; }
   const id = document.getElementById('pFirmId').value || genId();
   const existing = propFirms.find(x=>x.id===id);
   const linkedAccount = document.getElementById('pLinkedAccount').value||'';
@@ -13234,6 +13320,9 @@ themeInit();
 syncNavCollapsedIcon(document.getElementById('navJournal'));
 
 handleTelegramStartParam().then(gdriveInit);
+</script>
+<script>
+(function(){ const m=document.getElementById('propFirmModal'); if(!m) return; m.addEventListener('input',function(){ if(typeof pmRefresh==='function') pmRefresh(); }); m.addEventListener('change',function(){ if(typeof pmRefresh==='function') pmRefresh(); }); })();
 </script>
 </body>
 </html>
