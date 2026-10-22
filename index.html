@@ -13237,6 +13237,55 @@ function deletePayoutEntry(firmId, payoutId){
 
 // ── Render ──
 
+// ─── Risk engine (Batch 4a, pure): everything the prop card needs to decide, with NO DOM and NO formatting ───
+// today = 'YYYY-MM-DD' (the card passes the device's local date) so results are deterministic and testable.
+// Behaviour is exactly what renderPropFirms did inline in _56 (including: the daily violation test is strict '<',
+// the max-drawdown breach is inclusive '>=', "near" starts at 80%). Do not change thresholds here without the user's approval.
+function computePropRisk(f, today){
+  const pnl = getPropFirmPnL(f);
+  const isLinked = !!(f.linkedAccount && accounts.find(a=>a.id===f.linkedAccount));
+    // Target progress (percent can exceed 100; the bar itself caps at full)
+    const profitRaw = _lim(f,'profitTarget')>0 ? (Math.max(0,pnl)/_lim(f,'profitTarget'))*100 : 0;
+    const profitPct = Math.min(100,profitRaw);
+
+    // Max drawdown (cycle P&L below zero, measured against the limit)
+    const ddUsed = Math.abs(Math.min(0,pnl));
+    const ddPct = _lim(f,'maxDD')>0 ? Math.min(100,(ddUsed/_lim(f,'maxDD'))*100) : 0;
+    const maxDDBreach = _lim(f,'maxDD')>0 && pnl<0 && ddUsed >= _lim(f,'maxDD');
+    const maxDDNear   = _lim(f,'maxDD')>0 && pnl<0 && !maxDDBreach && ddPct >= 80;
+
+    // Daily drawdown: breach anywhere in the cycle + today's loss so far (closed trades on the linked account)
+    let dailyDDBreach=false, dailyDDBreachDate='', dailyDDBreachAmt=0, todayLoss=0;
+    if(_lim(f,'dailyDD')>0 && isLinked){
+      const linked = getLinkedTrades(f);
+      if(linked){
+        const cutoff = getCycleCutoff(f);
+        const scoped = cutoff ? linked.filter(t=>parseLocalDate(t.date)>cutoff) : linked;
+        const byDay = {};
+        scoped.forEach(t=>{ byDay[t.date]=(byDay[t.date]||0)+parseFloat(t.pnl||0); });
+        const violations = Object.entries(byDay).filter(([,v])=>v < -_lim(f,'dailyDD'));
+        if(violations.length){
+          dailyDDBreach = true;
+          const worst = violations.sort((a,b)=>a[1]-b[1])[0];
+          dailyDDBreachDate = worst[0]; dailyDDBreachAmt = Math.abs(worst[1]);
+        }
+        if((byDay[today]||0)<0) todayLoss = -byDay[today];
+      }
+    }
+    const dailyPct = _lim(f,'dailyDD')>0 ? Math.min(100,(todayLoss/_lim(f,'dailyDD'))*100) : 0;
+  const phaseKey = f.phase||'challenge';
+  const targetReached = ['challenge','verification','phase3'].includes(phaseKey) && _lim(f,'profitTarget')>0 && pnl>=_lim(f,'profitTarget');
+  let trading = null;
+  if(f.minDays && isLinked){ const days = calcTradingDaysInCycle(f); trading = { days, required:f.minDays, met: days >= f.minDays }; }
+  return {
+    isLinked, pnl,
+    target:{ limit:_lim(f,'profitTarget'), raw:profitRaw, pct:profitPct, reached:targetReached },
+    max:{ limit:_lim(f,'maxDD'), used:ddUsed, pct:ddPct, breach:maxDDBreach, near:maxDDNear },
+    daily:{ limit:_lim(f,'dailyDD'), todayLoss, pct:dailyPct, breach:dailyDDBreach, breachDate:dailyDDBreachDate, breachAmt:dailyDDBreachAmt },
+    trading
+  };
+}
+
 function renderPropFirms(){
   const _archFirms=propFirms.filter(_firmArchived), firms=propFirms.filter(f=>!_firmArchived(f));
   const _da=dispActive(), _cvF=(v,f)=>_da?v*(fxRateAt(_firmCur(f).code,null)||0):v;   // display currency: firm figures at today's rate
@@ -13289,35 +13338,10 @@ function renderPropFirms(){
     const phaseLabel = PHASE_LABELS[phaseKey] || phaseKey;
     const phaseBadgeClass = PHASE_BADGE[phaseKey] || 'phase-challenge';
 
-    // Target progress (percent can exceed 100; the bar itself caps at full)
-    const profitRaw = _lim(f,'profitTarget')>0 ? (Math.max(0,pnl)/_lim(f,'profitTarget'))*100 : 0;
-    const profitPct = Math.min(100,profitRaw);
-
-    // Max drawdown (cycle P&L below zero, measured against the limit)
-    const ddUsed = Math.abs(Math.min(0,pnl));
-    const ddPct = _lim(f,'maxDD')>0 ? Math.min(100,(ddUsed/_lim(f,'maxDD'))*100) : 0;
-    const maxDDBreach = _lim(f,'maxDD')>0 && pnl<0 && ddUsed >= _lim(f,'maxDD');
-    const maxDDNear   = _lim(f,'maxDD')>0 && pnl<0 && !maxDDBreach && ddPct >= 80;
-
-    // Daily drawdown: breach anywhere in the cycle + today's loss so far (closed trades on the linked account)
-    let dailyDDBreach=false, dailyDDBreachDate='', dailyDDBreachAmt=0, todayLoss=0;
-    if(_lim(f,'dailyDD')>0 && isLinked){
-      const linked = getLinkedTrades(f);
-      if(linked){
-        const cutoff = getCycleCutoff(f);
-        const scoped = cutoff ? linked.filter(t=>parseLocalDate(t.date)>cutoff) : linked;
-        const byDay = {};
-        scoped.forEach(t=>{ byDay[t.date]=(byDay[t.date]||0)+parseFloat(t.pnl||0); });
-        const violations = Object.entries(byDay).filter(([,v])=>v < -_lim(f,'dailyDD'));
-        if(violations.length){
-          dailyDDBreach = true;
-          const worst = violations.sort((a,b)=>a[1]-b[1])[0];
-          dailyDDBreachDate = worst[0]; dailyDDBreachAmt = Math.abs(worst[1]);
-        }
-        if((byDay[todayStr]||0)<0) todayLoss = -byDay[todayStr];
-      }
-    }
-    const dailyPct = _lim(f,'dailyDD')>0 ? Math.min(100,(todayLoss/_lim(f,'dailyDD'))*100) : 0;
+    const R = computePropRisk(f, todayStr);
+    const profitRaw = R.target.raw, profitPct = R.target.pct;
+    const ddUsed = R.max.used, ddPct = R.max.pct, maxDDBreach = R.max.breach, maxDDNear = R.max.near;
+    const dailyDDBreach = R.daily.breach, dailyDDBreachDate = R.daily.breachDate, dailyDDBreachAmt = R.daily.breachAmt, todayLoss = R.daily.todayLoss, dailyPct = R.daily.pct;
 
     // Rule chips
     const consistStatus = calcConsistencyStatus(f);
@@ -13325,12 +13349,12 @@ function renderPropFirms(){
       ? `<div class="consistency-badges-row"><span class="consistency-badge consistency-${consistStatus.status}">${consistStatus.status==='ok'?'\u2713':consistStatus.status==='warn'?'\u26a0':'\u2715'} ${consistStatus.msg}</span></div>${consistStatus.status==='fail'&&consistStatus.detail?`<div class="consistency-detail">${consistStatus.detail}</div>`:''}`
       : '';
     let chips = '';
-    if(f.minDays && isLinked){
-      const td = calcTradingDaysInCycle(f), met = td >= f.minDays;
+    if(R.trading){
+      const td = R.trading.days, met = R.trading.met;
       chips += _chip(td+'/'+f.minDays+' days', met?'ok':'warn', met?_I.check:'');
     }
     const isChallengePhase = ['challenge','verification','phase3'].includes(phaseKey);
-    const targetReached = isChallengePhase && _lim(f,'profitTarget')>0 && pnl>=_lim(f,'profitTarget');
+    const targetReached = R.target.reached;
     if(targetReached) chips += _chip('Target reached','ok',_I.check);
     if(_lim(f,'dailyDD')>0 && !(todayLoss>0)) chips += _chip('Daily limit '+fmtMoney(_lim(f,'dailyDD'),{dec:0},fc)+_limPct(f,'dailyDD'));
     if(_lim(f,'maxDD')>0 && !(pnl<0)) chips += _chip('Max DD '+fmtMoney(_lim(f,'maxDD'),{dec:0},fc)+_limPct(f,'maxDD'));
