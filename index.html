@@ -892,6 +892,19 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .pm-amt .pm-unit svg{opacity:.6;flex-shrink:0}
 .pm-amt .pm-unit.static{background:none;border-left:none;color:var(--text3);padding:0 13px 0 0;cursor:default}
 .pm-help.warn{color:var(--amber)}
+.dd-link{display:flex;align-items:center;gap:6px;color:var(--accent);font-size:13px;font-weight:600;margin:8px 0 2px;background:none;border:0;padding:6px 0;min-height:32px;cursor:pointer;font-family:var(--font);text-align:left;-webkit-tap-highlight-color:transparent}
+.dd-link svg{width:15px;height:15px;flex-shrink:0}
+.dd-linkrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px}
+.dd-tag{font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px;border:1px solid var(--amber);color:var(--amber)}
+.dd-row{display:flex;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid var(--border);font-size:14px;font-variant-numeric:tabular-nums}
+.dd-row span{color:var(--text3)} .dd-row b{text-align:right;font-weight:700;color:var(--text)}
+.dd-note{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin:12px 0;font-size:13px;line-height:1.55;color:var(--text2)}
+.dd-note.est b{color:var(--amber)}
+.dd-opt{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin:10px 0}
+.dd-opt .h{font-weight:700;font-size:14px;margin-bottom:4px}
+.dd-opt .b{font-size:13px;line-height:1.5;color:var(--text2)}
+.dd-opt .e{font-size:12px;line-height:1.5;color:var(--text3);margin-top:6px}
+.pf-bar i.pf-tick{position:absolute;top:0;width:2px;height:100%;border-radius:0;background:var(--text)}
 .pm-opt{font-weight:600;text-transform:none;letter-spacing:0;color:var(--text3);font-size:10px;margin-left:4px}
 #propFirmModal .form-row>.form-group{min-width:0}
 @media (max-width:359px){#propFirmModal .form-row.pm-stack{grid-template-columns:1fr;gap:0}}
@@ -1631,6 +1644,72 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
           <div class="pm-help" id="pHintMaxDD" data-def="Most you may lose in total.">Most you may lose in total.</div>
         </div>
         </div>
+        <div id="pDayGroup" style="display:none">
+          <div class="form-group" id="pDayKindGroup" style="display:none">
+            <label class="form-label">Daily Limit Is A Percent Of</label>
+            <select class="form-select" id="pDayKind">
+              <option value="init">The account size</option>
+              <option value="sod">That day’s starting balance</option>
+            </select>
+            <div class="pm-help">The account size: the limit never changes. Starting balance: it changes every day with your balance. Your firm’s rules say which.</div>
+          </div>
+          <div class="form-group" id="pDayConsGroup" style="display:none">
+            <label class="form-label">When The Daily Limit Is Hit</label>
+            <select class="form-select" id="pDayCons">
+              <option value="terminate">My firm ends the account</option>
+              <option value="dayLock">My firm only stops trading for the day</option>
+            </select>
+            <div class="pm-help">Ending the account counts as a breach. Stopping for the day does not: it clears tomorrow.</div>
+            <button type="button" class="dd-link" onclick="openDayHelp()">Not sure which one your firm uses?</button>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Personal Stop</label>
+            <select class="form-select" id="pBuf">
+              <option value="off">Off</option>
+              <option value="on">On</option>
+            </select>
+            <div class="pm-help">Your own early warning inside your firm’s limits. It is never a breach.</div>
+          </div>
+          <div class="form-row pm-stack" id="pBufRow" style="display:none">
+            <div class="form-group" id="pBufDailyG"><label class="form-label">Daily Stop (% Of Daily Limit)</label><input class="form-input" type="number" id="pBufDaily" placeholder="60" min="1" max="100" step="any"/></div>
+            <div class="form-group" id="pBufMaxG"><label class="form-label">Max Loss Stop (% Of Max Drawdown)</label><input class="form-input" type="number" id="pBufMax" placeholder="70" min="1" max="100" step="any"/></div>
+          </div>
+        </div>
+        <div id="pDdGroup" style="display:none">
+          <div class="form-group">
+            <label class="form-label">Drawdown Type</label>
+            <select class="form-select" id="pDdType">
+              <option value="static">Static (from the starting balance)</option>
+              <option value="eodTrailing">Trailing (end of day)</option>
+            </select>
+            <div class="pm-help" id="pDdTypeHint"></div>
+          </div>
+          <div id="pDdTrail" style="display:none">
+            <div class="form-group">
+              <label class="form-label">Floor Lock</label>
+              <select class="form-select" id="pDdLock">
+                <option value="none">No lock</option>
+                <option value="start">Lock at start + amount</option>
+              </select>
+              <div class="pm-help" id="pDdLockHint"></div>
+            </div>
+            <div class="form-group" id="pDdLockAmtGroup" style="display:none">
+              <label class="form-label">Lock Amount Above Start</label>
+              <div class="pm-amt"><input class="form-input" type="number" id="pDdLockAmt" placeholder="0" min="0" step="any"/><span class="pm-unit static pm-cur">$</span></div>
+              <div class="pm-help">0 locks the floor at the starting balance. Some firms lock slightly above it.</div>
+            </div>
+            <div class="form-group" id="pDdAfterGroup">
+              <label class="form-label">After a Payout</label>
+              <select class="form-select" id="pDdAfter">
+                <option value="keep">My floor stays where it was</option>
+                <option value="restart">My account starts over</option>
+                <option value="floorToStart">My floor moves to my starting balance</option>
+              </select>
+              <div class="pm-help" id="pDdAfterHint"></div>
+              <button type="button" class="dd-link" onclick="openDdHelp()">Not sure which one your firm uses?</button>
+            </div>
+          </div>
+        </div>
         <div class="form-group" style="margin-bottom:0">
           <label class="form-label">Consistency Rule</label>
           <select class="form-select" id="pConsistencyType" onchange="onConsistencyTypeChange()">
@@ -1701,6 +1780,41 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
   </div>
 </div>
 
+<!-- ══ Trailing drawdown sheets (Batch 3c) ══ -->
+<div class="modal-overlay" id="ddHelpModal" onclick="if(event.target===this)closeDdSheet('ddHelpModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Which one does my firm use?</div>
+    <div id="ddHelpBody"></div>
+    <button type="button" class="btn" style="width:100%;margin-top:12px" onclick="closeDdSheet('ddHelpModal')">Close</button>
+  </div>
+</div>
+<div class="modal-overlay" id="ddCalcModal" onclick="if(event.target===this)closeDdSheet('ddCalcModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">How this is calculated</div>
+    <div id="ddCalcBody"></div>
+    <button type="button" class="btn" style="width:100%;margin-top:4px" onclick="closeDdSheet('ddCalcModal')">Close</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="dayHelpModal" onclick="if(event.target===this)closeDdSheet('dayHelpModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Which one does my firm use?</div>
+    <div id="dayHelpBody"></div>
+    <button type="button" class="btn" style="width:100%;margin-top:12px" onclick="closeDdSheet('dayHelpModal')">Close</button>
+  </div>
+</div>
+<div class="modal-overlay" id="dayCalcModal" onclick="if(event.target===this)closeDdSheet('dayCalcModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">How the daily limit is calculated</div>
+    <div id="dayCalcBody"></div>
+    <button type="button" class="btn" style="width:100%;margin-top:4px" onclick="closeDdSheet('dayCalcModal')">Close</button>
+  </div>
+</div>
+
 <!-- ══ Payout Log Modal ══ -->
 <div class="modal-overlay" id="payoutLogModal" onclick="closePayoutOnOverlay(event)">
   <div class="modal">
@@ -1708,6 +1822,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
     <div class="modal-title">Payout Log</div>
     <input type="hidden" id="plFirmId"/>
     <div id="payoutLogList" style="margin-bottom:14px;max-height:260px;overflow-y:auto"></div>
+    <div id="plRecordWrap">
     <div class="section-header"><span class="section-title">Record Payout</span></div>
     <div class="form-row">
       <div class="form-group">
@@ -1723,8 +1838,9 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
       <label class="form-label">Notes (optional)</label>
       <input class="form-input" id="plNote" placeholder="e.g. 1st payout"/>
     </div>
+    </div>
     <div style="display:flex;gap:8px">
-      <button class="btn btn-primary" style="flex:1" onclick="addPayoutLog()">Record</button>
+      <button class="btn btn-primary" id="plRecordBtn" style="flex:1" onclick="addPayoutLog()">Record</button>
       <button class="btn btn-ghost" style="flex:1" onclick="closePayoutLogModal()">Close</button>
     </div>
   </div>
@@ -12964,7 +13080,7 @@ function pmHints(){
       const v=parseFloat(inp.value)||0;
       if(!(size>0)){ h.textContent='Set Account Size to use %'; h.classList.add('warn'); return; }
       h.classList.remove('warn');
-      h.textContent=v>0?('= '+fm(size*v/100)+({profitTarget:' of '+fm(size),dailyDD:' per day',maxDD:' in total'}[key])):'Percent of the account size';
+      h.textContent=(key==='dailyDD' && v>0 && (document.getElementById('pDayKind')||{}).value==='sod' && (document.getElementById('pLinkedAccount')||{}).value)?'Percent of each day\u2019s start':(v>0?('= '+fm(size*v/100)+({profitTarget:' of '+fm(size),dailyDD:' per day',maxDD:' in total'}[key])):'Percent of the account size');
     } else { h.textContent=h.dataset.def||''; h.classList.remove('warn'); }
   });
 }
@@ -13003,6 +13119,7 @@ function pmRefresh(){
   put('basics',[name||'Name required',phaseShort,size>0?sym+_sep(String(Math.round(size))):''].filter(Boolean).join(' \u00b7 '),name?'':'warn');
   const r=[]; const lv=(id,key,lbl)=>{ const v=n(id); if(!(v>0)) return; const bb=document.getElementById('pUnit'+key); r.push(lbl+' '+((bb&&bb.dataset.mode==='pct')?(Math.round(v*100)/100)+'%':K(v))); };
   lv('pProfitTarget','ProfitTarget','Target'); lv('pDailyDD','DailyDD','Daily'); lv('pMaxDD','MaxDD','Max');
+  if(g('pDdType')==='eodTrailing'&&g('pLinkedAccount')) r.push('Trailing');
   put('rules',r.length?r.join(' \u00b7 '):'Not set yet \u00b7 add any time',r.length?'':'dim');
   const cyc={weekly:'Weekly',biweekly:'Bi-weekly',monthly:'Monthly',bimonthly:'Every 2 months',ondemand:'On demand'}[g('pPayoutCycle')]||'';
   const split=g('pProfitSplit'), mp=n('pMinPayout');
@@ -13010,6 +13127,8 @@ function pmRefresh(){
   const nt=g('pNotes').trim().replace(/\s+/g,' ');
   put('notes',nt?(nt.length>40?nt.slice(0,40)+'\u2026':nt):'None',nt?'':'dim');
   pmHints();
+  pmDdSync();
+  pmDaySync();
 }
 
 let _propSym='$';
@@ -13051,6 +13170,8 @@ function openAddFirm(){
   document.getElementById('pMinPayout').value = '';
   document.getElementById('pLastPayoutDate').value = '';
   document.getElementById('pDeleteBtnWrap').style.display = 'none';
+  document.getElementById('pDdType').value='static'; document.getElementById('pDdLock').value='none'; document.getElementById('pDdLockAmt').value=''; document.getElementById('pDdAfter').value='keep';
+  document.getElementById('pDayKind').value='init'; document.getElementById('pDayCons').value='terminate'; document.getElementById('pBuf').value='off'; document.getElementById('pBufDaily').value=''; document.getElementById('pBufMax').value='';
   onPhaseChange(); pmReset(false);
   document.getElementById('propFirmModal').classList.add('open');
   updateNavVisibility();
@@ -13059,7 +13180,7 @@ function openAddFirm(){
 function openFirmMenu(btn,id,ev){
   const f=propFirms.find(x=>x.id===id); if(!f)return;
   const items=[{label:'Edit firm',icon:_I.edit,fn:()=>openEditFirm(id)}];
-  if(f.phase==='funded') items.push({label:'Payouts',icon:_I.coins,fn:()=>openPayoutLog(id)});
+  if(f.phase==='funded' || (f.payouts||[]).length) items.push({label:'Payouts',icon:_I.coins,fn:()=>openPayoutLog(id)});
   openActionMenu(btn,items,ev);
 }
 function openEditFirm(id){
@@ -13090,6 +13211,15 @@ function openEditFirm(id){
   document.getElementById('pLastPayoutDate').value = py.lastPayoutDate||'';
   document.getElementById('pStartDate').value = f.startDate||'';
   document.getElementById('pDeleteBtnWrap').style.display = 'block';
+  document.getElementById('pDdType').value=(f.ddType==='eodTrailing')?'eodTrailing':'static';
+  document.getElementById('pDdLock').value=f.ddLockAt?'start':'none';
+  document.getElementById('pDdLockAmt').value=(f.ddLockAt&&f.ddLockAt.startPlus)?f.ddLockAt.startPlus:'';
+  document.getElementById('pDdAfter').value=(f.ddAfterPayout==='restart'||f.ddAfterPayout==='floorToStart')?f.ddAfterPayout:'keep';
+  document.getElementById('pDayKind').value=(f.dailyKind==='pctSod')?'sod':'init';
+  document.getElementById('pDayCons').value=(f.dailyConsequence==='dayLock')?'dayLock':'terminate';
+  document.getElementById('pBuf').value=f.buffer?'on':'off';
+  document.getElementById('pBufDaily').value=(f.buffer&&f.buffer.daily)?f.buffer.daily:'';
+  document.getElementById('pBufMax').value=(f.buffer&&f.buffer.max)?f.buffer.max:'';
   onPhaseChange(); pmReset(true); pmLoadModes(f);
   document.getElementById('propFirmModal').classList.add('open');
   updateNavVisibility();
@@ -13103,11 +13233,26 @@ function closePropOnOverlay(e){ if(e.target===document.getElementById('propFirmM
 
 // ── Save / Delete ──
 
+let _pfRemoveOk=false;
 function savePropFirm(){
   const name = document.getElementById('pFirmName').value.trim();
   if(!name){ pmSet('basics',true); showToast('Enter a firm name','error'); const _fn=document.getElementById('pFirmName'); if(_fn) _fn.focus(); return; }
   const id = document.getElementById('pFirmId').value || genId();
   const existing = propFirms.find(x=>x.id===id);
+  const _newPhase = document.getElementById('pPhase').value; let _rmPayouts=false;
+  if(existing && existing.phase==='funded' && _newPhase!=='funded' && (existing.payouts||[]).length){
+    if(!_pfRemoveOk){
+      const _ps=existing.payouts, _n=_ps.length, _tot=_ps.reduce((x,p)=>x+(parseFloat(p.amount)||0),0), _fcx=_firmCur(existing);
+      const _amt=fmtMoney(_tot,Math.abs(_tot%1)<0.005?{dec:0}:null,_fcx), _ac=existing.linkedAccount?accounts.find(a=>a.id===existing.linkedAccount):null;
+      showConfirm(_n===1?'Remove 1 payout?':'Remove '+_n+' payouts?',
+        'This firm is no longer Funded. Removing its '+(_n===1?'payout':_n+' payouts')+' ('+_amt+')'+(_ac?' also changes the '+_ac.name+' balance by the same amount.':'.'),
+        ()=>{ _pfRemoveOk=true; savePropFirm(); }, 'Remove and save');
+      document.getElementById('confirmOkBtn').className='btn btn-danger';
+      return;
+    }
+    _rmPayouts=true;
+  }
+  _pfRemoveOk=false;
   const linkedAccount = document.getElementById('pLinkedAccount').value||'';
   const manualPnLRaw = document.getElementById('pManualPnL').value;
   const manualPnL = linkedAccount ? null : (manualPnLRaw!==''?parseFloat(manualPnLRaw):null);
@@ -13137,9 +13282,24 @@ function savePropFirm(){
       lastPayoutDate: document.getElementById('pLastPayoutDate').value||'',
     },
   };
+  if(_rmPayouts){ firmData.payouts=[]; firmData.payout.lastPayoutDate=''; }   // confirmed: payouts of a firm no longer Funded are removed with its last-payout date
   // Optional fields are only written when used, so firms that don't use them stay byte-identical to before.
   const _lm=_limitModes(); if(Object.keys(_lm).length) firmData.limitMode=_lm;
   const _sd=(document.getElementById('pStartDate')||{}).value||''; if(_sd&&linkedAccount) firmData.startDate=_sd;
+  if(linkedAccount){   // Batch R2: daily-loss options and personal stop, written only when used (rule 32)
+    const _dv=parseFloat(document.getElementById('pDailyDD').value)||0, _mv=parseFloat(document.getElementById('pMaxDD').value)||0;
+    if(_dv>0 && _lm.dailyDD==='pct' && document.getElementById('pDayKind').value==='sod') firmData.dailyKind='pctSod';
+    if(_dv>0 && document.getElementById('pDayCons').value==='dayLock') firmData.dailyConsequence='dayLock';
+    if(document.getElementById('pBuf').value==='on' && (_dv>0||_mv>0)){
+      const _cl=(id,d)=>{ const v=parseFloat(document.getElementById(id).value); return v>100?100:(v>0?v:d); };
+      const _b={}; if(_dv>0) _b.daily=_cl('pBufDaily',60); if(_mv>0) _b.max=_cl('pBufMax',70); firmData.buffer=_b;
+    }
+  }
+  if(linkedAccount && document.getElementById('pDdType').value==='eodTrailing'){   // Batch 3c: trailing fields are written only when used (rule 32)
+    firmData.ddType='eodTrailing';
+    if(document.getElementById('pDdLock').value==='start') firmData.ddLockAt={startPlus:Math.max(0,parseFloat(document.getElementById('pDdLockAmt').value)||0)};
+    const _aft=document.getElementById('pDdAfter').value; if(document.getElementById('pPhase').value==='funded' && (_aft==='restart'||_aft==='floorToStart')) firmData.ddAfterPayout=_aft;
+  }
 
   if(existing){ propFirms[propFirms.indexOf(existing)] = firmData; }
   else { propFirms.push(firmData); }
@@ -13167,6 +13327,7 @@ function openPayoutLog(id){
   { const _l=document.getElementById('plAmountLbl'); if(_l) _l.textContent='Amount ('+(f.linkedAccount?(curOf(f.linkedAccount).sym||'$'):'$')+')'; }
   document.getElementById('plDate').value = new Date().toISOString().slice(0,10);
   document.getElementById('plNote').value = '';
+  { const _fd=f.phase==='funded', _w=document.getElementById('plRecordWrap'), _b=document.getElementById('plRecordBtn'); if(_w) _w.style.display=_fd?'':'none'; if(_b) _b.style.display=_fd?'':'none'; }
   renderPayoutLogList(f);
   document.getElementById('payoutLogModal').classList.add('open');
   updateNavVisibility();
@@ -13229,10 +13390,17 @@ function addPayoutLog(){
 
 function deletePayoutEntry(firmId, payoutId){
   const f = propFirms.find(x=>x.id===firmId); if(!f) return;
+  const _gone = (f.payouts||[]).find(p=>p.id===payoutId);
   f.payouts = (f.payouts||[]).filter(p=>p.id!==payoutId);
+  let _dateMoved = false;
+  if(_gone && f.payout && f.payout.lastPayoutDate && _gone.date===f.payout.lastPayoutDate && !f.payouts.some(p=>p.date===_gone.date)){
+    const _ds=f.payouts.map(p=>p.date).filter(Boolean).sort();
+    f.payout.lastPayoutDate = _ds.length ? _ds[_ds.length-1] : '';
+    _dateMoved = true;
+  }
   savePropFirms();
   renderPayoutLogList(f);
-  showToast('Payout removed');
+  showToast(_dateMoved ? 'Payout removed \u00b7 date reset' : 'Payout removed');
 }
 
 // ── Render ──
@@ -13254,36 +13422,220 @@ function computePropRisk(f, today){
     const maxDDBreach = _lim(f,'maxDD')>0 && pnl<0 && ddUsed >= _lim(f,'maxDD');
     const maxDDNear   = _lim(f,'maxDD')>0 && pnl<0 && !maxDDBreach && ddPct >= 80;
 
-    // Daily drawdown: breach anywhere in the cycle + today's loss so far (closed trades on the linked account)
-    let dailyDDBreach=false, dailyDDBreachDate='', dailyDDBreachAmt=0, todayLoss=0;
+    // Daily drawdown (Batch R2): lowest point of each day, inclusive hit, per-firm consequence; see _dailyRisk
+    let dailyDDBreach=false, dailyDDBreachDate='', dailyDDBreachAmt=0, todayLoss=0, _dly=null;
     if(_lim(f,'dailyDD')>0 && isLinked){
-      const linked = getLinkedTrades(f);
-      if(linked){
-        const cutoff = getCycleCutoff(f);
-        const scoped = cutoff ? linked.filter(t=>parseLocalDate(t.date)>cutoff) : linked;
-        const byDay = {};
-        scoped.forEach(t=>{ byDay[t.date]=(byDay[t.date]||0)+parseFloat(t.pnl||0); });
-        const violations = Object.entries(byDay).filter(([,v])=>v < -_lim(f,'dailyDD'));
-        if(violations.length){
-          dailyDDBreach = true;
-          const worst = violations.sort((a,b)=>a[1]-b[1])[0];
-          dailyDDBreachDate = worst[0]; dailyDDBreachAmt = Math.abs(worst[1]);
-        }
-        if((byDay[today]||0)<0) todayLoss = -byDay[today];
-      }
+      _dly=_dailyRisk(f,today);
+      if(_dly){ dailyDDBreach=_dly.breach; dailyDDBreachDate=_dly.breachDate; dailyDDBreachAmt=_dly.breachAmt; todayLoss=_dly.todayLoss; }
     }
-    const dailyPct = _lim(f,'dailyDD')>0 ? Math.min(100,(todayLoss/_lim(f,'dailyDD'))*100) : 0;
+    const dailyPct = _dly ? _dly.pct : (_lim(f,'dailyDD')>0 ? Math.min(100,(todayLoss/_lim(f,'dailyDD'))*100) : 0);
   const phaseKey = f.phase||'challenge';
   const targetReached = ['challenge','verification','phase3'].includes(phaseKey) && _lim(f,'profitTarget')>0 && pnl>=_lim(f,'profitTarget');
   let trading = null;
   if(f.minDays && isLinked){ const days = calcTradingDaysInCycle(f); trading = { days, required:f.minDays, met: days >= f.minDays }; }
-  return {
+  const _R = {
     isLinked, pnl,
     target:{ limit:_lim(f,'profitTarget'), raw:profitRaw, pct:profitPct, reached:targetReached },
     max:{ limit:_lim(f,'maxDD'), used:ddUsed, pct:ddPct, breach:maxDDBreach, near:maxDDNear },
-    daily:{ limit:_lim(f,'dailyDD'), todayLoss, pct:dailyPct, breach:dailyDDBreach, breachDate:dailyDDBreachDate, breachAmt:dailyDDBreachAmt },
+    daily:{ limit:_dly?_dly.limit:_lim(f,'dailyDD'), todayLoss, pct:dailyPct, breach:dailyDDBreach, breachDate:dailyDDBreachDate, breachAmt:dailyDDBreachAmt,
+            breachLimit:_dly?_dly.breachLimit:_lim(f,'dailyDD'), consequence:_dly?_dly.consequence:'terminate', lockedToday:_dly?_dly.lockedToday:false, hitDates:_dly?_dly.hitDates:[], sodToday:_dly?_dly.sodToday:null, soft:_dly?_dly.soft:null, reasons:_dly?_dly.reasons:[], confidence:_dly?_dly.confidence:'exact' },
     trading
   };
+  if(isLinked && f.ddType==='eodTrailing'){ const _T=_trailRisk(f); if(_T) _R.max=_T; }   // Batch 3c: trailing replaces the max block only
+  { const _bm=_bufPct(f,'max'); if(isLinked && _bm>0 && _R.max.limit>0){ const _sl=_R.max.limit*_bm/100; _R.max.soft={limit:_sl,pct:_bm,left:_sl-_R.max.used,passed:_R.max.used>=_sl}; } }   // Batch R2: personal stop (advisory)
+  return _R;
+}
+
+// ── Trailing drawdown (Batch 3c, `_58`) ──────────────────────────────────────
+// Pure functions: no DOM. Only used when a LINKED firm has ddType:'eodTrailing' and a max-drawdown limit; static firms never enter here.
+function _ddLockLevel(f){ return (f.ddLockAt && isFinite(parseFloat(f.ddLockAt.startPlus))) ? (parseFloat(f.acctSize)||0) + Math.max(0,parseFloat(f.ddLockAt.startPlus)) : null; }
+// Day series: balance = account size + closed trades (+ the firm's logged payouts as a withdrawal at the END of their date, unless the firm restarts).
+function _ddSeries(f){
+  const start=parseFloat(f.acctSize)||0, funded=f.phase==='funded', mode=(funded&&f.ddAfterPayout)||'keep';
+  const linked=getLinkedTrades(f); if(linked===null) return null;
+  const cutoff=(funded&&mode==='restart') ? getCycleCutoff(f) : _startCut(f);   // restart: window starts after the last payout date; otherwise since the start date
+  const sc=linked.filter(t=>t.date && (!cutoff || parseLocalDate(t.date)>cutoff));
+  const pays=[]; if(funded&&mode!=='restart') (f.payouts||[]).forEach(p=>{ const a=parseFloat(p.amount)||0; if(a>0&&p.date&&(!cutoff||parseLocalDate(p.date)>cutoff)) pays.push({date:p.date,amount:a}); });
+  const byDate={}, ent=d=>byDate[d]||(byDate[d]={date:d,tr:[],pay:0});
+  sc.forEach((t,i)=>ent(t.date).tr.push({pnl:parseFloat(t.pnl)||0,time:t.time||'',i}));
+  pays.forEach(p=>{ ent(p.date).pay+=p.amount; });
+  let bal=start; const days=[];
+  Object.keys(byDate).sort().forEach(date=>{
+    const e=byDate[date], allTimed=e.tr.length>0&&e.tr.every(x=>x.time);
+    if(allTimed) e.tr.sort((a,b)=>a.time===b.time?a.i-b.i:(a.time<b.time?-1:1));
+    const ordered=e.tr.length<=1||allTimed, sod=bal; const path=[]; let neg=0;
+    e.tr.forEach(x=>{ bal+=x.pnl; path.push(bal); if(x.pnl<0) neg+=x.pnl; });
+    const afterTrades=bal; let pts=ordered?[sod].concat(path):[sod,afterTrades]; const tpts=pts.slice();
+    if(e.pay>0){ bal-=e.pay; pts.push(bal); }
+    days.push({date,sod,eod:bal,pts,tpts,ordered,worst:sod+neg,pay:e.pay});
+  });
+  return {start,days,end:bal};
+}
+function _trailRisk(f){
+  const L=_lim(f,'maxDD'); if(!(L>0)) return null;
+  const S=_ddSeries(f); if(!S) return null;
+  const funded=f.phase==='funded', mode=(funded&&f.ddAfterPayout)||'keep', toStart=(mode==='floorToStart');
+  const lockLvl=_ddLockLevel(f), lockCap=lockLvl==null?Infinity:lockLvl, startFloor=lockLvl==null?S.start:lockLvl;
+  const fromPeak=h=>Math.min(h-L,lockCap);
+  let hwm=S.start, breach=null, estUnordered=false, paid=false;
+  const floorIn=()=>(paid&&toStart)?startFloor:fromPeak(hwm);   // the floor in force during a day comes from the PREVIOUS closes
+  for(const d of S.days){
+    const fl=floorIn(), low=Math.min.apply(null,d.pts);
+    if(!breach && low<=fl) breach={date:d.date,balance:low,floor:fl};                // hit or go below = breach (inclusive)
+    else if(!breach && !d.ordered && d.worst<=fl) estUnordered=true;                  // order unknown: the dip could have touched the floor
+    hwm=Math.max(hwm,d.eod);                                                          // only closing balances raise the peak
+    if(d.pay>0 && toStart){ paid=true; if(!breach && d.eod<=startFloor) breach={date:d.date,balance:d.eod,floor:startFloor}; }
+  }
+  const floorNow=floorIn(), left=S.end-floorNow, used=Math.max(0,L-left), pct=Math.min(100,used/L*100), breachNow=!!breach||left<=0;
+  const reasons=[]; if(estUnordered) reasons.push('unordered');
+  if(funded && mode!=='restart' && f.payout && f.payout.lastPayoutDate && !(f.payouts||[]).some(p=>p.date===f.payout.lastPayoutDate)) reasons.push('payoutNotLogged');
+  return { limit:L, used, pct, breach:breachNow, near:(!breachNow&&pct>=80), type:'eodTrailing', hwm, floor:floorNow, left, balance:S.end,
+           lock:lockLvl, afterPayout:mode, confidence:reasons.length?'estimate':'exact', reasons,
+           breachDate:breach?breach.date:'', breachFloor:breach?breach.floor:null, breachBalance:breach?breach.balance:null };
+}
+const _DD_REASON={
+  unordered:'some days have several trades without a time, so the lowest point of the day is not known.',
+  payoutNotLogged:'a last payout date is set but no payout is logged on that date, so your balance is not lowered by it. Log it in Payouts.'
+};
+function _ddFm(x,fc){ return fmtMoney(x,Math.abs(x%1)<0.005?{dec:0}:null,fc); }
+const _DD_INFO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+function _ddCardHtml(f,R,fc,bar,msg){
+  const T=R.max, fm=x=>_ddFm(x,fc); let h='';
+  if(T.used>0) h+=bar('Trailing drawdown used', fm(T.used)+' / '+fmtMoney(T.limit,{dec:0},fc)+' \u00b7 '+Math.round(T.pct)+'%', Math.round(T.pct), T.soft?T.soft.pct:undefined).replace('<b class="','<b style="flex:0 0 auto;white-space:nowrap" class="');
+  h+='<div class="pf-row" style="margin-top:8px"><span>Peak '+fm(T.hwm)+' \u00b7 floor '+fm(T.floor)+'</span><b style="flex:0 0 auto;white-space:nowrap">'+fm(Math.max(0,T.left))+' left</b></div>';
+  if(T.soft) h+=_stopRow(T.soft,fc);
+  if(T.breach) h+=msg('Account breached \u2014 the trailing floor'+(T.breachFloor!=null?' of '+fm(T.breachFloor):'')+' was reached'+(T.breachDate?' on '+T.breachDate:'')+'. This account is no longer valid.','bad');
+  else if(T.near) h+=msg('Close to the trailing floor: '+fm(T.left)+' left before '+fm(T.floor)+'.','bad');
+  if(T.reasons.length) h+=msg('Estimate: '+_DD_REASON[T.reasons[0]],'warn');
+  h+='<div class="dd-linkrow"><button type="button" class="dd-link" onclick="openDdCalc(\''+f.id+'\')">'+_DD_INFO+'<span>How this is calculated</span></button>'+(T.confidence==='estimate'?'<span class="dd-tag">Estimate</span>':'')+'</div>';
+  return h;
+}
+// ── Daily loss (Batch R2, `_60`) ──────────────────────────────────────────────
+// A day's "used" = how far the balance fell below the day's start, at its LOWEST known point (closed trades only; a payout is never a loss).
+// Hit = used >= allowed (inclusive). Days considered = the current cycle only. consequence: 'terminate' (default; counts as a breach for the whole cycle) or 'dayLock' (only today can be locked; never a breach).
+function _isSod(f){ return f.dailyKind==='pctSod' && !!(f.limitMode && f.limitMode.dailyDD==='pct'); }   // only a % limit can be a % of the day's start
+function _dailyAllowed(f,sod){ const v=parseFloat(f.dailyDD)||0; if(!(v>0)) return 0; return _isSod(f) ? sod*v/100 : _lim(f,'dailyDD'); }
+function _bufPct(f,k){ const v=f.buffer?parseFloat(f.buffer[k]):0; return v>0?v:0; }
+function _dailyRisk(f,today){
+  const S=_ddSeries(f); if(!S) return null;
+  const cutoff=getCycleCutoff(f), cons=f.dailyConsequence==='dayLock'?'dayLock':'terminate';
+  const hits=[]; let estUnordered=false, todayUsed=0, bal=S.start, haveToday=null;
+  S.days.forEach(d=>{
+    if(d.date<today) bal=d.eod;
+    if(d.date===today) haveToday=d;
+    if(cutoff && !(parseLocalDate(d.date)>cutoff)) return;
+    const allowed=_dailyAllowed(f,d.sod); if(!(allowed>0)) return;
+    const used=Math.max(0,d.sod-Math.min.apply(null,d.tpts));
+    if(used>=allowed) hits.push({date:d.date,amount:used,allowed});
+    else if(!d.ordered && (d.sod-d.worst)>=allowed) estUnordered=true;           // order unknown: the dip could have reached the limit
+    if(d.date===today) todayUsed=used;
+  });
+  const sodToday=haveToday?haveToday.sod:bal, limit=_dailyAllowed(f,sodToday), term=cons==='terminate';
+  const worst=hits.length?hits.slice().sort((a,b)=>b.amount-a.amount)[0]:null, hitToday=hits.some(h=>h.date===today);
+  let soft=null; const bp=_bufPct(f,'daily'); if(bp>0&&limit>0){ const sl=limit*bp/100; soft={limit:sl,pct:bp,left:sl-todayUsed,passed:todayUsed>=sl}; }
+  const reasons=estUnordered?['unordered']:[];
+  return { limit, todayLoss:todayUsed, pct:limit>0?Math.min(100,todayUsed/limit*100):0, breach:term&&hits.length>0, breachDate:worst?worst.date:'', breachAmt:worst?worst.amount:0,
+           breachLimit:worst?worst.allowed:limit, consequence:cons, lockedToday:!term&&hitToday, hitDates:hits.map(h=>h.date), sodToday, soft, reasons, confidence:reasons.length?'estimate':'exact' };
+}
+function _stopRow(soft,fc){
+  const fm=x=>_ddFm(x,fc);
+  return '<div class="pf-row" style="margin-top:8px"><span>Your stop <span style="white-space:nowrap">'+fm(soft.limit)+' ('+(Math.round(soft.pct*100)/100)+'%)</span></span><b'+(soft.passed?' class="pf-wnt"':'')+' style="flex:0 0 auto;white-space:nowrap">'+(soft.passed?'passed by '+fm(-soft.left):fm(soft.left)+' left to it')+'</b></div>';
+}
+function _dailyLinkHtml(f,D){
+  return '<div class="dd-linkrow"><button type="button" class="dd-link" onclick="openDayCalc(\''+f.id+'\')">'+_DD_INFO+'<span>How this is calculated</span></button>'+(D.confidence==='estimate'?'<span class="dd-tag">Estimate</span>':'')+'</div>';
+}
+function openDayCalc(id){
+  const f=propFirms.find(x=>x.id===id); if(!f) return;
+  const dt=new Date(), today=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+  const D=computePropRisk(f,today).daily, fc=_firmCur(f), fm=x=>_ddFm(x,fc), pv=Math.round((parseFloat(f.dailyDD)||0)*100)/100;
+  const row=(l,r)=>'<div class="dd-row"><span>'+l+'</span><b>'+r+'</b></div>', note=(t,c)=>'<div class="dd-note'+(c?' '+c:'')+'">'+t+'</div>';
+  const used=D.todayLoss, sod=_isSod(f);
+  const base=sod?pv+'% of today\u2019s start, '+fm(D.sodToday):(f.limitMode&&f.limitMode.dailyDD==='pct'?pv+'% of the account size':'Fixed amount');
+  let h=row('Limit today',fm(D.limit))+row('Based on',base)+row('Lowest point today',used>0?'\u2212'+fm(used):'No loss today')+row('Used',fm(used))+row('Room left',fm(Math.max(0,D.limit-used)))
+    +row('When it is hit',D.consequence==='dayLock'?'Stops trading for the day':'Ends the account')+(D.soft?row('Your own stop',fm(D.soft.limit)+' ('+(Math.round(D.soft.pct*100)/100)+'%)'+(D.soft.passed?', passed':'')):'');
+  h+=note((sod?'Today\u2019s limit = '+pv+'% \u00d7 the balance at the start of the day. ':'')+'Used = how far the balance fell below that start, at its lowest point of the day.');
+  if(D.consequence==='dayLock'){ if(D.hitDates.length) h+=note('A day at the limit is not a breach for this firm. It clears tomorrow. Days at the limit this cycle: '+D.hitDates.join(', ')+'.'); }
+  else if(D.breach) h+=note('<b style="color:var(--red)">Breached.</b> The limit was reached on '+D.breachDate+'.');
+  D.reasons.forEach(r=>{ h+=note('<b>Estimate.</b> '+_DD_REASON[r].charAt(0).toUpperCase()+_DD_REASON[r].slice(1)+' Add a time to those trades for an exact result.','est'); });
+  h+=note('Based on closed trades. It cannot see open profit or intraday highs, which some firms count, so your firm may show less room. Check your firm\u2019s dashboard when you are close.');
+  document.getElementById('dayCalcBody').innerHTML=h;
+  document.getElementById('dayCalcModal').classList.add('open'); updateNavVisibility();
+}
+function openDayHelp(){
+  const opt=(n,t,b,e,sn)=>'<div class="dd-opt"><div class="h">'+n+' \u00b7 '+t+'</div><div class="b">'+b+'</div><div class="e">'+e+'</div><div class="e">'+sn+'</div></div>';
+  document.getElementById('dayHelpBody').innerHTML=
+    '<div class="pm-help" style="font-size:13px;margin:0 0 4px">Look at what your firm says happens when you reach the daily loss limit. Pick the closest match.</div>'
+    +opt(1,'My firm ends the account','Reaching the daily limit fails or closes the account. The app shows it as a breach.','Example: lose $5,000 on a $5,000 limit and the account is breached.','FTMO: breaking the Maximum Daily Loss fails the challenge (official site).')
+    +opt(2,'My firm only stops trading for the day','Reaching the limit pauses trading until the next day. The account stays alive. The app shows \u201clocked for today\u201d, not a breach.','Example: lose $5,500 on a $5,500 limit and trading is paused until tomorrow.','Topstep daily loss limit: trading pauses for the rest of the day (official). The5ers: Hyper Growth pauses for the day, Pro Growth ends the account (third-party report).')
+    +'<div class="pm-help" style="margin-top:8px">Rules change: checked 23 Oct 2026, confirm with your firm. If your firm counts open profit and loss, the app only sees closed trades, so check your firm\u2019s dashboard when you are close.</div>';
+  document.getElementById('dayHelpModal').classList.add('open'); updateNavVisibility();
+}
+function pmDaySync(){
+  const grp=document.getElementById('pDayGroup'); if(!grp) return;
+  const g=id=>document.getElementById(id), linked=!!(g('pLinkedAccount')||{}).value;
+  const dailyOn=(parseFloat(g('pDailyDD').value)||0)>0, maxOn=(parseFloat(g('pMaxDD').value)||0)>0, pct=g('pUnitDailyDD').dataset.mode==='pct', on=g('pBuf').value==='on';
+  grp.style.display=linked?'':'none';
+  g('pDayKindGroup').style.display=(dailyOn&&pct)?'':'none';
+  g('pDayConsGroup').style.display=dailyOn?'':'none';
+  g('pBufRow').style.display=(on&&(dailyOn||maxOn))?'':'none';
+  g('pBufDailyG').style.display=dailyOn?'':'none'; g('pBufMaxG').style.display=maxOn?'':'none';
+}
+function closeDdSheet(id){ const m=document.getElementById(id); if(m) m.classList.remove('open'); updateNavVisibility(); }
+function openDdCalc(id){
+  const f=propFirms.find(x=>x.id===id); if(!f) return;
+  const d=new Date(), today=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const R=computePropRisk(f,today), T=R.max, fc=_firmCur(f), fm=x=>_ddFm(x,fc); if(T.type!=='eodTrailing') return;
+  const row=(l,r)=>'<div class="dd-row"><span>'+l+'</span><b>'+r+'</b></div>';
+  const aft={keep:'My floor stays where it was',restart:'My account starts over',floorToStart:'My floor moves to my starting balance'}[T.afterPayout];
+  let h=row('Type','Trailing, end of day')+row('Balance now',fm(T.balance))+row('Peak',fm(T.hwm))+row('Floor',fm(T.floor))+row('Room left',fm(Math.max(0,T.left)))+(T.lock!=null?row('Floor lock',fm(T.lock)):'')+(f.phase==='funded'?row('After a payout',aft):'');
+  h+='<div class="dd-note">'+(T.afterPayout==='restart'?'Balance = starting size + closed trades since your last payout date. ':'Balance = starting size + closed trades \u2212 payouts you logged. ')+'Peak = highest closing balance. Floor = peak \u2212 limit'+(T.lock!=null?', and it stops rising at '+fm(T.lock)+' (your lock)':'')+'.'+(T.afterPayout==='floorToStart'?' After a payout the floor sits at '+fm(T.lock!=null?T.lock:parseFloat(f.acctSize)||0)+'.':'')+'</div>';
+  if(T.breach) h+='<div class="dd-note"><b style="color:var(--red)">Breached.</b> The floor'+(T.breachFloor!=null?' ('+fm(T.breachFloor)+')':'')+' was reached'+(T.breachDate?' on '+T.breachDate:'')+'.</div>';
+  T.reasons.forEach(r=>{ h+='<div class="dd-note est"><b>Estimate.</b> '+_DD_REASON[r].charAt(0).toUpperCase()+_DD_REASON[r].slice(1)+(r==='unordered'?' Add a time to those trades for an exact result.':'')+'</div>'; });
+  h+='<div class="dd-note">Based on closed trades. It cannot see open profit or intraday highs, which some firms count, so your firm may show less room. Check your firm\u2019s dashboard when you are close.</div>';
+  document.getElementById('ddCalcBody').innerHTML=h;
+  document.getElementById('ddCalcModal').classList.add('open'); updateNavVisibility();
+}
+// Modal helpers (Rules & Limits)
+function _ddNums(){
+  const sym=(typeof _propSym!=='undefined'&&_propSym)||'$', gv=id=>parseFloat((document.getElementById(id)||{}).value)||0;
+  const size=gv('pAcctSize'); let L=gv('pMaxDD'); const b=document.getElementById('pUnitMaxDD'); if(b&&b.dataset.mode==='pct') L=size*L/100;
+  return {sym,size,L,X:Math.max(0,gv('pDdLockAmt')),lock:(document.getElementById('pDdLock')||{}).value==='start',fm:x=>sym+_sep(String(Math.round(x)))};
+}
+function _ddExamples(N){
+  if(!(N.size>0&&N.L>0)) return null;
+  const peak=N.size+0.6*N.L, w=0.4*N.L, X=N.lock?N.X:0, fm=N.fm;
+  return {
+    keep:'Example: balance '+fm(peak)+', floor '+fm(peak-N.L)+'; withdraw '+fm(w)+' and your room goes from '+fm(N.L)+' to '+fm(N.L-w)+'.',
+    restart:'Example: after a payout your room is the full '+fm(N.L)+' again.',
+    floorToStart:'Example: balance '+fm(peak)+'; withdraw '+fm(w)+' and the floor moves to '+fm(N.size+X)+', so your room is '+fm(Math.max(0,peak-w-N.size-X))+'.'
+  };
+}
+function pmDdSync(){
+  const grp=document.getElementById('pDdGroup'); if(!grp) return;
+  const g=id=>document.getElementById(id), linked=!!(g('pLinkedAccount')||{}).value, tr=g('pDdType').value==='eodTrailing';
+  grp.style.display=linked?'block':'none';
+  g('pDdTrail').style.display=(linked&&tr)?'block':'none';
+  g('pDdLockAmtGroup').style.display=g('pDdLock').value==='start'?'block':'none';
+  g('pDdAfterGroup').style.display=g('pPhase').value==='funded'?'block':'none';
+  g('pDdTypeHint').textContent=tr?'Trailing: the floor rises with your highest closing balance and never moves down. Static: it never moves. Your firm\u2019s rules say which one, next to the maximum loss.':'Static: the limit is measured down from the account size.';
+  g('pDdLockHint').textContent=g('pDdLock').value==='start'?'The floor stops rising once it reaches your starting balance plus this amount.':'The floor keeps rising with your highest closing balance.';
+  const N=_ddNums(), ex=_ddExamples(N), v=g('pDdAfter').value;
+  const base={keep:'Withdrawing lowers your balance but not your floor, so your room shrinks by what you withdraw.',
+    restart:'Your firm resets the account after a payout, so you get the full limit again. Pick this only if your firm says so; otherwise the app can show more room than you really have.',
+    floorToStart:'After a payout your firm moves the floor up to your starting balance. Only what you leave above it is your room.'}[v]||'';
+  g('pDdAfterHint').textContent=base+(ex&&ex[v]&&v!=='restart'?' '+ex[v]:(ex&&v==='restart'?' '+ex[v]:''));
+}
+function openDdHelp(){
+  const N=_ddNums(), sym=N.sym, ok=N.size>0&&N.L>0, size=ok?N.size:10000, L=ok?N.L:1000, fm=x=>sym+_sep(String(Math.round(x)));
+  const peak=size+0.6*L, w=0.4*L, X=N.lock?N.X:0;
+  const opt=(n,t,b,e,seen)=>'<div class="dd-opt"><div class="h">'+n+' \u00b7 '+t+'</div><div class="b">'+b+'</div><div class="e">'+e+'</div><div class="e">'+seen+'</div></div>';
+  document.getElementById('ddHelpBody').innerHTML=
+    '<div class="pm-help" style="font-size:13px;margin:0 0 4px">Look at what your firm says happens to the maximum loss after you withdraw. Pick the closest match. Example: '+fm(size)+' account, '+fm(L)+' limit, balance '+fm(peak)+'.</div>'
+    +opt(1,'My floor stays where it was','Your firm keeps its floor. Withdrawing lowers your balance, so you have less room afterwards.','Withdraw '+fm(w)+': balance '+fm(peak-w)+', floor '+fm(peak-L)+', room '+fm(L-w)+'.','Reported for FTMO Instant (third-party report).')
+    +opt(2,'My account starts over','Your firm resets the account after a payout, so you get the full limit again.','Room becomes the full '+fm(L)+'. Pick this only if your firm says so; it can show more room than you really have.','No mainstream example confirmed.')
+    +opt(3,'My floor moves to my starting balance','After a payout your firm moves the floor up to your starting balance. Only what you leave above it is your room.','Withdraw '+fm(w)+': balance '+fm(peak-w)+', floor '+fm(size+X)+', room '+fm(Math.max(0,peak-w-size-X))+'.','Topstep Express Funded (official help centre).')
+    +'<div class="pm-help" style="margin-top:8px">Not sure? Start with 1 and compare with your firm\u2019s dashboard after your first payout. Rules change: checked 22 Oct 2026, confirm with your firm.</div>';
+  document.getElementById('ddHelpModal').classList.add('open'); updateNavVisibility();
 }
 
 function renderPropFirms(){
@@ -13323,7 +13675,7 @@ function renderPropFirms(){
   const isChallengePhase = p => ['challenge','verification','phase3'].includes(p);
 
   const _tier = p => p>=80?'rd':p>=50?'wn':'nt';
-  const _bar = (label,txt,p) => '<div class="pf-row"><span>'+label+'</span><b class="pf-'+_tier(p)+'t">'+txt+'</b></div><div class="pf-bar"><i class="pf-'+_tier(p)+'" style="width:'+p+'%"></i></div>';
+  const _bar = (label,txt,p,tick) => '<div class="pf-row"><span>'+label+'</span><b class="pf-'+_tier(p)+'t">'+txt+'</b></div><div class="pf-bar"'+(tick!=null?' style="position:relative"':'')+'><i class="pf-'+_tier(p)+'" style="width:'+p+'%"></i>'+(tick!=null?'<i class="pf-tick" style="left:'+tick+'%"></i>':'')+'</div>';
   const _chip = (txt,k,ic) => '<span class="pf-chip'+(k?' '+k:'')+'">'+(ic||'')+txt+'</span>';
   const _msg = (txt,k) => '<div class="pf-msg '+k+'">'+_I.alert+'<span>'+txt+'</span></div>';
   const _d = new Date(), todayStr = _d.getFullYear()+'-'+String(_d.getMonth()+1).padStart(2,'0')+'-'+String(_d.getDate()).padStart(2,'0');
@@ -13342,6 +13694,7 @@ function renderPropFirms(){
     const profitRaw = R.target.raw, profitPct = R.target.pct;
     const ddUsed = R.max.used, ddPct = R.max.pct, maxDDBreach = R.max.breach, maxDDNear = R.max.near;
     const dailyDDBreach = R.daily.breach, dailyDDBreachDate = R.daily.breachDate, dailyDDBreachAmt = R.daily.breachAmt, todayLoss = R.daily.todayLoss, dailyPct = R.daily.pct;
+    const _dl = R.daily;
 
     // Rule chips
     const consistStatus = calcConsistencyStatus(f);
@@ -13356,16 +13709,25 @@ function renderPropFirms(){
     const isChallengePhase = ['challenge','verification','phase3'].includes(phaseKey);
     const targetReached = R.target.reached;
     if(targetReached) chips += _chip('Target reached','ok',_I.check);
-    if(_lim(f,'dailyDD')>0 && !(todayLoss>0)) chips += _chip('Daily limit '+fmtMoney(_lim(f,'dailyDD'),{dec:0},fc)+_limPct(f,'dailyDD'));
-    if(_lim(f,'maxDD')>0 && !(pnl<0)) chips += _chip('Max DD '+fmtMoney(_lim(f,'maxDD'),{dec:0},fc)+_limPct(f,'maxDD'));
+    if(_dl.limit>0 && !(todayLoss>0)) chips += _chip('Daily limit '+fmtMoney(_dl.limit,{dec:0},fc)+(_isSod(f)&&R.isLinked?' \u00b7 '+(Math.round((parseFloat(f.dailyDD)||0)*100)/100)+'% of day start':_limPct(f,'dailyDD')));
+    if(R.max.type==='eodTrailing'){ chips += _chip('Max DD '+fmtMoney(_lim(f,'maxDD'),{dec:0},fc)+_limPct(f,'maxDD')+' \u00b7 trailing'); if(R.max.lock!=null) chips += _chip('Locks at '+fmtMoney(R.max.lock,{dec:0},fc)); }
+    else if(_lim(f,'maxDD')>0 && !(pnl<0)) chips += _chip('Max DD '+fmtMoney(_lim(f,'maxDD'),{dec:0},fc)+_limPct(f,'maxDD'));
 
     // Risk bars appear only when there is something to show
     let risk = '';
-    if(todayLoss>0) risk += _bar('Daily drawdown today', fmtMoney(todayLoss,{dec:0},fc)+' / '+fmtMoney(_lim(f,'dailyDD'),{dec:0},fc)+' \u00b7 '+Math.round(dailyPct)+'%', Math.round(dailyPct));
-    if(_lim(f,'maxDD')>0 && pnl<0) risk += _bar('Max drawdown used', fmtMoney(ddUsed,null,fc)+' / '+fmtMoney(_lim(f,'maxDD'),{dec:0},fc)+' \u00b7 '+Math.round(ddPct)+'%', Math.round(ddPct));
-    if(maxDDBreach) risk += _msg('Account breached \u2014 max drawdown reached. This account is no longer valid.','bad');
+    if(todayLoss>0) risk += _bar('Daily drawdown today', fmtMoney(todayLoss,{dec:0},fc)+' / '+fmtMoney(_dl.limit,{dec:0},fc)+' \u00b7 '+Math.round(dailyPct)+'%', Math.round(dailyPct), _dl.soft?_dl.soft.pct:undefined);
+    if(todayLoss>0 && _dl.soft) risk += _stopRow(_dl.soft,fc);
+    if(R.max.type==='eodTrailing') risk += _ddCardHtml(f,R,fc,_bar,_msg);
+    else if(_lim(f,'maxDD')>0 && pnl<0) risk += _bar('Max drawdown used', fmtMoney(ddUsed,null,fc)+' / '+fmtMoney(_lim(f,'maxDD'),{dec:0},fc)+' \u00b7 '+Math.round(ddPct)+'%', Math.round(ddPct), R.max.soft?R.max.soft.pct:undefined);
+    if(R.max.type!=='eodTrailing' && R.max.soft && pnl<0) risk += _stopRow(R.max.soft,fc);
+    if(R.max.type==='eodTrailing'){ /* trailing messages are built in _ddCardHtml */ }
+    else if(maxDDBreach) risk += _msg('Account breached \u2014 max drawdown reached. This account is no longer valid.','bad');
     else if(maxDDNear) risk += _msg(fmtMoney(_lim(f,'maxDD')-ddUsed,null,fc)+' left before the max drawdown limit. Trade carefully.','warn');
-    if(dailyDDBreach) risk += _msg('Daily limit breached on '+dailyDDBreachDate+': lost '+fmtMoney(dailyDDBreachAmt,null,fc)+' against a '+fmtMoney(_lim(f,'dailyDD'),{dec:0},fc)+' limit.','bad');
+    if(dailyDDBreach) risk += _msg('Daily limit breached on '+dailyDDBreachDate+': lost '+fmtMoney(dailyDDBreachAmt,null,fc)+' against a '+fmtMoney(_dl.breachLimit,{dec:0},fc)+' limit.','bad');
+    else if(_dl.lockedToday) risk += _msg('Daily limit reached today: your firm stops trading until tomorrow. Lost '+fmtMoney(todayLoss,null,fc)+' against a '+fmtMoney(_dl.limit,{dec:0},fc)+' limit.','warn');
+    else if(_dl.soft && _dl.soft.passed) risk += _msg('Past your own daily stop. Your firm\u2019s limit is still '+fmtMoney(Math.max(0,_dl.limit-todayLoss),{dec:0},fc)+' away.','warn');
+    if(_dl.reasons.length) risk += _msg('Estimate: '+_DD_REASON[_dl.reasons[0]],'warn');
+    if(todayLoss>0 || dailyDDBreach || _dl.lockedToday || _dl.reasons.length) risk += _dailyLinkHtml(f,_dl);
 
     // Payout section (funded only)
     let payoutSectionHTML = '';
@@ -13396,8 +13758,8 @@ function renderPropFirms(){
       </div>
       ${consistBadgeHTML}
       ${_lim(f,'profitTarget')>0?`<div class="pf-row" style="margin-top:12px"><span>Profit target</span><b class="${pnl<0?'negative':''}">${fmtMoney(pnl,{plus:true},fc)} / ${fmtMoney(_lim(f,'profitTarget'),{dec:0},fc)}${_limPct(f,'profitTarget')}${pnl>0?' \u00b7 '+Math.round(profitRaw)+'%':''}</b></div><div class="pf-bar"><i class="pf-gr" style="width:${profitPct}%"></i></div>`:''}
-      ${risk}
-      ${chips?`<div class="pf-chips">${chips}</div>`:''}
+      ${R.max.type==='eodTrailing'&&chips?`<div class="pf-chips">${chips}</div>`:''}${risk}
+      ${R.max.type!=='eodTrailing'&&chips?`<div class="pf-chips">${chips}</div>`:''}
       ${payoutSectionHTML}
     </div>`;
   }).join('')+_archFirmsHtml(_archFirms);
