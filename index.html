@@ -905,6 +905,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .dd-opt .b{font-size:13px;line-height:1.5;color:var(--text2)}
 .dd-opt .e{font-size:12px;line-height:1.5;color:var(--text3);margin-top:6px}
 .pf-bar i.pf-tick{position:absolute;top:0;width:2px;height:100%;border-radius:0;background:var(--text)}
+.tpl-row{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:10px 14px;margin:0 0 8px;background:var(--surface2);border:1px solid var(--border2);border-radius:12px;color:var(--text);font-family:var(--font);text-align:left;cursor:pointer}
+.tpl-row .t,.tpl-row .s{display:block}.tpl-row .t{font-size:14px;font-weight:700}.tpl-row .s{font-size:12px;color:var(--text3);margin-top:2px;line-height:1.35}
+.tpl-tier{font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px;border:1px solid var(--accent);color:var(--accent);white-space:nowrap;flex-shrink:0}
+.tpl-tier.rep{border-color:var(--amber);color:var(--amber)}
+.tpl-item{display:flex;align-items:center;gap:10px;width:100%;padding:10px 2px;border:0;border-bottom:1px solid var(--border);background:none;min-height:52px;text-align:left;color:var(--text);font-family:var(--font);cursor:pointer}
+.tpl-item .t{display:block;font-size:14px;font-weight:700}.tpl-item .s{display:block;font-size:12px;color:var(--text3);margin-top:2px;line-height:1.35}
+.tpl-grp{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.9px;margin:12px 0 0}
+.tpl-chip{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--accent-dim);border:1px solid rgba(0,229,160,.3);border-radius:12px;padding:9px 12px;margin:0 0 8px;font-size:13px;color:var(--text2)}
+.tpl-chip b{color:var(--text)}.tpl-chip.old{background:var(--amber-dim);border-color:var(--amber)}
+.tpl-ok{color:var(--accent);font-weight:700}.tpl-chg{color:var(--amber);font-weight:700}
+.tpl-sizes{display:flex;gap:7px;flex-wrap:wrap}
 .pm-opt{font-weight:600;text-transform:none;letter-spacing:0;color:var(--text3);font-size:10px;margin-left:4px}
 #propFirmModal .form-row>.form-group{min-width:0}
 @media (max-width:359px){#propFirmModal .form-row.pm-stack{grid-template-columns:1fr;gap:0}}
@@ -1358,6 +1369,26 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
 
 .st-seg.full{display:flex;width:100%}.st-seg.full button{flex:1}
 .ac-card.dim{opacity:.68}
+.ac-chip.brc{background:var(--red-dim);color:var(--red);border-color:transparent}
+.brc-line{display:flex;align-items:center;gap:8px;padding:12px 14px;margin:0 0 10px;border-radius:var(--radius);background:var(--amber-dim);border:1px solid rgba(245,158,11,.3);color:var(--amber);font-size:13px;font-weight:700;line-height:1.3;cursor:pointer}
+.brc-line svg{width:16px;height:16px;flex-shrink:0}.brc-line span{flex:1;min-width:0}
+.brc-count{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.brc-msg b{color:var(--text)}
+.brc-fine{font-size:12px;color:var(--text3);line-height:1.5;margin:0 0 16px}
+.brc-btns{display:flex;gap:10px}.brc-btns .btn{flex:1;min-width:0;padding:12px 8px;font-size:14px}
+.brc-hint{font-size:11.5px;color:var(--text3);line-height:1.5;margin-top:6px}
+.pk-item.dis.brc{border:1px dashed var(--border2)}
+.ac-q .brc-why{color:var(--red);font-weight:700}
+.sw-inact{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin:14px 2px 8px}
+.switch-swipe-wrap.inact{opacity:.62}
+.acct-type-chip.is-brc{background:var(--red-dim);color:var(--red);border-color:transparent}
+.prop-firm-card.brc-card{opacity:.82}
+.prop-firm-card.brc-card::before{background:var(--red);box-shadow:2px 0 8px rgba(244,63,94,.25)}
+.pf-note{font-size:12px;color:var(--text2);margin-top:10px;line-height:1.4}
+.prop-phase-badge.brc{background:var(--red-dim);color:var(--red)}
+.pf-row>b{flex:0 0 auto;white-space:nowrap}
+.pf-row>span{min-width:0}
+.form-row>.form-group{min-width:0}
 .ac-group{display:flex;align-items:center;gap:8px;padding:12px 14px;border:1px dashed var(--border2);border-radius:var(--radius);font-size:13px;color:var(--text2);margin:4px 0 10px;cursor:pointer;font-variant-numeric:tabular-nums}
 .ac-group b{font-weight:700;color:var(--text)}.ac-group .sp{flex:1}
 .ac-chev{display:inline-flex;transition:transform .15s}.ac-chev.open{transform:rotate(90deg)}.ac-chev svg{width:15px;height:15px}
@@ -1572,6 +1603,8 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
     <div class="modal-handle"></div>
     <div class="modal-title" id="propModalTitle">Add Prop Firm</div>
     <input type="hidden" id="pFirmId"/>
+    <button type="button" class="tpl-row" id="pTplRow" onclick="openTplSheet()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--accent)"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/></svg><span style="flex:1;min-width:0"><span class="t">Start from a template</span><span class="s">AquaFunded, Goat, FTMO, FundedNext, Topstep, Apex, The5ers</span></span><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--text3)"><polyline points="9 18 15 12 9 6"/></svg></button>
+    <div class="tpl-chip" id="pTplChip" style="display:none"></div>
 
     <!-- Section 1: Basic Info -->
     <div class="pm-sec" data-pm="basics">
@@ -1645,6 +1678,22 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
         </div>
         </div>
         <div id="pDayGroup" style="display:none">
+      <div class="form-group" id="pDsGroup">
+        <label class="form-label">Firm’s Day Starts At</label>
+        <select class="form-select" id="pDayStart" onchange="pmDsSync()">
+          <option value="">Midnight, my device’s time</option>
+          <option value="UTC|00:00">00:00 UTC</option>
+          <option value="America/New_York|17:00">5 PM New York time</option>
+          <option value="America/Chicago|17:00">5 PM Chicago time</option>
+          <option value="Europe/Prague|00:00">Midnight Prague time</option>
+          <option value="custom">Custom…</option>
+        </select>
+        <div class="form-row" id="pDsCustom" style="display:none">
+          <div class="form-group"><label class="form-label">Time</label><input class="form-input" type="time" id="pDsTime" value="00:00" onchange="pmDsSync()"/></div>
+          <div class="form-group"><label class="form-label">Clock</label><select class="form-select" id="pDsZone" onchange="pmDsSync()"><option value="device">My device</option><option value="UTC">UTC</option><option value="America/New_York">New York</option><option value="America/Chicago">Chicago</option><option value="Europe/London">London</option><option value="Europe/Prague">Prague</option><option value="Europe/Athens">Athens (GMT+2/+3, EU dates)</option></select></div>
+        </div>
+        <div class="pm-help" id="pDsHelp"></div>
+      </div>
           <div class="form-group" id="pDayKindGroup" style="display:none">
             <label class="form-label">Daily Limit Is A Percent Of</label>
             <select class="form-select" id="pDayKind">
@@ -1781,6 +1830,21 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
 </div>
 
 <!-- ══ Trailing drawdown sheets (Batch 3c) ══ -->
+<div class="modal-overlay" id="tplModal" onclick="if(event.target===this)closeDdSheet('tplModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="tplTitle">Firm templates</div>
+    <div id="tplBody"></div>
+  </div>
+</div>
+<div class="modal-overlay" id="tplSrcModal" onclick="if(event.target===this)closeDdSheet('tplSrcModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="tplSrcTitle">Rules source</div>
+    <div id="tplSrcBody"></div>
+    <button type="button" class="btn" style="width:100%;margin-top:4px" onclick="closeDdSheet('tplSrcModal')">Close</button>
+  </div>
+</div>
 <div class="modal-overlay" id="ddHelpModal" onclick="if(event.target===this)closeDdSheet('ddHelpModal')">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -3063,6 +3127,15 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
     <div style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:10px" id="delAcctMsg"></div>
     <div id="delAcctList"></div>
     <div id="delAcctBtns" style="display:flex;flex-direction:column;gap:10px;margin-top:14px"></div>
+  </div>
+</div>
+<div class="modal-overlay centered" id="brcModal">
+  <div class="modal" style="padding:22px 18px 24px">
+    <div class="brc-count" id="brcCount" style="display:none"></div>
+    <div style="font-size:18px;font-weight:800;margin-bottom:10px;letter-spacing:-.3px" id="brcTitle">Mark account as breached?</div>
+    <div class="brc-msg" style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:10px" id="brcMsg"></div>
+    <div class="brc-fine">Based on closed trades only. If your firm measures drawdown differently, keep it active. You can reactivate it any time.</div>
+    <div class="brc-btns"><button class="btn btn-danger" id="brcYes" onclick="brcAnswer(true)">Mark breached</button><button class="btn btn-ghost" id="brcNo" onclick="brcAnswer(false)">Keep active</button></div>
   </div>
 </div>
 <div class="modal-overlay centered" id="confirmModal">
@@ -6641,6 +6714,7 @@ function switchTab(name){
   if(name==='Settings') renderSettings();
   if(name==='Prop')     renderPropFirms();
   if(name==='TradingAccounts') renderAcctList();
+  if(name==='Prop'||name==='TradingAccounts') _brcTab();   // Batch 4b: the only tab triggers
   if(name==='Calendar'){
     if(calFilter==='month') renderCalendar();
     else if(calFilter==='custom') applyCalCustomRange();
@@ -6664,7 +6738,7 @@ function renderAcctBar(){
   const initials=current?current.name.trim().slice(0,2).toUpperCase():'ALL';
   const type=current?((current.type||current.accountType||'Trading')+''):'Portfolio';
   const balanceHtml=`<div class="acct-header-balance" id="acctHeaderBalance"><div class="lbl">${_dcMarkHtml(current)}Balance</div><div class="val" id="acctHeaderBalanceVal">$0.00</div><div class="acct-header-pnl" id="acctHeaderPnl">+$0.00</div></div>`;
-  bar.innerHTML=`<div class="acct-header-left"><div class="acct-header-icon-wrap"><div class="acct-header-icon">${escapeHtml(initials)}</div><span class="acct-sync-dot" id="acctSyncDot"></span></div><div class="acct-header-mid"><div class="acct-header-name"><span class="acct-header-name-text">${escapeHtml(current?current.name:'All Accounts')}</span><span class="acct-header-chevron"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></span></div><div class="acct-header-meta">${_dcStaleOn(current)?_dcStaleChip():'<span class="acct-type-chip">'+escapeHtml(type)+'</span>'}<button class="acct-header-refresh" onclick="event.stopPropagation();refreshAccountHeader(this)" aria-label="Refresh account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button><span class="acct-header-sync-status" id="acctSyncStatus"${_dcStaleOn(current)?' style="display:none"':''}>${accountSyncLabel()}</span></div></div></div><div class="acct-header-right">${balanceHtml}</div>`;
+  bar.innerHTML=`<div class="acct-header-left"><div class="acct-header-icon-wrap"><div class="acct-header-icon">${escapeHtml(initials)}</div><span class="acct-sync-dot" id="acctSyncDot"></span></div><div class="acct-header-mid"><div class="acct-header-name"><span class="acct-header-name-text">${escapeHtml(current?current.name:'All Accounts')}</span><span class="acct-header-chevron"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></span></div><div class="acct-header-meta">${_dcStaleOn(current)?_dcStaleChip():'<span class="acct-type-chip'+(current&&current.status==='breached'?' is-brc':'')+'">'+escapeHtml(current&&current.status==='breached'?'Breached':type)+'</span>'}<button class="acct-header-refresh" onclick="event.stopPropagation();refreshAccountHeader(this)" aria-label="Refresh account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button><span class="acct-header-sync-status" id="acctSyncStatus"${_dcStaleOn(current)?' style="display:none"':''}>${accountSyncLabel()}</span></div></div></div><div class="acct-header-right">${balanceHtml}</div>`;
 }
 function refreshAccountHeader(btn){
   btn.classList.add('spinning'); document.getElementById('acctSyncDot')?.classList.add('syncing');
@@ -6709,6 +6783,15 @@ function renderSwitchAcctList(){
       +   `<div class="acct-header-icon">${escapeHtml(initials)}</div>`
       +   `<div class="switch-acct-mid"><div class="switch-acct-name">${escapeHtml(a.name)}</div><div class="switch-acct-sub">${_withCur(accountSyncLabel(),a)}</div></div>`
       +   `<div class="switch-acct-right"><div class="switch-acct-bal">${fmtMoney(bal,null,a)}</div><div class="switch-acct-pnl ${ap>=0?'positive':'negative'}">${fmtMoney(ap,{plus:true},a)}</div></div>`
+      + `</div></div>`;
+  }).join('');
+  const _inb = accounts.filter(a=>a.status==='breached');
+  if(_inb.length) html += '<div class="sw-inact">Inactive</div>' + _inb.map(a=>{
+    const ap = trades.filter(t=>t.accountId===a.id).reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
+    return `<div class="switch-swipe-wrap inact"><div class="switch-acct-row${activeAcctFilter===a.id?' active':''}" onclick="selectSwitchAccount('${a.id}',this)">`
+      + `<div class="acct-header-icon">${escapeHtml(a.name.trim().slice(0,2).toUpperCase())}</div>`
+      + `<div class="switch-acct-mid"><div class="switch-acct-name">${escapeHtml(a.name)}</div><div class="switch-acct-sub"><span class="ac-chip brc">Breached</span></div></div>`
+      + `<div class="switch-acct-right"><div class="switch-acct-bal">${fmtMoney(acctBalance(a),null,a)}</div><div class="switch-acct-pnl ${ap>=0?'positive':'negative'}">${fmtMoney(ap,{plus:true},a)}</div></div>`
       + `</div></div>`;
   }).join('');
   list.innerHTML = html;
@@ -6808,12 +6891,12 @@ let _filteredTradesCache = { version: -1, acct: undefined, sig: '', result: null
 // The ONE definition of "All Accounts" (user decision, Session 51): active accounts only. Archived accounts (any currency) are out of
 // every All figure: header, Journal, Calendar + day/month reports, Stats, balance curve, ROI. Flag off = old behaviour (every account).
 function allScopeAccounts(){ return CURRENCY_UI ? activeAccounts() : accounts; }
-function _inAllScope(t){ if(!CURRENCY_UI) return true; const a=accounts.find(x=>x.id===t.accountId); return !(a&&a.status==='archived'); }
+function _inAllScope(t){ if(!CURRENCY_UI) return true; const a=accounts.find(x=>x.id===t.accountId); return !(a&&(a.status==='archived'||a.status==='breached')); }
 let _astRaw={k:'',v:null};
 function allScopeTradesRaw(){   // trades of active accounts, each in its own currency (Journal lists, trade cards)
   if(!CURRENCY_UI) return trades;
   const k=tradesVersion+'|'+accounts.map(a=>a.id+':'+(a.status||'')).join('|'); if(_astRaw.k===k) return _astRaw.v;
-  const arch=new Set(accounts.filter(a=>a.status==='archived').map(a=>a.id));
+  const arch=new Set(accounts.filter(a=>a.status==='archived'||a.status==='breached').map(a=>a.id));
   _astRaw={k,v:trades.filter(t=>!arch.has(t.accountId))}; return _astRaw.v;
 }
 function _allScopeSig(){ return CURRENCY_UI ? accounts.map(a=>a.id+':'+(a.status||'')+':'+(a.currency||'')+':'+(a.currencySymbol||'')).join('|')+(_dc.on?'|dc'+_dcVer+_dc.code:'') : ''; }
@@ -7875,7 +7958,7 @@ function openEditTrade(t){
   clTarget='trade';
   document.getElementById('modalTitle').textContent='Edit Trade';
   document.getElementById('deleteBtn').style.display='block';
-  populateAccountDropdown(t.accountId);
+  populateAccountDropdown(t.accountId,true);
   document.getElementById('fPair').value=t.pair||'';
   document.getElementById('fEntry').value=t.entry||'';
   document.getElementById('fExit').value=t.exit||'';
@@ -7937,7 +8020,7 @@ function openEditTrade(t){
   updateNavVisibility();
 }
 
-function activeAccounts(){ return accounts.filter(a=>a.status!=='archived'); }
+function activeAccounts(){ return accounts.filter(a=>a.status!=='archived'&&a.status!=='breached'); }   // 4c: counts toward totals, All, the switcher's main block and the keep-one-active guard
 function selectableAccounts(keepId){ return accounts.filter(a=>a.status!=='archived'||a.id===keepId); }
 function defaultRiskFor(a){
   if(!a||!(a.riskValue>0)) return null;
@@ -7956,8 +8039,9 @@ function applyDefaultRisk(){
 document.addEventListener('change',e=>{ if(e.target&&e.target.id==='fAccount'){ applyDefaultRisk(); syncTradeFormCur(); autoCalc(); } if(e.target&&e.target.id==='qAccount') syncQuickCur(); });
 ['input','change'].forEach(ev=>document.addEventListener(ev,e=>{ const id=e.target&&e.target.id; if(id==='fPair'||id==='fDate') autoCalc(); }));
 document.addEventListener('input',e=>{ if(e.target&&e.target.id==='fRisk'){ delete e.target.dataset.auto; const h=document.getElementById('fRiskHint'); if(h)h.style.display='none'; } });
-function populateAccountDropdown(selectedId){
-  document.getElementById('fAccount').innerHTML=selectableAccounts(selectedId).map(a=>`<option value="${a.id}"${selectedId===a.id?' selected':''}>${escapeHtml(a.name)}</option>`).join('');
+function populateAccountDropdown(selectedId,keep){
+  document.getElementById('fAccount').innerHTML=_acctOpts(selectableAccounts(selectedId),selectedId,keep?selectedId:null);
+  _brcHint('fAccount');
 }
 
 function clearTradeForm(){
@@ -8636,6 +8720,7 @@ function cancelModal(){
 function saveTrade(){
   const pair=document.getElementById('fPair').value.trim();
   if(!pair){showToast('Enter a pair/instrument','error');return;}
+  if(!document.getElementById('fAccount').value){ showToast('Add or reactivate an account first','error'); return; }
   const entry=document.getElementById('fEntry').value, exit=document.getElementById('fExit').value;
   const size=document.getElementById('fSize').value, risk=parseFloat(document.getElementById('fRisk').value)||null;
   let pnl=parseFloat(document.getElementById('fPnl').value);
@@ -8704,6 +8789,7 @@ function saveTrade(){
   saveTrades(); closeModal(); renderAll();
   if(isNew){ const tl=document.getElementById('tradeList'); if(tl) tl.scrollIntoView({block:'start',behavior:'smooth'}); }
   showToast(editingTradeId?'Trade updated ✓':'Trade saved ✓');
+  _brcAfterSave(trade.accountId);   // Batch 4b: that account only
 }
 
 function deleteTrade(){
@@ -8785,7 +8871,7 @@ function openAddPreTrade(){
   clTarget='pretrade';
   document.getElementById('preTradeModalTitle').textContent='New Setup';
   document.getElementById('preTradeDeleteBtn').style.display='none';
-  document.getElementById('ptAccount').innerHTML=activeAccounts().map(a=>`<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
+  document.getElementById('ptAccount').innerHTML=_acctOpts(selectableAccounts()); _brcHint('ptAccount');
   document.getElementById('ptPair').value='';
   document.getElementById('ptReasoning').value='';
   document.getElementById('ptEntry').value='';
@@ -8810,7 +8896,7 @@ function openEditPreTrade(id){
   clTarget='pretrade';
   document.getElementById('preTradeModalTitle').textContent='Edit Setup';
   document.getElementById('preTradeDeleteBtn').style.display='block';
-  document.getElementById('ptAccount').innerHTML=selectableAccounts(pt.accountId).map(a=>`<option value="${a.id}"${pt.accountId===a.id?' selected':''}>${escapeHtml(a.name)}</option>`).join('');
+  document.getElementById('ptAccount').innerHTML=_acctOpts(selectableAccounts(pt.accountId),pt.accountId,pt.accountId); _brcHint('ptAccount');
   document.getElementById('ptPair').value=pt.pair||'';
   document.getElementById('ptReasoning').value=pt.reasoning||'';
   document.getElementById('ptEntry').value=pt.plannedEntry||'';
@@ -8837,6 +8923,7 @@ function openEditPreTrade(id){
 function savePreTrade(){
   const pair=document.getElementById('ptPair').value.trim();
   if(!pair){ showToast('Enter a pair/instrument','error'); return; }
+  if(!document.getElementById('ptAccount').value){ showToast('Add or reactivate an account first','error'); return; }
   const existing = editingPreTradeId ? preTrades.find(p=>p.id===editingPreTradeId) : null;
   const imageRefs = pendingImagesPT.filter(im=>im.fileId).map(im=>({fileId:im.fileId}));
   const pt={
@@ -9537,7 +9624,7 @@ function deleteAccount(){
   if(!editingAcctId)return;
   const id=editingAcctId, acct=accounts.find(a=>a.id===id); if(!acct)return;
   const isArch=acct.status==='archived';
-  if(!isArch&&activeAccounts().length<=1){ showToast('Keep at least one active account','error'); return; }
+  if(!isArch&&acct.status!=='breached'&&activeAccounts().length<=1){ showToast('Keep at least one active account','error'); return; }
   const n=trades.filter(t=>t.accountId===id).length, firms=_firmsOfAccount(id), plans=preTrades.filter(p=>p.accountId===id).length;
   const nm='“'+acct.name+'”', cancel={l:'Cancel',c:'btn btn-ghost',f:_closeDelAcct};
   if(!n&&!firms.length&&!plans){
@@ -9591,8 +9678,10 @@ function openAcctMenu(btn,id,ev){
   const items=[{label:'Edit account',icon:_I.edit,fn:()=>editAccount(id)}];
   if(a.status==='archived') items.push({label:'Restore account',icon:_I.restore,fn:()=>restoreAccount(id)});
   else{
+    if(a.status==='breached') items.push({label:'Reactivate account',icon:_I.restore,fn:()=>reactivateAccount(id)});
     items.push({label:'Deposit / Withdraw',icon:_I.ledger,fn:()=>openLedgerModal(id)});
-    if(activeAccounts().length>1) items.push({label:'Archive account',icon:_I.archive,fn:()=>archiveAccount(id)});
+    if(a.status!=='breached') items.push({label:'Mark as breached',icon:_I.flag,fn:()=>markBreachedManual(id)});
+    if(a.status==='breached'||activeAccounts().length>1) items.push({label:'Archive account',icon:_I.archive,fn:()=>archiveAccount(id)});
   }
   openActionMenu(btn,items,ev);
 }
@@ -9605,38 +9694,43 @@ function _archiveNow(id){
 }
 function archiveAccount(id){
   const a=accounts.find(x=>x.id===id); if(!a)return;
-  if(activeAccounts().length<=1){ showToast('Keep at least one active account','error'); return; }
+  if(a.status!=='breached'&&activeAccounts().length<=1){ showToast('Keep at least one active account','error'); return; }
   const firms=_firmsOfAccount(id);
   showConfirm('Archive account?','"'+a.name+'" will be hidden from account lists and totals. Its trades and history are kept, and you can restore it any time.'+(firms.length?' Its prop firm "'+firms.map(f=>f.name).join('", "')+'" moves to the archived list with it.':''),()=>{ _archiveNow(id); });
 }
 function restoreAccount(id){
   const a=accounts.find(x=>x.id===id); if(!a)return;
-  a.status='active'; saveAccounts(); renderAll(); renderAcctList(); showToast('Account restored ✓');
+  const _wasBrc=!!a.statusReason;   // archiving keeps the breach reason, so restoring a breached account brings it back as breached (Reactivate is the way back to active)
+  if(_wasBrc) a.status='breached'; else { a.status='active'; delete a.statusReason; delete a.statusDate; }
+  saveAccounts(); renderAll(); renderAcctList(); try{ renderPropFirms(); }catch(e){} showToast(_wasBrc?'Restored as breached':'Account restored ✓');
 }
 let _archOpen=false;
 function toggleArchivedGroup(){ _archOpen=!_archOpen; renderAcctList(); }
-function _acctCard(r,archived){
+function _brcWhy(a){ return a.statusReason==='daily'?'daily limit':a.statusReason==='max'?'max drawdown':'marked by you'; }
+function _brcDate(d){ if(!d) return ''; try{ return new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'}); }catch(e){ return d; } }
+function _acctCard(r,archived,inact){
   const {a,pl,bal,n}=r, start=parseFloat(a.balance)||0, pct=start>0?pl/start*100:null, cu=curOf(a);
   const firm=(typeof _linkedFirm==='function')?_linkedFirm(a.id):null;
   let chip='';
   if(archived) chip='<span class="ac-chip">Archived</span>';
+  else if(a.status==='breached') chip='<span class="ac-chip brc">Breached</span>';
   else if(firm) chip='<span class="ac-chip'+(firm.phase==='funded'?' ok':'')+'">Prop · '+escapeHtml(PROP_PHASE_LABEL[firm.phase||'challenge']||'')+'</span>';
   else if(a.type==='demo') chip='<span class="ac-chip">Demo</span>';
   else if(a.type==='prop') chip='<span class="ac-chip">Prop</span>';
   { const ct=_curTag(a); if(ct) chip+='<span class="ac-chip">'+escapeHtml(ct)+'</span>'; }
   const plTxt=mfHtml(fmtMoney(pl,{plus:true},cu))+(pct!==null?' · '+(pct>=0?'+':'')+pct.toFixed(2)+'%':'');
   const risk=a.riskValue>0?' · Risk '+(a.riskMode==='fixed'?fmtMoney(a.riskValue,{dec:0},cu):(+a.riskValue)+'%'):'';
-  return '<div class="ac-card'+(archived?' dim':'')+'" onclick="editAccount(\''+a.id+'\')">'
+  return '<div class="ac-card'+(archived||inact?' dim':'')+'" onclick="editAccount(\''+a.id+'\')">'
     +'<div class="ac-top"><span class="ac-name">'+escapeHtml(a.name)+'</span>'+chip+'<button class="ac-menu" aria-label="Account actions" onclick="openAcctMenu(this,\''+a.id+'\',event)">'+_I.dots+'</button></div>'
     +'<div class="ac-bal"><b>'+fmtMoney(bal,null,cu)+'</b><span class="ac-pl '+(pl>=0?'pos':'neg')+'">'+plTxt+'</span></div>'
-    +'<div class="ac-q">'+(a.broker?escapeHtml(a.broker)+' · ':'')+'Start '+fmtMoney(start,{dec:0},cu)+' · '+n+' trade'+(n!==1?'s':'')+risk+'</div></div>';
+    +'<div class="ac-q">'+(inact&&a.status==='breached'?'<span class="brc-why">'+(_brcDate(a.statusDate)?_brcDate(a.statusDate)+' · ':'')+_brcWhy(a)+'</span> · ':'')+(a.broker?escapeHtml(a.broker)+' · ':'')+'Start '+fmtMoney(start,{dec:0},cu)+' · '+n+' trade'+(n!==1?'s':'')+risk+'</div></div>';
 }
 function renderAcctList(){
   const list=document.getElementById('acctList'), sum=document.getElementById('acctSummary');
   if(!list) return;
   if(!accounts.length){ if(sum)sum.style.display='none'; list.innerHTML='<div class="empty" style="padding:24px 0"><div class="empty-title">No accounts</div></div>';return; }
   const all=accounts.map(a=>({a,...acctBalanceNow(a),n:trades.filter(t=>t.accountId===a.id).length}));
-  const act=all.filter(r=>r.a.status!=='archived'), arch=all.filter(r=>r.a.status==='archived');
+  const act=all.filter(r=>r.a.status!=='archived'&&r.a.status!=='breached'), arch=all.filter(r=>r.a.status==='archived'||r.a.status==='breached').sort((x,y)=>((y.a.status==='breached')-(x.a.status==='breached'))||(x.a.status==='breached'&&y.a.status==='breached'?(y.a.statusDate||'').localeCompare(x.a.statusDate||''):0));   // 4c: Inactive = breached (newest first), then archived
   if(sum){
     const _da=dispActive();   // display currency: balances at today's rate, P&L from the already-converted trades
     const tb=act.reduce((x,r)=>x+(_da?dcConvAcct(r.bal,r.a,null):r.bal),0), tp=_da?allScopeTrades().reduce((x,t)=>x+(parseFloat(t.pnl)||0),0):act.reduce((x,r)=>x+r.pl,0), sc=_da?dcCur():acctsCur(act.map(r=>r.a));   // sc null = mixed currencies
@@ -9646,10 +9740,10 @@ function renderAcctList(){
   let html=act.map(r=>_acctCard(r,false)).join('');
   if(arch.length){
     const ap=arch.reduce((x,r)=>x+r.pl,0), ac=acctsCur(arch.map(r=>r.a));
-    html+='<div class="ac-group" onclick="toggleArchivedGroup()"><span class="ac-chev'+(_archOpen?' open':'')+'">'+_I.chev+'</span><b>Archived · '+arch.length+'</b><span class="sp"></span><span class="'+(ac?(ap>=0?'positive':'negative'):'')+'">'+(ac?fmtMoney(ap,{plus:true,dec:0},ac):_byCurInline(arch.map(r=>({c:curOf(r.a),v:r.pl})),{plus:true,dec:0}))+'</span></div>';
-    if(_archOpen) html+=arch.map(r=>_acctCard(r,true)).join('');
+    html+='<div class="ac-group" onclick="toggleArchivedGroup()"><span class="ac-chev'+(_archOpen?' open':'')+'">'+_I.chev+'</span><b>Inactive · '+arch.length+'</b><span class="sp"></span><span class="'+(ac?(ap>=0?'positive':'negative'):'')+'">'+(ac?fmtMoney(ap,{plus:true,dec:0},ac):_byCurInline(arch.map(r=>({c:curOf(r.a),v:r.pl})),{plus:true,dec:0}))+'</span></div>';
+    if(_archOpen) html+=arch.map(r=>_acctCard(r,r.a.status==='archived',true)).join('');
   }
-  list.innerHTML=html;
+  list.innerHTML=_brcLineHtml()+html;
 }
 function settingsAutoBackup(){return localStorage.getItem('tj_autoBackup')!=='0'}
 function setSettingsAutoBackup(enabled){localStorage.setItem('tj_autoBackup',enabled?'1':'0');showToast(enabled?'Local backup on':'Local backup off');renderSettings()}
@@ -12227,6 +12321,7 @@ function openActionMenu(btn,items,ev){
 document.addEventListener('pointerdown',e=>{ if(_am&&!_am.contains(e.target)&&!_am._btn.contains(e.target))closeActionMenu(); },true);
 window.addEventListener('scroll',closeActionMenu,true); window.addEventListener('resize',closeActionMenu);
 const _I={
+  flag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
   edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
   ledger:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>',
   coins:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/></svg>',
@@ -12268,7 +12363,7 @@ const _I={
   function openPk(sel){
     if(cur===sel){closePk();return;}
     closePk(); cur=sel; sel._btn.classList.add('open');
-    const opts=[...sel.options].map(o=>({v:o.value,t:o.textContent.trim(),d:o.disabled}));
+    const opts=[...sel.options].map(o=>({v:o.value,t:o.textContent.trim(),d:o.disabled,b:o.hasAttribute('data-brc')}));
     const searchable=opts.length>SEARCH_OVER;
     pop=document.createElement('div'); pop.className='pk-pop';
     pop.innerHTML=(searchable?'<div class="pk-search"><input type="search" placeholder="Search…" autocomplete="off" autocapitalize="off"/></div>':'')+'<div class="pk-list"></div>';
@@ -12276,7 +12371,7 @@ const _I={
     function draw(q){
       q=(q||'').toLowerCase();
       const shown=opts.filter(o=>!q||o.t.toLowerCase().includes(q));
-      list.innerHTML=shown.length?shown.map(o=>`<div class="pk-item${o.v===sel.value?' sel':''}${o.d?' dis':''}" data-v="${escapeHtml(o.v)}"><span>${escapeHtml(o.t)}</span>${CHECK}</div>`).join(''):'<div class="pk-empty">No matches</div>';
+      list.innerHTML=shown.length?shown.map(o=>`<div class="pk-item${o.v===sel.value?' sel':''}${o.d?' dis':''}${o.b?' brc':''}" data-v="${escapeHtml(o.v)}"><span>${escapeHtml(o.t)}</span>${CHECK}</div>`).join(''):'<div class="pk-empty">No matches</div>';
     }
     draw('');
     list.addEventListener('click',e=>{
@@ -12482,9 +12577,9 @@ function openQuickAdd(prefillDate){
   document.getElementById('qPnl').value = '';
   document.getElementById('qPnl').style.color = '';
   // Populate account dropdown
-  document.getElementById('qAccount').innerHTML = activeAccounts().map(a=>`<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
+  document.getElementById('qAccount').innerHTML = _acctOpts(selectableAccounts()); _brcHint('qAccount');
   // Pre-select current account filter if specific
-  if(activeAcctFilter !== 'all'){
+  if(activeAcctFilter !== 'all' && _acctOkForTrades(activeAcctFilter)){
     document.getElementById('qAccount').value = activeAcctFilter;
   }
   syncQuickCur();
@@ -12552,6 +12647,7 @@ function saveQuickTrade(){
   const date = document.getElementById('qDate').value;
   const time = document.getElementById('qTime').value || '';
   const acctId = document.getElementById('qAccount').value;
+  if(!acctId){ showToast('Add or reactivate an account first','error'); return; }
   const trade = {
     id: genId(),
     accountId: acctId,
@@ -12578,6 +12674,7 @@ function saveQuickTrade(){
   saveTrades(); closeQuickAdd(); renderAll();
   const tl=document.getElementById('tradeList'); if(tl) tl.scrollIntoView({block:'start',behavior:'smooth'});
   showToast('Trade saved ✓');
+  _brcAfterSave(trade.accountId);   // Batch 4b: Quick Add is also a trade save
 }
 
 // ─── Data Management ───
@@ -12683,10 +12780,11 @@ function importCSV(input){
       if(colIdx.pnl===undefined){  showToast('Missing required column: p&l / pnl','error'); return; }
 
       const existingIds = new Set(trades.map(t=>t.id));
-      let added=0, skipped=0;
+      let added=0, skipped=0, noAcct=0;
 
-      // Use the currently selected account as default for imported rows
-      const defaultAcctId = activeAcctFilter!=='all' ? activeAcctFilter : ((activeAccounts()[0]||accounts[0])?.id||'');
+      // Default account for rows without their own accountId: the selected account only while it is active, else the first active account (4c)
+      const _fa=activeAcctFilter!=='all'?accounts.find(a=>a.id===activeAcctFilter):null, _okA=(_fa&&_fa.status!=='archived'&&_fa.status!=='breached')?_fa:activeAccounts()[0];
+      const defaultAcctId = _okA?_okA.id:'';
 
       const get=(row,key,fallback='')=>colIdx[key]!==undefined ? (row[colIdx[key]]||fallback) : fallback;
 
@@ -12730,13 +12828,14 @@ function importCSV(input){
           images:[],
         };
         if(!trade.pair){ skipped++; continue; }
+        if(!trade.accountId){ noAcct++; continue; }
         trades.push(trade);
         existingIds.add(id);
         added++;
       }
 
       input.value = ''; // reset input so same file can be re-selected
-      if(added===0){ showToast(skipped?`All ${skipped} rows already exist`:'No valid rows found','error'); return; }
+      if(added===0){ showToast(noAcct?'Add or reactivate an account first':(skipped?`All ${skipped} rows already exist`:'No valid rows found'),'error'); return; }
       tradesVersion++;
       saveTrades(); renderAll(); renderSettings();
       showToast(`Imported ${added} trade${added!==1?'s':''}${skipped?` · ${skipped} skipped`:''} ✓`);
@@ -12949,7 +13048,7 @@ function calcTradingDaysInCycle(f){
   // Only count days where the day's net P&L > 0.5% of account size
   const threshold = (f.acctSize||0) * 0.005;
   const byDay = {};
-  scoped.forEach(t=>{ byDay[t.date]=(byDay[t.date]||0)+parseFloat(t.pnl||0); });
+  scoped.forEach(t=>{ const _k=_fdKey(f,t); byDay[_k]=(byDay[_k]||0)+parseFloat(t.pnl||0); });
   return Object.values(byDay).filter(v=>v>threshold).length;
 }
 
@@ -12966,7 +13065,7 @@ function calcConsistencyStatus(f){
     const profitTrades = scoped.filter(t=>parseFloat(t.pnl)>0);
     if(!profitTrades.length) return {status:'ok', msg:'No profit days yet'};
     const byDay = {};
-    profitTrades.forEach(t=>{ byDay[t.date]=(byDay[t.date]||0)+parseFloat(t.pnl); });
+    profitTrades.forEach(t=>{ const _k=_fdKey(f,t); byDay[_k]=(byDay[_k]||0)+parseFloat(t.pnl); });
     const totalProfit = Object.values(byDay).reduce((s,v)=>s+v,0);
     const maxDay = Math.max(...Object.values(byDay));
     const maxDayPct = totalProfit>0 ? (maxDay/totalProfit)*100 : 0;
@@ -12980,7 +13079,7 @@ function calcConsistencyStatus(f){
   if(type === 'daily_cap'){
     const cap = value||1000;
     const byDay = {};
-    scoped.forEach(t=>{ byDay[t.date]=(byDay[t.date]||0)+parseFloat(t.pnl); });
+    scoped.forEach(t=>{ const _k=_fdKey(f,t); byDay[_k]=(byDay[_k]||0)+parseFloat(t.pnl); });
     const violations = Object.entries(byDay).filter(([,v])=>v>cap);
     if(violations.length){
       const worst = violations.sort((a,b)=>b[1]-a[1])[0];
@@ -13022,7 +13121,7 @@ function onConsistencyTypeChange(){
 function populateLinkedAccountDropdown(selectedId){
   const sel = document.getElementById('pLinkedAccount');
   sel.innerHTML = '<option value="">\u2014 No link (manual entry) \u2014</option>'
-    + selectableAccounts(selectedId).map(a=>`<option value="${a.id}"${a.id===selectedId?' selected':''}>${escapeHtml(a.name)}</option>`).join('');
+    + _acctOpts(selectableAccounts(selectedId),selectedId,selectedId);
   _syncLinkedAccountUI(selectedId);
 }
 
@@ -13129,6 +13228,7 @@ function pmRefresh(){
   pmHints();
   pmDdSync();
   pmDaySync();
+  pmDsSync(); tplChipSync();
 }
 
 let _propSym='$';
@@ -13148,6 +13248,302 @@ function _syncLinkedAccountUI(linkedId){
 }
 
 // ── Open / Close ──
+
+// ── Batch R4: per-firm day start (D10). Absent f.dayStart = the typed calendar date, exactly as before. ──
+const _DS_Z={device:'my device',UTC:'UTC','America/New_York':'New York','America/Chicago':'Chicago','Europe/London':'London','Europe/Prague':'Prague','Europe/Athens':'Athens'};
+const _DS_PRE=[['','Midnight, my device\u2019s time'],['UTC|00:00','00:00 UTC'],['America/New_York|17:00','5 PM New York time'],['America/Chicago|17:00','5 PM Chicago time'],['Europe/Prague|00:00','Midnight Prague time']];
+const _DS_HELP='Which clock your firm resets its day on. Daily loss, trading days, consistency and the trailing floor all follow it. Trades with no time stay on the date you typed.';
+function _dsPad(n){ return (n<10?'0':'')+n; }
+function _dsParts(ms,tz){
+  const o={year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}; if(tz&&tz!=='device') o.timeZone=tz;
+  const p={}; new Intl.DateTimeFormat('en-CA',o).formatToParts(new Date(ms)).forEach(x=>{ p[x.type]=x.value; }); return p;
+}
+function _dsAtMin(ds){ const m=/^(\d{1,2}):(\d{2})$/.exec((ds&&ds.at)||''); return m?(parseInt(m[1],10)*60+parseInt(m[2],10)):0; }
+// The firm day is named by the date it ENDS on (like a forex daily candle): at or after the start time the clock date + 1.
+function _dsKeyFromMs(ds,ms){
+  const p=_dsParts(ms,ds.tz), mins=parseInt(p.hour,10)*60+parseInt(p.minute,10), a=_dsAtMin(ds);
+  let d=Date.UTC(parseInt(p.year,10),parseInt(p.month,10)-1,parseInt(p.day,10)); if(a>0&&mins>=a) d+=864e5;
+  const x=new Date(d); return x.getUTCFullYear()+'-'+_dsPad(x.getUTCMonth()+1)+'-'+_dsPad(x.getUTCDate());
+}
+// A trade is placed by its closing time (opening time if none), read as the device's local time; null = no time at all.
+function _tradeMs(t){
+  const tm=t.closeTime||t.time, dm=/^(\d{4})-(\d{2})-(\d{2})$/.exec(t.date||''), tt=/^(\d{1,2}):(\d{2})/.exec(tm||''); if(!dm||!tt) return null;
+  const cross=!!(t.closeTime&&t.time&&t.closeTime<t.time);
+  return new Date(parseInt(dm[1],10),parseInt(dm[2],10)-1,parseInt(dm[3],10)+(cross?1:0),parseInt(tt[1],10),parseInt(tt[2],10)).getTime();
+}
+function _fdKey(f,t){ const ds=f&&f.dayStart; if(!ds) return t.date; const ms=_tradeMs(t); return ms==null?t.date:_dsKeyFromMs(ds,ms); }
+function _fdOrd(f,t){ const ds=f&&f.dayStart; if(!ds) return t.time||''; const ms=_tradeMs(t); return ms==null?(t.time||''):String(10000000000000+ms); }
+function _fToday(f,today){ const ds=f&&f.dayStart; return ds?_dsKeyFromMs(ds,Date.now()):today; }
+function _dsLabel(ds){ const k=ds.tz+'|'+ds.at, p=_DS_PRE.find(x=>x[0]===k); return p?p[1]:(ds.at+' '+(_DS_Z[ds.tz]||ds.tz)); }
+function _dsLocalAt(ds,ms){   // the firm's start time, as a clock time on this device, for the date of ms
+  if(ds.tz==='device') return ds.at;
+  const p=_dsParts(ms,ds.tz), wall=Date.UTC(parseInt(p.year,10),parseInt(p.month,10)-1,parseInt(p.day,10),parseInt(p.hour,10),parseInt(p.minute,10)), off=wall-Math.floor(ms/60000)*60000;
+  const a=_dsAtMin(ds), inst=Date.UTC(parseInt(p.year,10),parseInt(p.month,10)-1,parseInt(p.day,10),Math.floor(a/60),a%60)-off, d=new Date(inst);
+  return _dsPad(d.getHours())+':'+_dsPad(d.getMinutes());
+}
+function _dsRead(){
+  const v=(document.getElementById('pDayStart')||{}).value; if(!v) return null;
+  if(v==='custom'){ const at=(document.getElementById('pDsTime')||{}).value, tz=(document.getElementById('pDsZone')||{}).value; return /^\d{2}:\d{2}$/.test(at||'')&&tz?{tz:tz,at:at}:null; }
+  const a=v.split('|'); return {tz:a[0],at:a[1]};
+}
+function _dsSet(ds){
+  const sel=document.getElementById('pDayStart'); if(!sel) return;
+  if(!ds){ sel.value=''; } else { const k=ds.tz+'|'+ds.at; if(_DS_PRE.some(x=>x[0]===k)) sel.value=k; else { sel.value='custom'; document.getElementById('pDsTime').value=ds.at; document.getElementById('pDsZone').value=ds.tz; } }
+  pmDsSync();
+}
+function pmDsSync(){
+  const sel=document.getElementById('pDayStart'); if(!sel) return;
+  document.getElementById('pDsCustom').style.display=sel.value==='custom'?'':'none';
+  const ds=_dsRead(), help=document.getElementById('pDsHelp'); if(!help) return;
+  if(!ds){ help.textContent=(sel.value==='custom')?'Pick a time and a clock.':_DS_HELP; return; }
+  const now=Date.now(), a=_dsLocalAt(ds,now), b=_dsLocalAt(ds,now+183*864e5);
+  help.textContent=ds.tz==='device'?('A day starts at '+ds.at+' on your device. A day is named by the date it ends on.'):('That is '+a+' your time now'+(a!==b?' ('+b+' at the other time of year)':'')+'. A day is named by the date it ends on. '+(sel.value==='custom'?'':'Trades with no time stay on the date you typed.'));
+}
+const _DS_DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], _DS_MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function _dsFmtKey(k){ const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(k||''); if(!m) return k||''; const d=new Date(Date.UTC(+m[1],+m[2]-1,+m[3])); return _DS_DOW[d.getUTCDay()]+' '+(+m[3])+' '+_DS_MON[+m[2]-1]; }
+function _dsRows(f){
+  if(!f||!f.dayStart) return ''; const ds=f.dayStart, row=(l,r)=>'<div class="dd-row"><span>'+l+'</span><b>'+r+'</b></div>';
+  const d=new Date(), today=d.getFullYear()+'-'+_dsPad(d.getMonth()+1)+'-'+_dsPad(d.getDate());
+  return row('Firm day','Starts '+_dsLabel(ds)+(ds.tz==='device'?'':' ('+_dsLocalAt(ds,Date.now())+' your time now)'))+row('Today is','The day ending '+_dsFmtKey(_fToday(f,today)));
+}
+function _dsNote(f){
+  if(!f||!f.dayStart) return '';
+  return '<div class="dd-note">Your firm\u2019s day runs from '+_dsLabel(f.dayStart)+' to the same time next day. A trade is placed by its closing time (its opening time if there is no closing time), read as your device\u2019s time. Trades with no time stay on the date you typed.</div>';
+}
+// ── Batch R3: firm templates (a code constant, never user data; the firm only stores tpl:{id,on,st,sz} when one was applied) ──
+let _tplCur=null, _tp={id:null,st:null,sz:null};
+const _S=(k,l,o)=>Object.assign({k:k,l:l},o||{});
+const _TPL_EST_HI='Your firm starts each day from the higher of balance and equity. The card uses the closing balance, so its daily room can differ.';
+const _TPL_DS={'AquaFunded':'UTC|00:00','Goat Funded Trader':'America/New_York|17:00','FTMO':'Europe/Prague|00:00','Topstep':'America/Chicago|17:00'};
+const _TPL_EST_TR='Your firm trails on its highest balance or equity, including open profit. The card can only trail on closing balances, so its floor can sit lower than your firm\u2019s. Treat the room as an estimate.';
+const _TPL_CAV_AQ='Not tracked by the app: the firm\u2019s per-trade or floating-loss rules and any split reductions.';
+const FIRM_TEMPLATES=[
+ {id:'aqua-2std',firm:'AquaFunded',name:'2 Step Standard',tier:'official',read:'full',on:'2026-10-24',clk:'00:00 UTC',
+  st:[_S('challenge','Phase 1',{t:8,md:3}),_S('verification','Phase 2',{t:5,md:3}),_S('funded','Funded')],
+  dd:{v:5,k:'sod',c:'terminate'},mx:{v:8,tr:0},pay:{sp:90,cy:'biweekly'},est:[_TPL_EST_HI],cav:[_TPL_CAV_AQ],
+  src:[['2 Step Standard, AquaFunded help centre (page dated 14 Sep 2026)','https://help.aquafunded.com/en/articles/15281226-2-step-standard']]},
+ {id:'aqua-pap',firm:'AquaFunded',name:'Pay After Pass',era:'created from 4 Aug 2026',tier:'official',read:'full',on:'2026-10-24',clk:'00:00 UTC',
+  st:[_S('challenge','Evaluation',{t:3,nd:1}),_S('funded','Funded',{md:5,cons:['best_day_pct',15]})],
+  dd:{v:3,k:'init',c:'terminate'},mx:{v:5,tr:1},pay:{sp:90,cy:'biweekly'},est:[_TPL_EST_TR],cav:[_TPL_CAV_AQ+' The daily limit applies on the funded stage only.'],
+  src:[['Pay After Pass Model, AquaFunded help centre (page updated over a week before 24 Oct 2026)','https://help.aquafunded.com/en/articles/13322298-pay-after-pass-model']]},
+ {id:'aqua-pap-old',firm:'AquaFunded',name:'Pay After Pass',era:'created before 4 Aug 2026',tier:'yours',read:'you',on:'2026-10-24',clk:'00:00 UTC',
+  st:[_S('challenge','Evaluation',{t:3,nd:1}),_S('funded','Funded',{md:5,cons:['best_day_pct',15]})],
+  dd:{v:3,k:'sod',c:'terminate'},mx:{v:6,tr:1},pay:{sp:90,cy:'biweekly'},est:[_TPL_EST_TR],cav:[_TPL_CAV_AQ],
+  how:'These numbers (3% target, 3% daily, 6% trailing, 15% consistency) come from your own account details. The daily limit as a percent of the day\u2019s starting balance was read from your own AquaFunded dashboard on 25 Oct 2026. The firm\u2019s current page describes the newer version with 5% max loss, and I could not read the older page. Split 90% and 14 days are from the current page.',
+  src:[['Current Pay After Pass page, for comparison','https://help.aquafunded.com/en/articles/13322298-pay-after-pass-model']]},
+ {id:'aqua-flex',firm:'AquaFunded',name:'1 Step Flex',era:'bought from 31 Aug 2026',tier:'official',read:'full',on:'2026-10-24',clk:'00:00 UTC',
+  st:[_S('challenge','Evaluation',{t:10}),_S('funded','Funded',{md:3})],dd:{v:3,k:'sod',c:'terminate'},mx:{v:12,tr:0},pay:{sp:90,cy:'biweekly'},est:[_TPL_EST_HI],
+  cav:[_TPL_CAV_AQ+' Bought before 31 Aug 2026 the max loss is 10%.'],src:[['1 Step Flex, AquaFunded help centre (page dated 14 Sep 2026)','https://help.aquafunded.com/en/articles/10476451-1-step-flex']]},
+ {id:'aqua-1std',firm:'AquaFunded',name:'1 Step Standard',tier:'official',read:'full',on:'2026-10-24',clk:'00:00 UTC',
+  st:[_S('challenge','Evaluation',{t:9,md:3}),_S('funded','Funded')],dd:{v:3,k:'sod',c:'terminate'},mx:{v:6,tr:1},pay:{sp:90,cy:'biweekly'},est:[_TPL_EST_HI,_TPL_EST_TR],cav:[_TPL_CAV_AQ],
+  src:[['1 Step Standard, AquaFunded help centre (page dated 14 Sep 2026)','https://help.aquafunded.com/en/articles/15281183-1-step-standard']]},
+ {id:'aqua-2pro',firm:'AquaFunded',name:'2 Step Pro',era:'bought from 31 Aug 2026',tier:'official',read:'full',on:'2026-10-24',clk:'00:00 UTC',
+  st:[_S('challenge','Phase 1',{t:10}),_S('verification','Phase 2',{t:5}),_S('funded','Funded',{md:3,cons:['best_day_pct',50]})],dd:{v:5,k:'sod',c:'terminate'},mx:{v:10,tr:1},pay:{sp:90,cy:'biweekly'},est:[_TPL_EST_HI,_TPL_EST_TR],
+  cav:[_TPL_CAV_AQ+' Bought before 31 Aug 2026 the consistency rule is 25%. The firm\u2019s page is unclear on whether the floor can move down; its examples never move it down.'],
+  src:[['2 Step Pro, AquaFunded help centre (page dated 14 Sep 2026)','https://help.aquafunded.com/en/articles/15281229-2-step-pro']]},
+ {id:'aqua-2elite',firm:'AquaFunded',name:'2 Step Elite',era:'bought from 22 Oct 2026',tier:'official',read:'full',on:'2026-10-24',clk:'00:00 UTC',
+  st:[_S('challenge','Phase 1',{t:8,md:3}),_S('verification','Phase 2',{t:5,md:3}),_S('funded','Funded')],dd:{v:4,k:'sod',c:'terminate'},mx:{v:12,tr:0},pay:{sp:90,cy:'biweekly'},est:[_TPL_EST_HI],
+  cav:[_TPL_CAV_AQ+' Bought before 22 Oct 2026 the max loss is 10% and there is no WaveStop.'],src:[['2 Step Elite, AquaFunded help centre (page updated 23 Oct 2026)','https://help.aquafunded.com/en/articles/17709019-2-step-elite']]},
+ {id:'goat-2goat',firm:'Goat Funded Trader',name:'2 Step GOAT',era:'bought from 25 Jul 2026',tier:'official',read:'snippet',on:'2026-10-24',clk:'5 PM New York time',
+  st:[_S('challenge','Step 1',{t:8,md:3}),_S('verification','Step 2',{t:6,md:3}),_S('funded','Funded',{md:4})],dd:{v:4,k:'sod',c:'terminate'},mx:{v:10,tr:0},pay:{sp:80,cy:'biweekly'},est:[_TPL_EST_HI],
+  cav:['Not tracked by the app: Goat Guard, the $3,000 daily profit cap and the payout caps. Bought before 25 Jul 2026 the funded stage needs 3 profitable days per payout.'],
+  src:[['2 Step GOAT, Goat Funded Trader help centre','https://help.goatfundedtrader.com/2-step-goat.html']]},
+ {id:'goat-2std',firm:'Goat Funded Trader',name:'2-Step Standard',era:'bought from 25 Jul 2026',tier:'official',read:'full',on:'2026-10-24',clk:'5 PM New York time',
+  st:[_S('challenge','Step 1',{t:10,md:3}),_S('verification','Step 2',{t:5,md:3}),_S('funded','Funded',{md:4})],dd:{v:5,k:'sod',c:'terminate'},mx:{v:10,tr:0},pay:{sp:80,cy:'biweekly'},est:[_TPL_EST_HI],
+  cav:['Not tracked by the app: Goat Guard, the $3,000 daily profit cap and the payout caps. Bought before 25 Jul 2026 the funded stage needs 3 profitable days per payout.'],
+  src:[['2-Step Standard, Goat Funded Trader help centre (updated 5 Oct 2026)','https://help.goatfundedtrader.com/en/articles/13575169-2-step-standard']]},
+ {id:'goat-2pro',firm:'Goat Funded Trader',name:'2-Step PRO',tier:'official',read:'snippet',on:'2026-10-24',clk:'5 PM New York time',
+  st:[_S('challenge','Step 1',{t:8,md:3}),_S('verification','Step 2',{t:4,md:3}),_S('funded','Funded',{md:3})],dd:{v:4,k:'sod',c:'terminate'},mx:{v:8,tr:0},est:[_TPL_EST_HI],
+  cav:['This page changed about 23 Oct 2026; check it before relying on these numbers. Not tracked by the app: Goat Guard and the $3,000 daily profit cap.'],
+  src:[['2-Step PRO, Goat Funded Trader help centre','https://help.goatfundedtrader.com/en/articles/13778401-2-step-pro-model']]},
+ {id:'ftmo-2',firm:'FTMO',name:'2-Step Challenge',tier:'official',read:'snippet',on:'2026-10-24',clk:'midnight Prague time',
+  st:[_S('challenge','Phase 1',{t:10,md:4}),_S('verification','Phase 2',{t:5,md:4}),_S('funded','FTMO Account')],dd:{v:5,k:'init',c:'terminate'},mx:{v:10,tr:0},
+  src:[['FTMO trading objectives','https://ftmo.oanda.com/?p=3696'],['FTMO maximum daily loss and maximum loss','https://ftmo.oanda.com/?p=787']]},
+ {id:'ftmo-1',firm:'FTMO',name:'1-Step Challenge',tier:'official',read:'snippet',on:'2026-10-24',clk:'midnight Prague time',
+  st:[_S('challenge','Challenge',{t:10}),_S('funded','FTMO Account')],dd:{v:3,k:'init',c:'terminate'},mx:{v:10,tr:1},est:[_TPL_EST_TR.replace('highest balance or equity, including open profit','highest end-of-day balance')],
+  cav:['FTMO\u2019s own FAQ does not mention a lock at your starting balance, so none is set. Some reviews say there is one.'],
+  src:[['FTMO 1-Step maximum daily loss','https://ftmo.oanda.com/?p=2707'],['FTMO 1-Step maximum loss','https://ftmo.oanda.com/?p=2706']]},
+ {id:'fn-1',firm:'FundedNext',name:'Stellar 1-Step',tier:'official',read:'snippet',on:'2026-10-24',clk:'00:00 server time (GMT+2, GMT+3 in summer)',
+  st:[_S('challenge','Challenge',{t:10,md:2}),_S('funded','Funded')],dd:{v:3,k:'init',c:'terminate'},mx:{v:6,tr:0},pay:{sp:80},
+  src:[['FundedNext trading objectives','https://fundednext.com/general-rules/cfds/trading-objectives'],['Stellar 1-Step, FundedNext help centre','https://help.fundednext.com/en/articles/17252927-stellar-1-step-account']]},
+ {id:'fn-2',firm:'FundedNext',name:'Stellar 2-Step',tier:'official',read:'snippet',on:'2026-10-24',clk:'00:00 server time (GMT+2, GMT+3 in summer)',
+  st:[_S('challenge','Phase 1',{t:8,md:5}),_S('verification','Phase 2',{t:5,md:5}),_S('funded','Funded')],dd:{v:5,k:'init',c:'terminate'},mx:{v:10,tr:0},pay:{sp:80},
+  src:[['FundedNext trading objectives','https://fundednext.com/general-rules/cfds/trading-objectives'],['Stellar 2-Step, FundedNext help centre','https://help.fundednext.com/en/articles/17255124-stellar-2-step-challenge']]},
+ {id:'fn-lite',firm:'FundedNext',name:'Stellar Lite',tier:'official',read:'snippet',on:'2026-10-24',clk:'00:00 server time (GMT+2, GMT+3 in summer)',
+  st:[_S('challenge','Phase 1',{t:8,md:5}),_S('verification','Phase 2',{t:4,md:5}),_S('funded','Funded')],dd:{v:4,k:'init',c:'terminate'},mx:{v:8,tr:0},
+  src:[['FundedNext trading objectives','https://fundednext.com/general-rules/cfds/trading-objectives']]},
+ {id:'fn-inst',firm:'FundedNext',name:'Stellar Instant',tier:'official',read:'snippet',on:'2026-10-24',clk:'00:00 server time (GMT+2, GMT+3 in summer)',
+  st:[_S('funded','Funded',{lock:0})],mx:{v:6,tr:1},est:['FundedNext does not say whether this trails at the end of the day or on live equity, so the card is an estimate.'],
+  src:[['FundedNext trading objectives','https://fundednext.com/general-rules/cfds/trading-objectives']]},
+ {id:'topstep',firm:'Topstep',name:'Trading Combine / Express Funded',tier:'official',read:'full',on:'2026-10-24',clk:'the futures session reset',
+  st:[_S('challenge','Combine',{lock:0}),_S('funded','Express Funded',{lock:0,after:'floorToStart'})],sz:[[50000,2000],[100000,3000],[150000,4500]],
+  est:['Topstep\u2019s daily loss limit is optional and chosen at purchase ($1,000, $2,000 or $3,000 by size, it stops the day only), and I could not read the profit target on Topstep\u2019s own page, so those stay empty for you to enter.'],
+  src:[['What is the Maximum Loss Limit? (page dated 18 Sep 2026)','https://help.topstep.com/en/articles/8284204-what-is-the-maximum-loss-limit'],['Daily Loss Limit (page dated 30 Jun 2026)','https://help.topstep.com/en/articles/10490293-daily-loss-limit-in-the-trading-combine-and-express-funded-account']]},
+ {id:'apex-eod',firm:'Apex',name:'EOD Trailing',tier:'official',read:'snippet',on:'2026-10-24',clk:'the 6 PM New York session open (third-party reports)',
+  st:[_S('challenge','Evaluation'),_S('funded','Performance Account',{lock:100,cons:['best_day_pct',50],pay:{sp:100,mp:500}})],sz:[[25000,1000],[50000,2000],[100000,3000],[150000,4000]],
+  est:['Apex\u2019s daily loss limit depends on the account tier and I did not read the amounts, so it stays empty. On an evaluation the lock depends on the platform, so none is set there. Apex fails a payout at a best day of exactly 50% or more; the app flags a best day above 50%.'],
+  src:[['EOD Drawdown Explained, Apex help centre','https://apextraderfunding.com/help-center/eod-trailing-drawdown-accounts/eod-drawdown-explained/'],['EOD Performance Accounts, Apex help centre','https://apextraderfunding.com/help-center/eod-trailing-drawdown-accounts/eod-performance-accounts-pa/'],['EOD Payouts, Apex help centre','https://apextraderfunding.com/help-center/eod-trailing-drawdown-accounts/eod-payouts/']]},
+ {id:'5ers-hs',firm:'The5ers',name:'High Stakes',tier:'reported',read:'snippet',on:'2026-10-24',clk:'MT5 server time (third-party reports)',
+  st:[_S('challenge','Phase 1'),_S('verification','Phase 2'),_S('funded','Funded')],dd:{v:5,k:'sod',c:'terminate'},mx:{v:10,tr:0},est:[_TPL_EST_HI],cav:['Profit targets are left empty because sources differ.'],
+  src:[['The5ers challenge programs explained','https://the5ers.com/challenge-programs-bootcamp-high-stakes-hyper-growth-explained/']]},
+ {id:'5ers-hg',firm:'The5ers',name:'Hyper Growth',tier:'reported',read:'snippet',on:'2026-10-24',clk:'MT5 server time (third-party reports)',
+  st:[_S('challenge','Evaluation',{t:10}),_S('funded','Funded')],dd:{v:3,k:'sod',c:'dayLock'},mx:{v:6,tr:0},est:[_TPL_EST_HI],
+  src:[['The5ers challenge programs explained','https://the5ers.com/challenge-programs-bootcamp-high-stakes-hyper-growth-explained/']]},
+ {id:'5ers-pg',firm:'The5ers',name:'Pro Growth',tier:'reported',read:'snippet',on:'2026-10-24',clk:'MT5 server time (third-party reports)',
+  st:[_S('challenge','Evaluation',{t:10}),_S('funded','Funded')],dd:{v:3,k:'sod',c:'terminate'},mx:{v:6,tr:0},est:[_TPL_EST_HI],
+  src:[['The5ers challenge programs explained','https://the5ers.com/challenge-programs-bootcamp-high-stakes-hyper-growth-explained/']]}
+];
+const _TPL_ORDER=['AquaFunded','Goat Funded Trader','FTMO','FundedNext','Topstep','Apex','The5ers'];
+const _TPL_MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const _tplD=iso=>{ const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||''); return m?(parseInt(m[3],10)+' '+_TPL_MON[parseInt(m[2],10)-1]+' '+m[1]):String(iso||''); };
+const _tplOld=iso=>{ const t=new Date((iso||'')+'T00:00:00').getTime(); return !isNaN(t)&&(Date.now()-t)/864e5>90; };
+const _tplTier=t=>({official:'Official',reported:'Reported',yours:'Your details'}[t.tier]||'Reported');
+const _tplGet=id=>FIRM_TEMPLATES.find(x=>x.id===id)||null;
+const _tplNm=t=>t.firm+' '+t.name+(t.era?' ('+t.era+')':'');
+function tplSpec(t,key,size){
+  const st=t.st.find(x=>x.k===key)||t.st[0], sized=!!t.sz, row=sized?(t.sz.find(r=>r[0]===size)||t.sz[0]):null;
+  const dd=sized?(row[2]?{v:row[2],k:'init',c:'dayLock'}:null):(st.nd?null:(t.dd||null));
+  const tr=!!(sized||(t.mx&&t.mx.tr));
+  const lk=(st.lock!==undefined)?st.lock:((t.mx&&t.mx.lock!==undefined)?t.mx.lock:null);
+  return {k:st.k,l:st.l,unit:sized?'usd':'pct',size:sized?row[0]:(size||0),t:st.t||null,md:st.md||null,
+    dd:dd?{v:dd.v,k:dd.k,c:dd.c}:null,mx:{v:sized?row[1]:t.mx.v,tr:tr,lock:tr?lk:null,after:(tr&&st.k==='funded'&&st.after)||null},
+    cons:st.cons||null,pay:st.pay||t.pay||null};
+}
+function _tplFm(v,unit,size){
+  const sym=(typeof _propSym!=='undefined'&&_propSym)||'$', r=Math.round(v*100)/100;
+  if(unit==='usd') return sym+_sep(String(Math.round(v)));
+  return r+'%'+(size>0?' = '+sym+_sep(String(Math.round(size*v/100))):'');
+}
+function tplRows(sp){
+  const sym=(typeof _propSym!=='undefined'&&_propSym)||'$', fm=(v,u)=>_tplFm(v,u,sp.size), R=[];
+  R.push(['Profit target',sp.t?fm(sp.t,sp.unit):'Not filled']);
+  R.push(['Daily limit',sp.dd?fm(sp.dd.v,sp.unit):'Not filled']);
+  if(sp.dd){ R.push(['When the daily limit is hit',sp.dd.c==='dayLock'?'My firm only stops trading for the day':'My firm ends the account']);
+    if(sp.unit==='pct') R.push(['Daily limit is a percent of',sp.dd.k==='sod'?'That day\u2019s starting balance':'The account size']); }
+  R.push(['Max loss',fm(sp.mx.v,sp.unit)]);
+  R.push(['Max loss type',sp.mx.tr?'Trails end of day':'Fixed from the start']);
+  if(sp.mx.tr) R.push(['Floor lock',sp.mx.lock==null?'No lock':(sp.mx.lock===0?'Lock at start + 0':'Lock at start + '+sym+_sep(String(sp.mx.lock)))]);
+  if(sp.mx.tr&&sp.k==='funded') R.push(['After a payout',sp.mx.after==='floorToStart'?'My floor moves to my starting balance':'My floor stays where it was']);
+  R.push(['Min trading days',sp.md?String(sp.md):'Not filled']);
+  { const dk=_TPL_DS[(_tplGet(_tp.id)||{}).firm]; if(dk){ const a=dk.split('|'); R.push(['Firm day starts',_dsLabel({tz:a[0],at:a[1]})]); } }
+  if(sp.cons) R.push(['Consistency','Best Day \u2264 '+sp.cons[1]+'% of total profit']);
+  if(sp.pay) R.push(['Payout',[sp.pay.sp?sp.pay.sp+'% split':'',sp.pay.cy?{weekly:'weekly',biweekly:'every 14 days',monthly:'monthly'}[sp.pay.cy]:'',sp.pay.mp?'min '+sym+_sep(String(sp.pay.mp)):''].filter(Boolean).join(', ')]);
+  return R;
+}
+function tplSum(t){
+  const sym='$';
+  if(t.sz){ const mx=t.sz.map(r=>r[1]); const k=x=>sym+(x>=1000?(Math.round(x/100)/10)+'K':x); return 'Max loss '+k(Math.min.apply(null,mx))+'\u2013'+k(Math.max.apply(null,mx))+', trails each day'; }
+  const d=t.dd?t.dd.v+'% daily':'no daily limit';
+  return d+' \u00b7 '+t.mx.v+'% max, '+(t.mx.tr?'trails':'fixed floor');
+}
+function openTplSheet(){ _tp={id:null,st:null,sz:null}; tplShowList(); document.getElementById('tplModal').classList.add('open'); updateNavVisibility(); }
+function tplShowList(){
+  document.getElementById('tplTitle').textContent='Firm templates';
+  const chev='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--text3)"><polyline points="9 18 15 12 9 6"/></svg>';
+  let h='<div class="pm-help" style="font-size:13px;margin:0 0 4px">Starting points from each firm\u2019s published rules, with the date I checked them. You can change every value afterwards. <b>Official</b> = from the firm\u2019s own page. <b>Reported</b> = third-party reports. <b>Your details</b> = what you told me about your account.</div>';
+  _TPL_ORDER.forEach(fn=>{
+    h+='<div class="tpl-grp">'+fn+'</div>';
+    FIRM_TEMPLATES.filter(t=>t.firm===fn).forEach(t=>{
+      h+='<button type="button" class="tpl-item" onclick="tplPick(\''+t.id+'\')"><span style="flex:1;min-width:0"><span class="t">'+t.name+'</span><span class="s">'+(t.era?t.era+' \u00b7 ':'')+tplSum(t)+'</span></span><span class="tpl-tier'+(t.tier==='official'?'':' rep')+'">'+_tplTier(t)+'</span>'+chev+'</button>';
+    });
+  });
+  h+='<button type="button" class="btn" style="width:100%;margin-top:12px" onclick="closeDdSheet(\'tplModal\')">Close</button>';
+  document.getElementById('tplBody').innerHTML=h;
+}
+function tplPick(id){
+  const t=_tplGet(id); if(!t) return;
+  const cur=(document.getElementById('pPhase')||{}).value, size=parseFloat((document.getElementById('pAcctSize')||{}).value)||0;
+  _tp.id=id; _tp.st=t.st.some(x=>x.k===cur)?cur:t.st[0].k;
+  _tp.sz=t.sz?(t.sz.some(r=>r[0]===size)?size:t.sz[0][0]):(size>0?size:0);
+  tplShowStep2();
+}
+function tplSetStage(k){ _tp.st=k; tplShowStep2(); }
+function tplSetSize(n){ _tp.sz=n; tplShowStep2(); }
+function tplSizeIn(v){ _tp.sz=parseFloat(v)||0; tplPrev(); }
+function tplNeedsLink(sp){ return !!(_TPL_DS[(_tplGet(_tp.id)||{}).firm]||sp.mx.tr||(sp.dd&&(sp.dd.k==='sod'||sp.dd.c==='dayLock'))); }
+function tplPrev(){
+  const t=_tplGet(_tp.id); if(!t) return; const sp=tplSpec(t,_tp.st,_tp.sz);
+  let h='<div class="form-label" style="margin-top:6px">This will fill in</div>'+tplRows(sp).map(r=>'<div class="dd-row"><span>'+r[0]+'</span><b>'+r[1]+'</b></div>').join('');
+  (t.est||[]).forEach(e=>{ h+='<div class="dd-note est"><b>Estimate:</b> '+e+'</div>'; });
+  { const dk=_TPL_DS[t.firm]; if(dk){ const a=dk.split('|'); h+='<div class="dd-note">Set for you: your firm\u2019s day starts at '+_dsLabel({tz:a[0],at:a[1]})+'. A trade is placed by its closing time (its opening time if there is none), read as your device\u2019s time.</div>'; }
+    else if(t.clk) h+='<div class="dd-note">I could not confirm this firm\u2019s clock on its own page ('+t.clk+'), so your day start is left at your midnight. Change it under Rules &amp; Limits if you know it.</div>'; }
+  (t.cav||[]).forEach(c=>{ h+='<div class="dd-note">'+c+'</div>'; });
+  h+='<div class="pm-help">Left as you have it: link, start date, notes, personal stop, and anything the template does not set.</div>';
+  if(!(document.getElementById('pLinkedAccount')||{}).value && tplNeedsLink(sp)) h+='<div class="pm-help warn">No journal account is linked yet: trailing, lock, the daily action and the start-of-day option are saved only once you link one (Basic Info, Link to Journal). The firm\u2019s day start needs a link too.</div>';
+  document.getElementById('tplPrev').innerHTML=h;
+}
+function tplShowStep2(){
+  const t=_tplGet(_tp.id); if(!t) return;
+  document.getElementById('tplTitle').textContent=_tplNm(t);
+  let h='<div style="display:flex;align-items:center;gap:8px;margin:-8px 0 10px;flex-wrap:wrap"><span class="tpl-tier'+(t.tier==='official'?'':' rep')+'">'+_tplTier(t)+'</span><span class="pm-help" style="margin:0">Checked '+_tplD(t.on)+(_tplOld(t.on)?' \u00b7 over 90 days ago, check again':'')+'</span></div>';
+  if(t.st.length>1) h+='<div class="form-group"><label class="form-label">Stage</label><div class="st-seg" style="width:100%">'+t.st.map(x=>'<button type="button" class="'+(x.k===_tp.st?'active':'')+'" style="flex:1" onclick="tplSetStage(\''+x.k+'\')">'+x.l+'</button>').join('')+'</div></div>';
+  if(t.sz) h+='<div class="form-group"><label class="form-label">Account size</label><div class="tpl-sizes">'+t.sz.map(r=>'<span class="chip'+(r[0]===_tp.sz?' selected':'')+'" onclick="tplSetSize('+r[0]+')"><span style="white-space:nowrap">$'+(r[0]/1000)+'K</span></span>').join('')+'</div></div>';
+  else h+='<div class="form-group"><label class="form-label">Account size</label><div class="pm-amt"><input class="form-input" id="tplSize" inputmode="decimal" value="'+(_tp.sz>0?_tp.sz:'')+'" placeholder="e.g. 100000" oninput="tplSizeIn(this.value)" style="border:none;background:none"/><span class="pm-unit static">'+((typeof _propSym!=='undefined'&&_propSym)||'$')+'</span></div></div>';
+  h+='<div id="tplPrev"></div><button type="button" class="btn btn-primary" style="width:100%;margin-top:12px" onclick="tplApply()">Use these rules</button><button type="button" class="btn" style="width:100%;margin-top:8px" onclick="tplShowList()">Back</button>';
+  document.getElementById('tplBody').innerHTML=h; tplPrev();
+}
+function tplApply(){
+  const t=_tplGet(_tp.id); if(!t) return; const sp=tplSpec(t,_tp.st,_tp.sz);
+  const S=(id,v)=>{ const e=document.getElementById(id); if(e) e.value=(v==null?'':String(v)); };
+  S('pPhase',sp.k);
+  if(!document.getElementById('pFirmName').value.trim()) S('pFirmName',t.firm+' '+t.name);
+  if(sp.size>0){ S('pAcctSize',sp.size); const sz=document.getElementById('pAcctSize'); if(sz) sz._pmAuto=false; }
+  ['ProfitTarget','DailyDD','MaxDD'].forEach(k=>{ const b=document.getElementById('pUnit'+k); if(b) b.dataset.mode=sp.unit; });
+  S('pProfitTarget',sp.t); S('pMinDays',sp.md); S('pDailyDD',sp.dd?sp.dd.v:''); S('pMaxDD',sp.mx.v);
+  S('pDdType',sp.mx.tr?'eodTrailing':'static'); S('pDdLock',sp.mx.lock!=null?'start':'none'); S('pDdLockAmt',sp.mx.lock>0?sp.mx.lock:''); S('pDdAfter',sp.mx.after||'keep');
+  S('pDayKind',sp.dd&&sp.dd.k==='sod'?'sod':'init'); S('pDayCons',sp.dd&&sp.dd.c==='dayLock'?'dayLock':'terminate');
+  { const dk=_TPL_DS[t.firm]; _dsSet(dk?{tz:dk.split('|')[0],at:dk.split('|')[1]}:null); }
+  S('pConsistencyType',sp.cons?sp.cons[0]:'none'); S('pConsistencyValue',sp.cons?sp.cons[1]:''); onConsistencyTypeChange();
+  if(sp.pay){ if(sp.pay.sp) S('pProfitSplit',sp.pay.sp); if(sp.pay.cy) S('pPayoutCycle',sp.pay.cy); if(sp.pay.mp) S('pMinPayout',sp.pay.mp); }
+  _tplCur={id:t.id,on:t.on,st:sp.k,sz:t.sz?sp.size:null};
+  onPhaseChange(); pmUnitSync(); pmSet('rules',true); pmRefresh();
+  closeDdSheet('tplModal'); showToast('Template applied \u2713');
+}
+function tplChipSync(){
+  const row=document.getElementById('pTplRow'), chip=document.getElementById('pTplChip'); if(!row||!chip) return;
+  row.style.display=document.getElementById('pFirmId').value?'none':'';
+  const t=_tplCur&&_tplGet(_tplCur.id);
+  if(!t){ chip.style.display='none'; chip.innerHTML=''; return; }
+  const old=_tplOld(_tplCur.on);
+  chip.style.display=''; chip.className='tpl-chip'+(old?' old':'');
+  chip.innerHTML='<span class="tpl-tier'+(t.tier==='official'?'':' rep')+'">'+_tplTier(t)+'</span><span><b>'+_tplNm(t)+'</b> \u00b7 checked '+_tplD(_tplCur.on)+(old?' \u00b7 over 90 days ago, check again':'')+'</span><button type="button" class="dd-link" style="margin:0 0 0 auto;padding:0;min-height:28px" onclick="openTplSource()">Source \u203a</button>';
+}
+function tplDiff(sp,T0){
+  const g=id=>document.getElementById(id), num=id=>parseFloat((g(id)||{}).value)||0, size=num('pAcctSize'), linked=!!(g('pLinkedAccount')||{}).value;
+  const cur=(id,unitId)=>{ const v=num(id), m=(g(unitId)||{dataset:{}}).dataset.mode==='pct'?'pct':'usd';
+    if(m===sp.unit) return v; if(!(size>0)) return NaN; return sp.unit==='pct'?v/size*100:v*size/100; };
+  const eq=(a,b)=>!isNaN(a)&&Math.abs(a-b)<=0.011*Math.max(1,Math.abs(b));
+  const sym=(typeof _propSym!=='undefined'&&_propSym)||'$', fmv=v=>isNaN(v)?'not set':(sp.unit==='pct'?(Math.round(v*100)/100)+'%':sym+_sep(String(Math.round(v))));
+  const R=[]; const add=(label,tp,ok,cv,needsLink)=>R.push({label:label,tp:tp,ok:ok,cv:(needsLink&&!linked&&!ok)?'not saved without a linked account':cv});
+  if(sp.t){ const c=cur('pProfitTarget','pUnitProfitTarget'); add('Profit target '+fmv(sp.t),'',eq(c,sp.t),'you changed: '+fmv(c)); }
+  if(sp.dd){ const c=cur('pDailyDD','pUnitDailyDD'); add('Daily limit '+fmv(sp.dd.v),'',eq(c,sp.dd.v),'you changed: '+fmv(c));
+    const dk=(g('pDayKind')||{}).value==='sod'?'pctSod':'init'; if(sp.unit==='pct') add('Percent of '+(sp.dd.k==='sod'?'the day\u2019s start':'the account size'),'',(sp.dd.k==='sod'?'pctSod':'init')===dk,'you changed: '+(dk==='pctSod'?'the day\u2019s start':'the account size'),true);
+    const dc=(g('pDayCons')||{}).value==='dayLock'?'dayLock':'terminate'; add('When the daily limit is hit: '+(sp.dd.c==='dayLock'?'stops the day only':'ends the account'),'',dc===sp.dd.c,'you changed: '+(dc==='dayLock'?'stops the day only':'ends the account'),true); }
+  { const c=cur('pMaxDD','pUnitMaxDD'); add('Max loss '+fmv(sp.mx.v),'',eq(c,sp.mx.v),'you changed: '+fmv(c)); }
+  { const tr=(g('pDdType')||{}).value==='eodTrailing'; add('Max loss type: '+(sp.mx.tr?'trails end of day':'fixed'),'',tr===sp.mx.tr,'you changed: '+(tr?'trails end of day':'fixed'),true); }
+  if(sp.mx.tr){ const lk=(g('pDdLock')||{}).value==='start'?num('pDdLockAmt'):null; add('Floor lock: '+(sp.mx.lock==null?'none':'start + '+sp.mx.lock),'',lk===sp.mx.lock,'you changed: '+(lk==null?'none':'start + '+lk),true);
+    if(sp.k==='funded'){ const a=(g('pDdAfter')||{}).value||'keep', ta=sp.mx.after||'keep'; add('After a payout: '+(ta==='floorToStart'?'floor moves to start':'floor stays'),'',a===ta,'you changed: '+({keep:'floor stays',restart:'account starts over',floorToStart:'floor moves to start'}[a]),true); } }
+  { const dk=_TPL_DS[T0.firm]; if(dk){ const a=dk.split('|'), c=_dsRead(); add('Firm day starts '+_dsLabel({tz:a[0],at:a[1]}),'',!!c&&c.tz===a[0]&&c.at===a[1],'you changed: '+(c?_dsLabel(c):'midnight, my device\u2019s time'),true); } }
+  if(sp.md){ const c=num('pMinDays'); add('Min trading days '+sp.md,'',c===sp.md,'you changed: '+(c||'none')); }
+  if(sp.cons){ const ct=(g('pConsistencyType')||{}).value, cv=num('pConsistencyValue'); add('Consistency: best day \u2264 '+sp.cons[1]+'%','',ct===sp.cons[0]&&cv===sp.cons[1],'you changed: '+(ct==='none'?'none':cv+'%')); }
+  return R;
+}
+function openTplSource(){
+  const t=_tplCur&&_tplGet(_tplCur.id); if(!t) return;
+  const sp=tplSpec(t,_tplCur.st,_tplCur.sz), D=tplDiff(sp,t), old=_tplOld(_tplCur.on);
+  document.getElementById('tplSrcTitle').textContent=_tplNm(t);
+  const how={full:'Read in full on the firm\u2019s own page.',snippet:'Seen as a search result from the firm\u2019s own page, not opened in full.',you:'From your own account details.'}[t.read]||'';
+  let h='<div style="display:flex;align-items:center;gap:8px;margin:-8px 0 8px;flex-wrap:wrap"><span class="tpl-tier'+(t.tier==='official'?'':' rep')+'">'+_tplTier(t)+'</span><span class="pm-help" style="margin:0">Checked '+_tplD(_tplCur.on)+(old?' \u00b7 over 90 days ago, check again':'')+'</span></div>';
+  h+=D.map(r=>'<div class="dd-row"><span>'+r.label+'</span><b>'+(r.ok?'<span class="tpl-ok">matches</span>':'<span class="tpl-chg">'+r.cv+'</span>')+'</b></div>').join('');
+  h+='<div class="dd-opt"><div class="h">Where this comes from</div><div class="b">'+t.src.map(x=>'<a href="'+x[1]+'" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">'+x[0]+'</a>').join('<br>')+'</div><div class="e">'+(t.how||how)+'</div></div>';
+  (t.est||[]).forEach(e=>{ h+='<div class="dd-note est"><b>Estimate:</b> '+e+'</div>'; });
+  if(!_TPL_DS[t.firm]&&t.clk) h+='<div class="dd-note">Clock not confirmed on the firm\u2019s own page ('+t.clk+'); the day start was left at your midnight.</div>';
+  (t.cav||[]).forEach(c=>{ h+='<div class="dd-note">'+c+'</div>'; });
+  h+='<div class="pm-help">Rules change. Confirm with '+t.firm+' before relying on these numbers.</div>';
+  document.getElementById('tplSrcBody').innerHTML=h;
+  document.getElementById('tplSrcModal').classList.add('open'); updateNavVisibility();
+}
+function _tplLine(f){ const t=f&&f.tpl&&_tplGet(f.tpl.id); return t?'<div class="dd-note">Rules from the template '+_tplNm(t)+', checked '+_tplD(f.tpl.on)+'.</div>':''; }
 
 function openAddFirm(){
   document.getElementById('propModalTitle').textContent = 'Add Prop Firm';
@@ -13172,7 +13568,7 @@ function openAddFirm(){
   document.getElementById('pDeleteBtnWrap').style.display = 'none';
   document.getElementById('pDdType').value='static'; document.getElementById('pDdLock').value='none'; document.getElementById('pDdLockAmt').value=''; document.getElementById('pDdAfter').value='keep';
   document.getElementById('pDayKind').value='init'; document.getElementById('pDayCons').value='terminate'; document.getElementById('pBuf').value='off'; document.getElementById('pBufDaily').value=''; document.getElementById('pBufMax').value='';
-  onPhaseChange(); pmReset(false);
+  _tplCur=null; onPhaseChange(); pmReset(false); _dsSet(null);
   document.getElementById('propFirmModal').classList.add('open');
   updateNavVisibility();
 }
@@ -13220,7 +13616,7 @@ function openEditFirm(id){
   document.getElementById('pBuf').value=f.buffer?'on':'off';
   document.getElementById('pBufDaily').value=(f.buffer&&f.buffer.daily)?f.buffer.daily:'';
   document.getElementById('pBufMax').value=(f.buffer&&f.buffer.max)?f.buffer.max:'';
-  onPhaseChange(); pmReset(true); pmLoadModes(f);
+  _tplCur=(f.tpl&&f.tpl.id)?{id:f.tpl.id,on:f.tpl.on,st:f.tpl.st,sz:(f.tpl.sz!=null?f.tpl.sz:null)}:null; onPhaseChange(); pmReset(true); pmLoadModes(f); _dsSet(f.dayStart||null);
   document.getElementById('propFirmModal').classList.add('open');
   updateNavVisibility();
 }
@@ -13301,6 +13697,8 @@ function savePropFirm(){
     const _aft=document.getElementById('pDdAfter').value; if(document.getElementById('pPhase').value==='funded' && (_aft==='restart'||_aft==='floorToStart')) firmData.ddAfterPayout=_aft;
   }
 
+  { const _ds=_dsRead(); if(_ds&&linkedAccount) firmData.dayStart=_ds; }   // Batch R4: linked firms only, never the default (rule 32)
+  if(_tplCur&&_tplCur.id){ firmData.tpl={id:_tplCur.id,on:_tplCur.on,st:_tplCur.st}; if(_tplCur.sz!=null) firmData.tpl.sz=_tplCur.sz; }   // Batch R3: written only when a template was applied (rule 32)
   if(existing){ propFirms[propFirms.indexOf(existing)] = firmData; }
   else { propFirms.push(firmData); }
   savePropFirms();
@@ -13410,6 +13808,7 @@ function deletePayoutEntry(firmId, payoutId){
 // Behaviour is exactly what renderPropFirms did inline in _56 (including: the daily violation test is strict '<',
 // the max-drawdown breach is inclusive '>=', "near" starts at 80%). Do not change thresholds here without the user's approval.
 function computePropRisk(f, today){
+  if(f.dayStart) today=_fToday(f,today);   // Batch R4: today on the firm's clock
   const pnl = getPropFirmPnL(f);
   const isLinked = !!(f.linkedAccount && accounts.find(a=>a.id===f.linkedAccount));
     // Target progress (percent can exceed 100; the bar itself caps at full)
@@ -13431,19 +13830,126 @@ function computePropRisk(f, today){
     const dailyPct = _dly ? _dly.pct : (_lim(f,'dailyDD')>0 ? Math.min(100,(todayLoss/_lim(f,'dailyDD'))*100) : 0);
   const phaseKey = f.phase||'challenge';
   const targetReached = ['challenge','verification','phase3'].includes(phaseKey) && _lim(f,'profitTarget')>0 && pnl>=_lim(f,'profitTarget');
+  const _smx = (maxDDBreach && isLinked) ? _staticMaxFirst(f) : null;   // Batch 4b: first day the cycle net reached the limit (static max loss)
   let trading = null;
   if(f.minDays && isLinked){ const days = calcTradingDaysInCycle(f); trading = { days, required:f.minDays, met: days >= f.minDays }; }
   const _R = {
     isLinked, pnl,
     target:{ limit:_lim(f,'profitTarget'), raw:profitRaw, pct:profitPct, reached:targetReached },
-    max:{ limit:_lim(f,'maxDD'), used:ddUsed, pct:ddPct, breach:maxDDBreach, near:maxDDNear },
+    max:{ limit:_lim(f,'maxDD'), used:ddUsed, pct:ddPct, breach:maxDDBreach, near:maxDDNear, breachDate:_smx?_smx.date:'', breachAmt:_smx?_smx.amount:0, breachLimit:_smx?_smx.limit:_lim(f,'maxDD') },
     daily:{ limit:_dly?_dly.limit:_lim(f,'dailyDD'), todayLoss, pct:dailyPct, breach:dailyDDBreach, breachDate:dailyDDBreachDate, breachAmt:dailyDDBreachAmt,
-            breachLimit:_dly?_dly.breachLimit:_lim(f,'dailyDD'), consequence:_dly?_dly.consequence:'terminate', lockedToday:_dly?_dly.lockedToday:false, hitDates:_dly?_dly.hitDates:[], sodToday:_dly?_dly.sodToday:null, soft:_dly?_dly.soft:null, reasons:_dly?_dly.reasons:[], confidence:_dly?_dly.confidence:'exact' },
+            breachLimit:_dly?_dly.breachLimit:_lim(f,'dailyDD'), consequence:_dly?_dly.consequence:'terminate', lockedToday:_dly?_dly.lockedToday:false, hitDates:_dly?_dly.hitDates:[], first:_dly?_dly.first:null, sodToday:_dly?_dly.sodToday:null, soft:_dly?_dly.soft:null, reasons:_dly?_dly.reasons:[], confidence:_dly?_dly.confidence:'exact' },
     trading
   };
   if(isLinked && f.ddType==='eodTrailing'){ const _T=_trailRisk(f); if(_T) _R.max=_T; }   // Batch 3c: trailing replaces the max block only
   { const _bm=_bufPct(f,'max'); if(isLinked && _bm>0 && _R.max.limit>0){ const _sl=_R.max.limit*_bm/100; _R.max.soft={limit:_sl,pct:_bm,left:_sl-_R.max.used,passed:_R.max.used>=_sl}; } }   // Batch R2: personal stop (advisory)
   return _R;
+}
+
+// ── Batch 4b: breach status model and prompt (`_63`) ──────────────────────────────────────────────
+// Account fields (all optional, written only when used): status:'breached', statusReason:'daily'|'max'|'manual', statusDate:'YYYY-MM-DD', breachSeen:[accountId|daily|date, accountId|max|date].
+// Breach = the app suggests, the user confirms. A candidate comes ONLY from a linked, not archived, not breached firm: R.daily.breach (terminate firms; lockedToday and dayLock never)
+// or R.max.breach (static or trailing). The key names the FIRST day at the limit (the day a real firm would have ended the account), not the worst day the card shows.
+function _brcToday(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+// Static max loss: the first firm day whose cycle net (closed trades after the cycle cutoff, per firm day) is at or below minus the limit (inclusive, like the card's >=).
+function _staticMaxFirst(f){
+  const L=_lim(f,'maxDD'); if(!(L>0)) return null;
+  const linked=getLinkedTrades(f); if(linked===null) return null;
+  const cutoff=getCycleCutoff(f), by={};
+  linked.forEach(t=>{ if(cutoff && !(parseLocalDate(t.date)>cutoff)) return; const k=_fdKey(f,t); if(!k) return; by[k]=(by[k]||0)+(parseFloat(t.pnl)||0); });
+  let cum=0; const ks=Object.keys(by).sort();
+  for(let i=0;i<ks.length;i++){ cum+=by[ks[i]]; if(-cum>=L) return {date:ks[i],amount:-cum,limit:L}; }
+  return null;
+}
+function _brcCands(today){
+  today=today||_brcToday(); const out=[];
+  propFirms.forEach(f=>{
+    if(!f.linkedAccount) return;
+    const a=accounts.find(x=>x.id===f.linkedAccount);
+    if(!a||a.status==='archived'||a.status==='breached') return;
+    const R=computePropRisk(f,today), fc=_firmCur(f), seen=Array.isArray(a.breachSeen)?a.breachSeen:[];
+    if(R.daily.breach && R.daily.consequence==='terminate' && R.daily.first){
+      const h=R.daily.first, key=a.id+'|daily|'+h.date;
+      out.push({accountId:a.id,firmId:f.id,type:'daily',date:h.date,amount:h.amount,limit:h.allowed,cur:fc,key,seen:seen.indexOf(key)>=0});
+    }
+    if(R.max.breach){
+      const m=R.max, tr=m.type==='eodTrailing', date=m.breachDate||today, key=a.id+'|max|'+date;
+      out.push({accountId:a.id,firmId:f.id,type:'max',trail:tr,date,amount:m.breachAmt,limit:m.breachLimit,bal:tr?(m.breachBalance!=null?m.breachBalance:m.balance):null,floor:tr?(m.breachFloor!=null?m.breachFloor:m.floor):null,cur:fc,key,seen:seen.indexOf(key)>=0});
+    }
+  });
+  return out;
+}
+function _brcBody(c,a){
+  const fm=x=>fmtMoney(x,null,c.cur), fl=x=>_ddFm(x,c.cur), nm='<b>'+escapeHtml(a.name)+'</b>';
+  let h;
+  if(c.type==='daily') h=nm+' lost '+fm(c.amount)+' on '+c.date+', over its '+fl(c.limit)+' daily limit.';
+  else if(c.trail) h=nm+' closed at '+fm(c.bal)+' on '+c.date+', at or below its '+fm(c.floor)+' floor.';
+  else h=nm+' is down '+fm(c.amount)+' on '+c.date+', at or past its '+fl(c.limit)+' max drawdown limit.';
+  return h+' Marking it breached stops new trades being added to it and takes it out of your All Accounts totals.';
+}
+let _brcQ=null;
+function _brcSeenAdd(a,key){ if(!Array.isArray(a.breachSeen)) a.breachSeen=[]; if(a.breachSeen.indexOf(key)<0) a.breachSeen.push(key); }
+function _brcOpenQueue(items){ if(!items||!items.length||_brcQ) return; _brcQ={items:items.slice(),i:0}; _brcShow(); }
+function _brcClose(){ _brcQ=null; document.getElementById('brcModal').classList.remove('open'); updateNavVisibility(); }
+function _brcShow(){
+  const q=_brcQ; if(!q) return;
+  while(q.i<q.items.length){ const c0=q.items[q.i], a0=accounts.find(x=>x.id===c0.accountId); if(a0&&a0.status!=='archived'&&a0.status!=='breached') break; q.items.splice(q.i,1); }
+  if(q.i>=q.items.length){ _brcClose(); return; }
+  const c=q.items[q.i], a=accounts.find(x=>x.id===c.accountId), n=q.items.length, cnt=document.getElementById('brcCount');
+  cnt.textContent=(q.i+1)+' of '+n; cnt.style.display=n>1?'':'none';
+  document.getElementById('brcMsg').innerHTML=_brcBody(c,a);
+  document.getElementById('brcModal').classList.add('open'); updateNavVisibility();
+}
+// The two buttons are the only exits: Keep active and a dismissal are the same thing (the key is remembered). Mark breached also remembers it, so a later reactivation does not nag at once.
+function brcAnswer(mark){
+  const q=_brcQ; if(!q) return;
+  const c=q.items[q.i], a=c&&accounts.find(x=>x.id===c.accountId);
+  if(a){ _brcSeenAdd(a,c.key); if(mark){ a.status='breached'; a.statusReason=c.type; a.statusDate=c.date; } saveAccounts(); }
+  q.i++;
+  if(mark&&a){ renderAll(); renderAcctList(); try{ renderPropFirms(); }catch(e){} showToast('Marked as breached'); }
+  else { renderAcctList(); try{ renderPropFirms(); }catch(e){} }
+  _brcShow();
+}
+// Runs only after a trade save (that account) and when the Accounts or Prop tab is opened. Never on launch, never inside a render.
+function _brcCheck(onlyAcct){
+  if(_brcQ) return;
+  const items=_brcCands().filter(c=>!c.seen && (!onlyAcct||c.accountId===onlyAcct));
+  if(items.length) _brcOpenQueue(items);
+}
+function _brcAfterSave(accountId){ try{ _brcCheck(accountId); }catch(e){ console.error(e); } }
+function _brcTab(){ try{ _brcCheck(null); }catch(e){ console.error(e); } }
+function brcReview(){ _brcOpenQueue(_brcCands()); }
+function _brcLineHtml(){
+  let n=0; try{ n=new Set(_brcCands().map(c=>c.accountId)).size; }catch(e){ n=0; }
+  if(!n) return '';
+  return '<div class="brc-line" role="button" onclick="brcReview()">'+_I.alert+'<span>'+n+' account'+(n!==1?'s':'')+' may be breached \u00b7 Review</span>'+_I.chev+'</div>';
+}
+function _brcAfterChange(){ renderAll(); renderAcctList(); try{ renderPropFirms(); }catch(e){} }
+function markBreachedManual(id){
+  const a=accounts.find(x=>x.id===id); if(!a) return;
+  showConfirm('Mark account as breached?','\u201c'+a.name+'\u201d will stop taking new trades and leave your All Accounts totals. You can reactivate it any time.',()=>{
+    a.status='breached'; a.statusReason='manual'; a.statusDate=_brcToday(); saveAccounts(); _brcAfterChange(); showToast('Marked as breached');
+  },'Mark breached');
+  document.getElementById('confirmOkBtn').className='btn btn-danger';
+}
+function reactivateAccount(id){
+  const a=accounts.find(x=>x.id===id); if(!a) return;
+  a.status='active'; delete a.statusReason; delete a.statusDate; saveAccounts(); _brcAfterChange(); showToast('Account reactivated');
+}
+// Pickers: a breached account is a disabled row "Name \u2014 Breached" (last), except the one being edited (keepId). The default selection never lands on it.
+function _acctOpts(list,selId,keepId){
+  const bad=a=>a.status==='breached'&&a.id!==keepId, ok=list.filter(a=>!bad(a)), no=list.filter(bad);
+  return ok.map(a=>`<option value="${a.id}"${selId===a.id?' selected':''}>${escapeHtml(a.name)}</option>`).join('')
+    +no.map(a=>`<option value="${a.id}" data-brc="1" disabled>${escapeHtml(a.name)} \u2014 Breached</option>`).join('');
+}
+function _acctOkForTrades(id){ const a=accounts.find(x=>x.id===id); return !!a&&a.status!=='breached'&&a.status!=='archived'; }
+function _brcHint(selId){
+  const sel=document.getElementById(selId); if(!sel||!sel.parentElement) return;
+  let h=sel.parentElement.querySelector('.brc-hint');
+  const any=[...sel.options].some(o=>o.disabled&&o.hasAttribute('data-brc'));
+  if(!h){ if(!any) return; h=document.createElement('div'); h.className='brc-hint'; sel.parentElement.appendChild(h); }
+  h.textContent=[...sel.options].some(o=>!o.disabled)?'A breached account cannot take new trades. Reactivate it from the Accounts tab to use it again.':'No active account. Add or reactivate one.';
+  h.style.display=any?'':'none';
 }
 
 // ── Trailing drawdown (Batch 3c, `_58`) ──────────────────────────────────────
@@ -13457,7 +13963,7 @@ function _ddSeries(f){
   const sc=linked.filter(t=>t.date && (!cutoff || parseLocalDate(t.date)>cutoff));
   const pays=[]; if(funded&&mode!=='restart') (f.payouts||[]).forEach(p=>{ const a=parseFloat(p.amount)||0; if(a>0&&p.date&&(!cutoff||parseLocalDate(p.date)>cutoff)) pays.push({date:p.date,amount:a}); });
   const byDate={}, ent=d=>byDate[d]||(byDate[d]={date:d,tr:[],pay:0});
-  sc.forEach((t,i)=>ent(t.date).tr.push({pnl:parseFloat(t.pnl)||0,time:t.time||'',i}));
+  sc.forEach((t,i)=>ent(_fdKey(f,t)).tr.push({pnl:parseFloat(t.pnl)||0,time:_fdOrd(f,t),i}));
   pays.forEach(p=>{ ent(p.date).pay+=p.amount; });
   let bal=start; const days=[];
   Object.keys(byDate).sort().forEach(date=>{
@@ -13535,7 +14041,7 @@ function _dailyRisk(f,today){
   let soft=null; const bp=_bufPct(f,'daily'); if(bp>0&&limit>0){ const sl=limit*bp/100; soft={limit:sl,pct:bp,left:sl-todayUsed,passed:todayUsed>=sl}; }
   const reasons=estUnordered?['unordered']:[];
   return { limit, todayLoss:todayUsed, pct:limit>0?Math.min(100,todayUsed/limit*100):0, breach:term&&hits.length>0, breachDate:worst?worst.date:'', breachAmt:worst?worst.amount:0,
-           breachLimit:worst?worst.allowed:limit, consequence:cons, lockedToday:!term&&hitToday, hitDates:hits.map(h=>h.date), sodToday, soft, reasons, confidence:reasons.length?'estimate':'exact' };
+           breachLimit:worst?worst.allowed:limit, consequence:cons, lockedToday:!term&&hitToday, hitDates:hits.map(h=>h.date), first:hits.length?hits[0]:null, sodToday, soft, reasons, confidence:reasons.length?'estimate':'exact' };
 }
 function _stopRow(soft,fc){
   const fm=x=>_ddFm(x,fc);
@@ -13553,12 +14059,13 @@ function openDayCalc(id){
   const base=sod?pv+'% of today\u2019s start, '+fm(D.sodToday):(f.limitMode&&f.limitMode.dailyDD==='pct'?pv+'% of the account size':'Fixed amount');
   let h=row('Limit today',fm(D.limit))+row('Based on',base)+row('Lowest point today',used>0?'\u2212'+fm(used):'No loss today')+row('Used',fm(used))+row('Room left',fm(Math.max(0,D.limit-used)))
     +row('When it is hit',D.consequence==='dayLock'?'Stops trading for the day':'Ends the account')+(D.soft?row('Your own stop',fm(D.soft.limit)+' ('+(Math.round(D.soft.pct*100)/100)+'%)'+(D.soft.passed?', passed':'')):'');
+  h+=_dsRows(f);
   h+=note((sod?'Today\u2019s limit = '+pv+'% \u00d7 the balance at the start of the day. ':'')+'Used = how far the balance fell below that start, at its lowest point of the day.');
   if(D.consequence==='dayLock'){ if(D.hitDates.length) h+=note('A day at the limit is not a breach for this firm. It clears tomorrow. Days at the limit this cycle: '+D.hitDates.join(', ')+'.'); }
   else if(D.breach) h+=note('<b style="color:var(--red)">Breached.</b> The limit was reached on '+D.breachDate+'.');
   D.reasons.forEach(r=>{ h+=note('<b>Estimate.</b> '+_DD_REASON[r].charAt(0).toUpperCase()+_DD_REASON[r].slice(1)+' Add a time to those trades for an exact result.','est'); });
   h+=note('Based on closed trades. It cannot see open profit or intraday highs, which some firms count, so your firm may show less room. Check your firm\u2019s dashboard when you are close.');
-  document.getElementById('dayCalcBody').innerHTML=h;
+  h+=_dsNote(f); h+=_tplLine(f); document.getElementById('dayCalcBody').innerHTML=h;
   document.getElementById('dayCalcModal').classList.add('open'); updateNavVisibility();
 }
 function openDayHelp(){
@@ -13592,7 +14099,7 @@ function openDdCalc(id){
   if(T.breach) h+='<div class="dd-note"><b style="color:var(--red)">Breached.</b> The floor'+(T.breachFloor!=null?' ('+fm(T.breachFloor)+')':'')+' was reached'+(T.breachDate?' on '+T.breachDate:'')+'.</div>';
   T.reasons.forEach(r=>{ h+='<div class="dd-note est"><b>Estimate.</b> '+_DD_REASON[r].charAt(0).toUpperCase()+_DD_REASON[r].slice(1)+(r==='unordered'?' Add a time to those trades for an exact result.':'')+'</div>'; });
   h+='<div class="dd-note">Based on closed trades. It cannot see open profit or intraday highs, which some firms count, so your firm may show less room. Check your firm\u2019s dashboard when you are close.</div>';
-  document.getElementById('ddCalcBody').innerHTML=h;
+  h+=_dsNote(f); h+=_tplLine(f); document.getElementById('ddCalcBody').innerHTML=h;
   document.getElementById('ddCalcModal').classList.add('open'); updateNavVisibility();
 }
 // Modal helpers (Rules & Limits)
@@ -13640,6 +14147,7 @@ function openDdHelp(){
 
 function renderPropFirms(){
   const _archFirms=propFirms.filter(_firmArchived), firms=propFirms.filter(f=>!_firmArchived(f));
+  const _isBrc=f=>{ const a=_firmAcct(f); return !!a&&a.status==='breached'; }, _act=firms.filter(f=>!_isBrc(f)), _ord=_act.concat(firms.filter(_isBrc)), _nb=_ord.length-_act.length;   // 4c: breached firms leave the cycle/evaluation figures but keep their payouts in Paid out
   const _da=dispActive(), _cvF=(v,f)=>_da?v*(fxRateAt(_firmCur(f).code,null)||0):v;   // display currency: firm figures at today's rate
   const summaryEl = document.getElementById('propSummaryGrid');
   const totalAccts = firms.length;
@@ -13648,12 +14156,12 @@ function renderPropFirms(){
   const livePnL = firms.reduce((s,f)=>s+(getPropFirmPnL(f)||0),0);
 
   // Summary strip: only funded accounts have a payout cycle, so the cycle figure counts funded firms only
-  const fundedFirms = firms.filter(f=>f.phase==='funded');
+  const fundedFirms = _act.filter(f=>f.phase==='funded');
   const fundedCycle = fundedFirms.reduce((x,f)=>x+_cvF(getCyclePnL(f)||0,f),0);
   summaryEl.style.display = firms.length ? '' : 'none';
   const fcCur = _da?dcCur():_uniformCur(fundedFirms.map(x=>_firmCur(x))), pdCur = _da?dcCur():_uniformCur(firms.map(x=>_firmCur(x)));   // null = firms in different currencies: "Mixed", no sum
   summaryEl.innerHTML = '<div><b class="'+(fcCur&&fundedCycle>0?'positive':fcCur&&fundedCycle<0?'negative':'')+'">'+(fcCur?fmtMoney(fundedCycle,{plus:true,dec:0},fcCur):_byCurLines(fundedFirms.map(x=>({c:_firmCur(x),v:getCyclePnL(x)||0})),{plus:true,dec:0},true))+'</b><span>Funded cycle P&amp;L</span></div>'
-    +'<div><b>'+(firms.length-fundedFirms.length)+'</b><span>In evaluation</span></div>'
+    +'<div><b>'+(_act.length-fundedFirms.length)+'</b><span>In evaluation</span></div>'
     +'<div><b class="'+(pdCur&&totalEarned>0?'positive':'')+'">'+(pdCur?fmtMoney(totalEarned,{dec:0},pdCur):_byCurLines(firms.map(x=>({c:_firmCur(x),v:(x.payouts||[]).reduce((s,q)=>s+q.amount,0)})),{dec:0}))+'</b><span>Paid out</span></div>';
 
   const listEl = document.getElementById('propFirmList');
@@ -13680,8 +14188,8 @@ function renderPropFirms(){
   const _msg = (txt,k) => '<div class="pf-msg '+k+'">'+_I.alert+'<span>'+txt+'</span></div>';
   const _d = new Date(), todayStr = _d.getFullYear()+'-'+String(_d.getMonth()+1).padStart(2,'0')+'-'+String(_d.getDate()).padStart(2,'0');
 
-  listEl.innerHTML = firms.map(f=>{
-    const pnl = getPropFirmPnL(f), fc = _firmCur(f);
+  listEl.innerHTML = _brcLineHtml() + _ord.map((f,_i)=>{
+    const pnl = getPropFirmPnL(f), fc = _firmCur(f), _ba=_firmAcct(f), bc=!!_ba&&_ba.status==='breached';
     const totalFirmEarned = (f.payouts||[]).reduce((s,p)=>s+p.amount,0);
     const payoutCount = (f.payouts||[]).length;
     const isLinked = !!(f.linkedAccount && accounts.find(a=>a.id===f.linkedAccount));
@@ -13745,18 +14253,19 @@ function renderPropFirms(){
         +(cyclePnL>0?'<div class="pf-row"><span>Est. payout \u00b7 '+split+'% split</span><b>'+fmtMoney(earnableAmt,null,fc)+'</b></div>':'')
         +(nextDate?'<div class="pf-row"><span>Next payout</span><b>'+nextDate.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</b></div>':'')
         +(minPayout>0&&earnableAmt<minPayout?'<div class="pf-row"><span style="color:var(--amber)">Min payout '+fmtMoney(minPayout,{dec:0},fc)+' not met</span></div>':'')
-        +'<div class="pf-payfoot"><span>Total earned <b class="'+(totalFirmEarned>0?'positive':'')+'">'+fmtMoney(totalFirmEarned,null,fc)+'</b></span><button class="btn-sm '+(canRequest?'accent':'')+'" onclick="openPayoutLog(\''+f.id+'\')">'+_I.coins+' Payouts ('+payoutCount+')</button></div></div>';
+        +'<div class="pf-payfoot"><span>Total earned <b class="'+(totalFirmEarned>0?'positive':'')+'">'+fmtMoney(totalFirmEarned,null,fc)+'</b></span><button class="btn-sm '+(canRequest&&!bc?'accent':'')+'" onclick="openPayoutLog(\''+f.id+'\')">'+_I.coins+' Payouts ('+payoutCount+')</button></div></div>';
     }
 
     const cardPhaseClass = phaseKey==='funded'?'phase-funded-card':phaseKey==='verification'?'phase-verification-card':phaseKey==='phase3'?'phase-phase3-card':'phase-challenge-card';
     const sub = (isLinked ? escapeHtml(linkedAcctName) : 'Manual P&amp;L') + ' \u00b7 ' + fmtMoney(f.acctSize||0,{dec:0},fc);
-    return `<div class="prop-firm-card ${cardPhaseClass}">
+    const bnote = bc ? '<div class="pf-note">Breached '+(_brcDate(_ba.statusDate)?_brcDate(_ba.statusDate)+' \u00b7 ':'')+_brcWhy(_ba)+'. Was '+phaseLabel+'. Left out of the cycle and evaluation figures above.</div>' : '';
+    return (_nb&&_i===_act.length?'<div class="lbl" style="margin:14px 2px 8px;font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--text3)">Breached \u00b7 '+_nb+'</div>':'')+`<div class="prop-firm-card ${cardPhaseClass}${bc?' brc-card':''}">
       <div class="pf-top">
         <div style="flex:1;min-width:0"><div class="prop-firm-name">${escapeHtml(f.name)}</div><div class="pf-sub">${sub}</div></div>
-        <span class="prop-phase-badge ${phaseBadgeClass}" style="flex-shrink:0">${phaseLabel}</span>
+        <span class="prop-phase-badge ${bc?'brc':phaseBadgeClass}" style="flex-shrink:0">${bc?'Breached':phaseLabel}</span>
         <button class="ac-menu" aria-label="Firm actions" onclick="openFirmMenu(this,'${f.id}',event)">${_I.dots}</button>
       </div>
-      ${consistBadgeHTML}
+      ${consistBadgeHTML}${bnote}
       ${_lim(f,'profitTarget')>0?`<div class="pf-row" style="margin-top:12px"><span>Profit target</span><b class="${pnl<0?'negative':''}">${fmtMoney(pnl,{plus:true},fc)} / ${fmtMoney(_lim(f,'profitTarget'),{dec:0},fc)}${_limPct(f,'profitTarget')}${pnl>0?' \u00b7 '+Math.round(profitRaw)+'%':''}</b></div><div class="pf-bar"><i class="pf-gr" style="width:${profitPct}%"></i></div>`:''}
       ${R.max.type==='eodTrailing'&&chips?`<div class="pf-chips">${chips}</div>`:''}${risk}
       ${R.max.type!=='eodTrailing'&&chips?`<div class="pf-chips">${chips}</div>`:''}
