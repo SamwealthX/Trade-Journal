@@ -907,6 +907,23 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .pf-bar i.pf-tick{position:absolute;top:0;width:2px;height:100%;border-radius:0;background:var(--text)}
 .tpl-row{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:10px 14px;margin:0 0 8px;background:var(--surface2);border:1px solid var(--border2);border-radius:12px;color:var(--text);font-family:var(--font);text-align:left;cursor:pointer}
 .tpl-row .t,.tpl-row .s{display:block}.tpl-row .t{font-size:14px;font-weight:700}.tpl-row .s{font-size:12px;color:var(--text3);margin-top:2px;line-height:1.35}
+.pm-banner{font-size:12px;line-height:1.45;color:var(--text2);background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:9px 12px;margin:0 0 10px}
+.pm-banner b{color:var(--text)}
+.ap-go{margin-left:auto;font-size:12.5px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:2px}
+#importModal .modal{overflow-wrap:anywhere}
+.imp-sec{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text3);margin:16px 0 8px}
+.imp-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--border2);border-radius:10px;margin-bottom:6px;font-size:13.5px;font-weight:600;color:var(--text);line-height:1.3;cursor:pointer}
+.imp-opt .r{width:16px;height:16px;border-radius:50%;border:2px solid var(--text3);flex:none;margin-top:1px;box-sizing:border-box}
+.imp-opt.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.imp-opt.on .r{border-color:var(--accent);background:radial-gradient(var(--accent) 42%,transparent 46%)}
+.imp-opt small{display:block;color:var(--text3);font-size:11.5px;font-weight:500;margin-top:2px}
+.imp-opt input{margin-top:6px;width:100%;box-sizing:border-box;padding:8px 10px;font-size:13px}
+.imp-sg{display:inline-block;font:700 9px/1 var(--font);letter-spacing:.5px;text-transform:uppercase;padding:2px 5px;border-radius:4px;border:1px solid var(--accent);color:var(--accent);margin-left:6px;vertical-align:middle}
+.imp-sub{padding:5px 0 5px 12px;font-size:12.5px;color:var(--text3)}
+.imp-sw{display:flex;align-items:center;gap:12px;padding:10px 0 2px;font-size:13px;color:var(--text2);line-height:1.35;cursor:pointer}
+.imp-sw i{flex:none;width:38px;height:22px;border-radius:11px;background:var(--border2);position:relative}
+.imp-sw i:after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff}
+.imp-sw.on i{background:var(--accent)}.imp-sw.on i:after{left:18px}
 .tpl-tier{font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px;border:1px solid var(--accent);color:var(--accent);white-space:nowrap;flex-shrink:0}
 .tpl-tier.rep{border-color:var(--amber);color:var(--amber)}
 .tpl-item{display:flex;align-items:center;gap:10px;width:100%;padding:10px 2px;border:0;border-bottom:1px solid var(--border);background:none;min-height:52px;text-align:left;color:var(--text);font-family:var(--font);cursor:pointer}
@@ -1603,6 +1620,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
     <div class="modal-handle"></div>
     <div class="modal-title" id="propModalTitle">Add Prop Firm</div>
     <input type="hidden" id="pFirmId"/>
+    <div class="pm-banner" id="pStep2Banner" style="display:none"></div>
     <button type="button" class="tpl-row" id="pTplRow" onclick="openTplSheet()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--accent)"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/></svg><span style="flex:1;min-width:0"><span class="t">Start from a template</span><span class="s">AquaFunded, Goat, FTMO, FundedNext, Topstep, Apex, The5ers</span></span><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--text3)"><polyline points="9 18 15 12 9 6"/></svg></button>
     <div class="tpl-chip" id="pTplChip" style="display:none"></div>
 
@@ -2329,6 +2347,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
     <button class="st-row " onclick="document.getElementById('jsonFileInput').click()"><span class="st-ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span><span class="st-rt"><b>Restore from backup (JSON)</b></span><svg class="st-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
     <input type="file" id="jsonFileInput" accept=".json,application/json" style="display:none" onchange="importJSON(this)"/>
     <input type="file" id="csvFileInput" accept=".csv,text/csv" style="display:none" onchange="importCSV(this)"/>
+    <input type="file" id="acctImportInput" accept=".csv,.xlsx,.html,.htm,text/csv,text/html,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none" onchange="importPick(this)"/>
   </div>
 
   <h3 class="st-h">Danger zone</h3>
@@ -2700,8 +2719,10 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
     </div>
     <div class="form-group">
       <label class="form-label">Account Type</label>
-      <select class="form-select" id="acctType"><option value="live">Live</option><option value="demo">Demo</option><option value="prop">Prop</option></select>
+      <select class="form-select" id="acctType" onchange="onAcctTypeChange()"><option value="live">Live</option><option value="demo">Demo</option><option value="prop">Prop</option></select>
+      <div class="pm-help" id="acctPropHint" style="display:none">Next you set this firm’s rules: phase, limits and payouts.</div>
     </div>
+    <div class="form-group" id="acctPropRow" style="display:none"></div>
     <div class="form-group">
       <label class="form-label">Broker / Platform <span style="opacity:.6;font-weight:500;text-transform:none;letter-spacing:0">(optional)</span></label>
       <input class="form-input" id="acctBroker" placeholder="e.g. Exness, MT5, cTrader"/>
@@ -2721,7 +2742,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
       <textarea class="form-input" id="acctNotes" rows="2" placeholder="Anything worth remembering about this account"></textarea>
     </div>
     <div style="display:flex;gap:10px;margin-top:4px">
-      <button class="btn btn-primary" onclick="saveAccount()" style="flex:2">Save Account</button>
+      <button class="btn btn-primary" id="acctSaveBtn" onclick="saveAccount()" style="flex:2">Save Account</button>
       <button class="btn btn-ghost" onclick="document.getElementById('acctModal').classList.remove('open')" style="flex:1">Cancel</button>
     </div>
     <div id="acctDeleteBtn" style="display:none;margin-top:10px">
@@ -3127,6 +3148,14 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
     <div style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:10px" id="delAcctMsg"></div>
     <div id="delAcctList"></div>
     <div id="delAcctBtns" style="display:flex;flex-direction:column;gap:10px;margin-top:14px"></div>
+  </div>
+</div>
+<div class="modal-overlay centered" id="importModal">
+  <div class="modal" style="padding:22px 18px 24px;max-height:92vh;overflow-y:auto">
+    <div style="font-size:18px;font-weight:800;margin-bottom:10px;letter-spacing:-.3px" id="impTitle"></div>
+    <div style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:10px" id="impMsg"></div>
+    <div id="impList"></div>
+    <div id="impBtns" style="display:flex;flex-direction:column;gap:10px;margin-top:14px"></div>
   </div>
 </div>
 <div class="modal-overlay centered" id="brcModal">
@@ -8133,6 +8162,7 @@ function tradeDurationMinutes(t){
   if(!t || !t.time || !t.closeTime) return null;
   const [sh,sm]=t.time.split(':').map(Number), [eh,em]=t.closeTime.split(':').map(Number);
   if([sh,sm,eh,em].some(isNaN)) return null;
+  if(t.closeDate&&t.date){ const _a=/^(\d{4})-(\d{2})-(\d{2})$/.exec(t.date), _b=/^(\d{4})-(\d{2})-(\d{2})$/.exec(t.closeDate); if(_a&&_b){ const _ms=Date.UTC(+_b[1],+_b[2]-1,+_b[3],eh,em)-Date.UTC(+_a[1],+_a[2]-1,+_a[3],sh,sm); if(_ms>=0) return Math.round(_ms/60000); } }   // Batch I2
   let mins=(eh*60+em)-(sh*60+sm);
   if(mins<0) mins+=24*60; // crossed midnight
   return mins;
@@ -8762,6 +8792,7 @@ function saveTrade(){
     if(document.getElementById('fPnl').dataset.auto==='1'&&_fxCur) trade.fx=_fxCur;
     else if(editingTradeId){ const _o=trades.find(x=>x.id===editingTradeId); if(_o&&_o.pnl===trade.pnl){ if(_o.fx) trade.fx=_o.fx; if(_o.fxPrev) trade.fxPrev=_o.fxPrev; } }
   }
+  if(editingTradeId){ const _o2=trades.find(x=>x.id===editingTradeId); if(_o2&&_o2.closeDate&&_o2.date===trade.date&&_o2.time===trade.time&&_o2.closeTime===trade.closeTime) trade.closeDate=_o2.closeDate; }   // Batch I2: keep the close date unless the times were edited
   if(editingTradeId){ const idx=trades.findIndex(t=>t.id===editingTradeId); if(idx!==-1)trades[idx]=trade; }
   else trades.push(trade);
   tradesVersion++;
@@ -9594,20 +9625,68 @@ function openAddAccount(){
   editingAcctId=null;
   document.getElementById('acctModalTitle').textContent='New Account';
   document.getElementById('acctName').value=''; document.getElementById('acctBal').value='';
-  _fillAcctExtras(null);
+  _fillAcctExtras(null); _syncAcctPropUI();
   document.getElementById('acctDeleteBtn').style.display='none';
   document.getElementById('acctModal').classList.add('open');
   updateNavVisibility();
 }
-function saveAccount(){
+let _newAcctId=null;
+function saveAccount(opt){
   const name=document.getElementById('acctName').value.trim(), bal=parseFloat(document.getElementById('acctBal').value)||0;
   if(!name){showToast('Enter account name','error');return;}
   const extras=_readAcctExtras(); if(!extras)return;
-  if(editingAcctId){ const idx=accounts.findIndex(a=>a.id===editingAcctId); if(idx!==-1){accounts[idx].name=name;accounts[idx].balance=bal;Object.assign(accounts[idx],extras); if(CURRENCY_UI&&extras.currency!=='CUSTOM'){delete accounts[idx].currencySymbol;delete accounts[idx].currencyPos;} } }
-  else accounts.push({id:genId(),name,balance:bal,ledger:[],...extras});
+  if(editingAcctId){ const idx=accounts.findIndex(a=>a.id===editingAcctId); if(idx!==-1){const _oN=accounts[idx].name,_oB=accounts[idx].balance; accounts[idx].name=name;accounts[idx].balance=bal;Object.assign(accounts[idx],extras); _followFirm(editingAcctId,_oN,name,_oB,bal); if(CURRENCY_UI&&extras.currency!=='CUSTOM'){delete accounts[idx].currencySymbol;delete accounts[idx].currencyPos;} } }
+  else { _newAcctId=genId(); accounts.push({id:_newAcctId,name,balance:bal,ledger:[],...extras}); }
   saveAccounts(); document.getElementById('acctModal').classList.remove('open');
   updateNavVisibility();
   renderAll(); renderAcctList(); renderSettings(); showToast(editingAcctId?'Account updated ✓':'Account added ✓');
+  { const _eid=editingAcctId, _nid=_newAcctId; _newAcctId=null;   // Batch 4d: a new Prop account goes on to its rules; the Prop Rules row saves, then opens them
+    if(_nid&&extras.type==='prop') _propStep2(_nid,true);
+    else if(opt&&opt.rules&&_eid){ const _f=_linkedFirm(_eid); if(_f) openEditFirm(_f.id); else _propStep2(_eid,false); } }
+}
+// ─── Batch 4d: Prop as an account type (two steps; the real Add Prop Firm modal is step 2, prefilled and linked) ───
+let _step2Id=null;
+function onAcctTypeChange(){ _syncAcctPropUI(); }
+function _syncAcctPropUI(){
+  const isNew=!editingAcctId, ty=document.getElementById('acctType').value, a=isNew?null:accounts.find(x=>x.id===editingAcctId), f=a?_linkedFirm(a.id):null;
+  const hint=document.getElementById('acctPropHint'), btn=document.getElementById('acctSaveBtn'), row=document.getElementById('acctPropRow');
+  const step=isNew&&ty==='prop';
+  hint.style.display=step?'block':'none'; btn.textContent=step?'Save & Set Prop Rules':'Save Account';
+  const show=!!a&&a.status!=='archived'&&(ty==='prop'||!!f);
+  row.style.display=show?'':'none';
+  if(!show){ row.innerHTML=''; return; }
+  const cu=curOf(a); let T,S,GO,H;
+  if(f){
+    const sz=parseFloat(f.acctSize)||0, parts=[]; [['profitTarget','Target'],['maxDD','Max loss'],['dailyDD','Daily']].forEach(([k,l])=>{ const v=_lim(f,k); if(v>0) parts.push(l+' '+fmtMoney(v,{dec:0},cu)); });
+    T=escapeHtml((PROP_PHASE_LABEL[f.phase||'challenge']||'')+(sz>0?' · '+fmtMoney(sz,{dec:0},cu):'')); S=escapeHtml(parts.length?parts.join(' · '):'No limits set yet'); GO='Edit';
+    H='Renaming this account or changing its starting balance also updates the firm while they match.';
+  } else {
+    T='No prop rules yet'; S='Set the phase, limits and payouts. This adds a firm linked to this account.'; GO='Set up';
+    H='Choosing Type “Prop” on an older account shows this row too.';
+  }
+  row.innerHTML='<label class="form-label">Prop Rules</label><button type="button" class="tpl-row" onclick="acctPropRowGo()"><span style="flex:1;min-width:0"><span class="t">'+T+'</span><span class="s">'+S+'</span></span><span class="ap-go">'+GO+'</span></button><div class="pm-help">'+H+'</div>';
+}
+function acctPropRowGo(){ saveAccount({rules:true}); }
+// Name and starting balance follow from account to firm only while they still match (no stored marker; the firm modal can still diverge).
+function _followFirm(id,oldName,newName,oldBal,newBal){
+  const f=_linkedFirm(id); if(!f) return; let ch=false; const ob=parseFloat(oldBal)||0, nb=parseFloat(newBal)||0;
+  if(oldName!==newName&&f.name===oldName){ f.name=newName; ch=true; }
+  if(ob!==nb&&(parseFloat(f.acctSize)||0)===ob){ f.acctSize=nb; ch=true; }
+  if(ch) savePropFirms();
+}
+function _propStep2(id,isNew){
+  const a=accounts.find(x=>x.id===id); if(!a) return;
+  openAddFirm(); populateLinkedAccountDropdown(id);
+  const sel=document.getElementById('pLinkedAccount'); sel.value=id; onLinkedAccountChange();
+  document.getElementById('pFirmName').value=a.name; pmRefresh();
+  if(isNew){ _step2Id=id; const bn=document.getElementById('pStep2Banner'); bn.innerHTML='<b>Account “'+escapeHtml(a.name)+'” added.</b> Set its rules now, or close this and do it later from the account’s ⋯ menu.'; bn.style.display='block'; }
+}
+function _delFirmMsg(id){
+  const f=propFirms.find(x=>x.id===id); if(!f) return 'This removes the firm and its payout log.';
+  const acct=f.linkedAccount?accounts.find(a=>a.id===f.linkedAccount):null, tot=(f.payouts||[]).reduce((x,p)=>x+(parseFloat(p.amount)||0),0);
+  let m='This removes the firm “'+f.name+'” and its payout log.';
+  if(acct){ m+=' The account and its trades stay.'; if(tot>0) m+=' Its balance goes up by the '+fmtMoney(tot,Math.abs(tot%1)<0.005?{dec:0}:null,_firmCur(f))+' of payouts logged, because payouts count as withdrawals on the account.'; }
+  return m;
 }
 function _closeDelAcct(){ document.getElementById('delAcctModal').classList.remove('open'); updateNavVisibility(); }
 function _delDlg(title,msgHtml,rowsHtml,btns){
@@ -9676,9 +9755,11 @@ function acctBalance(a){ return acctBalanceNow(a).bal; }   // the one definition
 function openAcctMenu(btn,id,ev){
   const a=accounts.find(x=>x.id===id); if(!a)return;
   const items=[{label:'Edit account',icon:_I.edit,fn:()=>editAccount(id)}];
+  if(a.status!=='archived'){ const _pf=_linkedFirm(id); if(_pf||a.type==='prop') items.push({label:_pf?'Edit prop rules':'Set up prop rules',icon:_I.chart,fn:()=>{ if(_pf) openEditFirm(_pf.id); else _propStep2(id,false); }}); }
   if(a.status==='archived') items.push({label:'Restore account',icon:_I.restore,fn:()=>restoreAccount(id)});
   else{
     if(a.status==='breached') items.push({label:'Reactivate account',icon:_I.restore,fn:()=>reactivateAccount(id)});
+    if(a.status!=='breached') items.push({label:'Import trades',icon:_I.imp,fn:()=>startImport(id)});   // Batch I1: active accounts only
     items.push({label:'Deposit / Withdraw',icon:_I.ledger,fn:()=>openLedgerModal(id)});
     if(a.status!=='breached') items.push({label:'Mark as breached',icon:_I.flag,fn:()=>markBreachedManual(id)});
     if(a.status==='breached'||activeAccounts().length>1) items.push({label:'Archive account',icon:_I.archive,fn:()=>archiveAccount(id)});
@@ -9784,7 +9865,7 @@ function editAccount(id){
   editingAcctId=id; const a=accounts.find(x=>x.id===id); if(!a)return;
   document.getElementById('acctModalTitle').textContent='Edit Account';
   document.getElementById('acctName').value=a.name; document.getElementById('acctBal').value=a.balance;
-  _fillAcctExtras(a);
+  _fillAcctExtras(a); _syncAcctPropUI();
   document.getElementById('acctDeleteBtn').style.display=accounts.length>1?'block':'none';
   document.getElementById('acctModal').classList.add('open');
   updateNavVisibility();
@@ -12321,6 +12402,7 @@ function openActionMenu(btn,items,ev){
 document.addEventListener('pointerdown',e=>{ if(_am&&!_am.contains(e.target)&&!_am._btn.contains(e.target))closeActionMenu(); },true);
 window.addEventListener('scroll',closeActionMenu,true); window.addEventListener('resize',closeActionMenu);
 const _I={
+  imp:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
   flag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
   edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
   ledger:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>',
@@ -12727,6 +12809,273 @@ function exportCSV(){
   showToast(`Exported ${trades.length} trades ✓`);
 }
 
+// ─── Batch I1: per-account Import trades (menu item, preview, commit) ───
+let _impAcctId=null, _impPending=null;
+const _IMP_MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function _impFp(t){ return [t.date||'',t.time||'',String(t.pair||'').toUpperCase(),t.dir==='short'?'short':'long',parseFloat(t.pnl)||0].join('|'); }
+function _impDate(d,withYear){ const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(d||''); if(!m) return ''; return (+m[3])+' '+_IMP_MON[+m[2]-1]+(withYear?' '+m[1]:''); }
+// Pure: reads the CSV text and says what an import into acctId WOULD do. Rows always get acctId (the file's Account ID column is ignored).
+function _impPlan(text,acctId){
+  const R=_csvRead(text); if(R.err) return {err:R.err};
+  const existing=new Set(trades.map(t=>t.id)), fps=new Set(trades.filter(t=>t.accountId===acctId).map(_impFp));
+  const out={err:null,acctId,rows:[],already:0,noPair:0,pnl:0,dmin:'',dmax:'',fileAccts:0,otherAccts:false,curMis:null};
+  const fa=new Set(), cu=new Set();
+  for(let i=1;i<R.lines.length;i++){
+    const row=parseCSVLine(R.lines[i]); if(row.every(c=>!c.trim())) continue;
+    if(R.colIdx.accountId!==undefined&&(row[R.colIdx.accountId]||'').trim()) fa.add(row[R.colIdx.accountId].trim());
+    if(R.curIdx>=0&&(row[R.curIdx]||'').trim()) cu.add(row[R.curIdx].trim().toUpperCase());
+    const t=_csvTrade(row,i,R.colIdx,acctId); t.accountId=acctId;
+    if(existing.has(t.id)){ out.already++; continue; }
+    if(!t.pair){ out.noPair++; continue; }
+    if(!_csvHasId(row,R.colIdx)&&fps.has(_impFp(t))){ out.already++; continue; }   // no id in the file: same date, time, pair, direction and P&L already in this account
+    existing.add(t.id); out.rows.push(t); out.pnl+=t.pnl;
+    if(t.date){ if(!out.dmin||t.date<out.dmin) out.dmin=t.date; if(!out.dmax||t.date>out.dmax) out.dmax=t.date; }
+  }
+  out.fileAccts=fa.size; out.otherAccts=fa.size>=2||(fa.size===1&&!fa.has(acctId));
+  if(CURRENCY_UI&&cu.size){ const ac=curOf(acctId).code, diff=[...cu].find(c=>c!==ac); if(diff) out.curMis={file:diff,acct:ac}; }
+  return out;
+}
+// ─── Batch I2: MT5 trade-history report import (.xlsx / .html), server-to-device time conversion ───
+let _impSt=null; const _tzFmt={};
+function _mnum(x){ return parseFloat(String(x==null?'':x).replace(/[\s\u00a0]/g,'').replace(/,/g,''))||0; }
+function _xmlText(u8){ const u16=u8.length>1&&((u8[0]===0xFF&&u8[1]===0xFE)||(u8[0]===0xFE&&u8[1]===0xFF)); return new TextDecoder(u16?(u8[0]===0xFF?'utf-16le':'utf-16be'):'utf-8').decode(u8); }
+function _zipFiles(u8){
+  const dv=new DataView(u8.buffer,u8.byteOffset,u8.byteLength); let e=-1;
+  for(let i=u8.length-22;i>=Math.max(0,u8.length-65558);i--){ if(dv.getUint32(i,true)===0x06054b50){ e=i; break; } }
+  if(e<0) throw new Error('zip');
+  const n=dv.getUint16(e+10,true); let p=dv.getUint32(e+16,true); const out={};
+  for(let k=0;k<n;k++){
+    if(dv.getUint32(p,true)!==0x02014b50) throw new Error('zip');
+    const meth=dv.getUint16(p+10,true), csz=dv.getUint32(p+20,true), nl=dv.getUint16(p+28,true), el=dv.getUint16(p+30,true), cl=dv.getUint16(p+32,true), lo=dv.getUint32(p+42,true);
+    out[new TextDecoder().decode(u8.subarray(p+46,p+46+nl))]={meth,csz,lo}; p+=46+nl+el+cl;
+  }
+  return out;
+}
+async function _zipRead(u8,ent){
+  const dv=new DataView(u8.buffer,u8.byteOffset,u8.byteLength), nl=dv.getUint16(ent.lo+26,true), el=dv.getUint16(ent.lo+28,true), d=u8.subarray(ent.lo+30+nl+el,ent.lo+30+nl+el+ent.csz);
+  if(ent.meth===0) return d; if(ent.meth!==8) throw new Error('zip');
+  if(typeof DecompressionStream==='undefined') throw new Error('NO_DECOMP');
+  return new Uint8Array(await new Response(new Blob([d]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+}
+async function _xlsxRows(u8){
+  const files=_zipFiles(u8), names=Object.keys(files).filter(n=>/^xl\/worksheets\/sheet\d+\.xml$/.test(n)).sort(); if(!names.length) return null;
+  const dp=new DOMParser(); let ss=[];
+  if(files['xl/sharedStrings.xml']){ const d=dp.parseFromString(_xmlText(await _zipRead(u8,files['xl/sharedStrings.xml'])),'application/xml'); ss=[...d.getElementsByTagName('si')].map(si=>[...si.getElementsByTagName('t')].map(t=>t.textContent).join('')); }
+  const sd=dp.parseFromString(_xmlText(await _zipRead(u8,files[names[0]])),'application/xml'), rows=[];
+  [...sd.getElementsByTagName('row')].forEach(r=>{
+    const row=[];
+    [...r.getElementsByTagName('c')].forEach(c=>{
+      const m=/^([A-Z]+)/.exec(c.getAttribute('r')||''); let col=0; if(m) for(const ch of m[1]) col=col*26+ch.charCodeAt(0)-64; col=col?col-1:row.length;
+      const t=c.getAttribute('t'); let v='';
+      if(t==='inlineStr') v=[...c.getElementsByTagName('t')].map(x=>x.textContent).join('');
+      else { const ve=c.getElementsByTagName('v')[0]; v=ve?ve.textContent:''; if(t==='s') v=ss[parseInt(v,10)]||''; }
+      while(row.length<col) row.push(''); row[col]=String(v).trim();
+    });
+    rows.push(row);
+  });
+  return rows;
+}
+function _htmlRows(text){
+  const doc=new DOMParser().parseFromString(text,'text/html');
+  return [...doc.querySelectorAll('tr')].map(tr=>[...tr.children].filter(c=>/^t[dh]$/i.test(c.tagName)).map(c=>c.textContent.replace(/[\s\u00a0]+/g,' ').trim()));
+}
+// rows (arrays of strings, from xlsx or html) -> {info,pos,ops} or {err}
+function _mt5FromRows(rows){
+  if(!rows||!rows.some(r=>r.length&&/^Trade History Report$/i.test(r.find(c=>c)||''))) return {err:'NOT_MT5'};
+  const info={name:'',account:'',currency:'',server:'',kind:'',mode:'',company:'',date:''};
+  rows.slice(0,14).forEach(r=>{
+    const k=(r[0]||'').trim(), v=(r.slice(1).find(c=>c)||'');
+    if(k==='Name:') info.name=v; else if(k==='Company:') info.company=v; else if(k==='Date:') info.date=v;
+    else if(k==='Account:'){ const m=/^(\d+)\s*\(([^,)]*),\s*([^,)]*),\s*([^,)]*),\s*([^)]*)\)/.exec(v); if(m){ info.account=m[1]; info.currency=m[2].trim(); info.server=m[3].trim(); info.kind=m[4].trim(); info.mode=m[5].trim(); } else info.account=(/^\d+/.exec(v)||[''])[0]; }
+  });
+  if(!info.account) return {err:'NOT_MT5'};
+  const sec=nm=>rows.findIndex(r=>r.filter(c=>c).length===1&&r.find(c=>c)===nm), DT=/^\d{4}\.\d{2}\.\d{2} \d{2}:\d{2}(:\d{2})?$/;
+  const ip=sec('Positions'); if(ip<0) return {err:'NOT_MT5'};
+  let h=ip+1; while(h<rows.length&&!(rows[h].includes('Position')&&rows[h].includes('Symbol'))) h++;
+  if(h>=rows.length) return {err:'NOT_MT5'};
+  const hdr=rows[h], pos=[];
+  for(let i=h+1;i<rows.length;i++){
+    let r=rows[i]; if(!r.length||!DT.test(r[0]||'')) break;
+    if(r.length>hdr.length&&r[4]==='') r=r.filter((_,k)=>k!==4);   // the html layout has one extra blank cell after Type
+    if(r.length<13) return {err:'NOT_MT5'};
+    pos.push({open:r[0],ticket:r[1],symbol:r[2],type:String(r[3]).toLowerCase(),volume:r[4],price:r[5],sl:r[6],tp:r[7],close:r[8],closePrice:r[9],commission:_mnum(r[10]),swap:_mnum(r[11]),profit:_mnum(r[12])});
+  }
+  const ops=[], idl=sec('Deals');
+  if(idl>=0){
+    let hd=idl+1; while(hd<rows.length&&!(rows[hd].includes('Deal')&&rows[hd].includes('Type'))) hd++;
+    if(hd<rows.length){
+      const H=rows[hd], tI=H.indexOf('Type'), dI=H.indexOf('Deal'), pI=H.indexOf('Profit'), cI=H.indexOf('Comment');
+      for(let i=hd+1;i<rows.length;i++){ const r=rows[i]; if(!r.length||!DT.test(r[0]||'')) break; if(String(r[tI]).toLowerCase()==='balance') ops.push({time:r[0],deal:r[dI],amount:_mnum(r[pI]),comment:(cI>=0&&r[cI])||''}); }
+    }
+  }
+  return {info,pos,ops};
+}
+// bytes -> a CSV text, an MT5 report ({mt5}), or an error ({err})
+async function _impSniff(u8){
+  try{
+    if(u8.length>3&&u8[0]===0x50&&u8[1]===0x4B){ const r=_mt5FromRows(await _xlsxRows(u8)); return r.err?{err:r.err}:{mt5:r}; }
+    const u16=u8.length>1&&((u8[0]===0xFF&&u8[1]===0xFE)||(u8[0]===0xFE&&u8[1]===0xFF));
+    if(!u16&&u8.subarray(0,4096).includes(0)) return {err:'NOT_MT5'};   // NUL bytes: a binary file, not text
+    const text=new TextDecoder(u16?(u8[0]===0xFF?'utf-16le':'utf-16be'):'utf-8').decode(u8);
+    if(/<(html|table|tr)\b/i.test(text.slice(0,30000))){ const r=_mt5FromRows(_htmlRows(text)); return r.err?{err:r.err}:{mt5:r}; }
+    return text;
+  }catch(e){ return {err:e&&e.message==='NO_DECOMP'?'NO_DECOMP':'NOT_MT5'}; }
+}
+function _mt5Sym(s){
+  s=String(s||''); let m=/^(.+?)(\.[A-Za-z0-9]+)$/.exec(s); if(m) return [m[1].toUpperCase(),m[2]];
+  m=/^([A-Za-z0-9#]*[A-Z0-9])([a-z]+)$/.exec(s); if(m&&m[1].length>=3) return [m[1].toUpperCase(),m[2]];
+  return [s.toUpperCase(),''];
+}
+function _tzMs(zone,ms){   // the wall clock of `zone` at instant ms, read as if it were UTC
+  ms=Math.floor(ms/1000)*1000;
+  const f=_tzFmt[zone]||(_tzFmt[zone]=new Intl.DateTimeFormat('en-US',{timeZone:zone,hourCycle:'h23',year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'numeric',second:'numeric'})), o={};
+  f.formatToParts(new Date(ms)).forEach(p=>{ o[p.type]=p.value; });
+  return Date.UTC(+o.year,+o.month-1,+o.day,(+o.hour)%24,+o.minute,+o.second)-ms;
+}
+function _wallToUtc(zone,wallMs){ const o1=_tzMs(zone,wallMs); let g=wallMs-o1; const o2=_tzMs(zone,g); if(o2!==o1) g=wallMs-o2; return g; }
+// server wall-clock text 'YYYY.MM.DD HH:MM[:SS]' -> {date,time} in the device's time zone
+function _impToLocal(w,tz,fx){
+  const m=/^(\d{4})\.(\d{2})\.(\d{2}) (\d{2}):(\d{2})(?::(\d{2}))?$/.exec(w||''); if(!m) return {date:'',time:''};
+  const Y=+m[1],Mo=+m[2],D=+m[3],H=+m[4],Mi=+m[5],S=+(m[6]||0), W=Date.UTC(Y,Mo-1,D,H,Mi,S); let ms;
+  if(tz==='device') ms=new Date(Y,Mo-1,D,H,Mi,S).getTime();
+  else if(tz==='fixed') ms=W-(fx||0)*60000;
+  else if(tz==='ny') ms=_wallToUtc('America/New_York',W-7*36e5);   // GMT+2/+3 "New York close" servers are New York + 7 h
+  else if(tz==='eu') ms=_wallToUtc('Europe/Athens',W);
+  else ms=W;
+  const d=new Date(ms), p=n=>String(n).padStart(2,'0');
+  return {date:d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()),time:p(d.getHours())+':'+p(d.getMinutes())};
+}
+function _impOff(min){ const a=Math.abs(min), h=Math.floor(a/60), m=a%60; return 'GMT'+(min<0?'-':'+')+h+(m?':'+String(m).padStart(2,'0'):''); }
+function _impFixedParse(t){ const m=/^\s*(?:GMT|UTC)?\s*([+-]?)(\d{1,2})(?::?(\d{2}))?\s*$/i.exec(t||''); if(!m) return null; const h=+m[2], mi=m[3]?+m[3]:0; if(h>14||mi>59) return null; return (m[1]==='-'?-1:1)*(h*60+mi); }
+function _impTzLoad(server){ try{ const v=JSON.parse(localStorage.getItem('tj_impTz')||'{}')[server]; return v&&typeof v.tz==='string'?v:null; }catch(e){ return null; } }
+function _impTzSave(server,tz,fixed){ try{ const m=JSON.parse(localStorage.getItem('tj_impTz')||'{}'); m[server]={tz,fixed:fixed==null?null:fixed}; localStorage.setItem('tj_impTz',JSON.stringify(m)); }catch(e){} }
+// a hint for the server zone from the trade times (never proof)
+function _mt5Suggest(rep){
+  const fx=rep.pos.filter(p=>!/^(BTC|ETH|LTC|XRP|SOL|DOGE|BNB|ADA|DOT)/i.test(p.symbol)); let sunLate=0, wk=0;
+  fx.forEach(p=>[p.open,p.close].forEach(s=>{ const m=/^(\d{4})\.(\d{2})\.(\d{2}) (\d{2}):/.exec(s); if(!m) return; const dw=new Date(Date.UTC(+m[1],+m[2]-1,+m[3])).getUTCDay(); if(dw===0&&+m[4]>=22) sunLate++; if(dw===0||dw===6) wk++; }));
+  if(sunLate>0) return 'utc'; if(fx.length>=30&&wk===0) return 'ny'; return '';
+}
+// Pure: what importing this report into acctId WOULD do under a given server zone
+function _impPlanMT5(rep,acctId,tz,fixed){
+  const out={err:null,kind:'mt5',acctId,rows:[],already:0,pnl:0,profit:0,comm:0,swap:0,dmin:'',dmax:'',symbols:0,suffixes:[],held:0,opsNew:[],opsDep:0,opsWd:0,opsDepSum:0,opsWdSum:0,curMis:null,sample:null};
+  const existing=new Set(trades.map(t=>t.id)), syms=new Set(), suf=new Set(), acct=accounts.find(a=>a.id===acctId), I=rep.info;
+  rep.pos.forEach((p,k)=>{
+    const [base,sx]=_mt5Sym(p.symbol); syms.add(base); if(sx) suf.add(sx);
+    const o=_impToLocal(p.open,tz,fixed), c=_impToLocal(p.close,tz,fixed);
+    if(k===0) out.sample={wall:p.open,local:o};
+    const id='mt5-'+I.account+'-'+p.ticket; if(existing.has(id)){ out.already++; return; }
+    existing.add(id);
+    const net=+(p.profit+p.commission+p.swap).toFixed(2);
+    const t={id,accountId:acctId,pair:base,dir:p.type==='sell'?'short':'long',date:o.date,time:o.time,closeTime:c.time,session:detectSession(o.time),entry:p.price,exit:p.closePrice,size:p.volume,pnl:net,rr:null,risk:'',sl:p.sl,tp:p.tp,setup:'',emotion:'',reason:'',notes:'',checklist:{htf:[],liq:[],setup:[],poi:[],conf:[],slpl:[],exit:[]},images:[]};
+    if(c.date&&c.date!==o.date){ t.closeDate=c.date; out.held++; }
+    out.rows.push(t); out.pnl+=net; out.profit+=p.profit; out.comm+=p.commission; out.swap+=p.swap;
+    if(o.date){ if(!out.dmin||o.date<out.dmin) out.dmin=o.date; if(!out.dmax||o.date>out.dmax) out.dmax=o.date; }
+  });
+  out.symbols=syms.size; out.suffixes=[...suf].sort();
+  const have=new Set(((acct&&acct.ledger)||[]).map(e=>e.id));
+  rep.ops.forEach(op=>{ const id='mt5-'+I.account+'-'+op.deal; if(have.has(id)||!op.amount) return; have.add(id);
+    out.opsNew.push({id,type:op.amount>0?'deposit':'withdrawal',amount:Math.abs(op.amount),date:_impToLocal(op.time,tz,fixed).date,note:op.comment||'MT5 import'});
+    if(op.amount>0){ out.opsDep++; out.opsDepSum+=op.amount; } else { out.opsWd++; out.opsWdSum+=op.amount; } });
+  if(CURRENCY_UI&&I.currency){ const ac=curOf(acctId).code; if(I.currency.toUpperCase()!==ac) out.curMis={file:I.currency.toUpperCase(),acct:ac}; }
+  return out;
+}
+function _impMt5Open(rep,fileName,acctId){
+  if(!accounts.find(x=>x.id===acctId)) return;
+  const sg=_mt5Suggest(rep), pf=_impTzLoad(rep.info.server);
+  _impSt={rep,fileName,acctId,sg,pref:pf?pf.tz:'',tz:pf?pf.tz:sg,fixed:pf&&pf.fixed!=null?pf.fixed:null,fixedTxt:pf&&pf.fixed!=null?_impOff(pf.fixed).slice(3):'',ledgerOn:false};
+  _impMt5Render();
+}
+function _impSetTz(k){ if(!_impSt) return; _impSt.tz=k; _impMt5Render(); }
+function _impSetFixed(v){ if(!_impSt) return; _impSt.fixedTxt=v; _impSt.fixed=_impFixedParse(v); _impMt5Render(); }
+function _impToggleLedger(){ if(!_impSt) return; _impSt.ledgerOn=!_impSt.ledgerOn; _impMt5Render(); }
+function _impMt5Render(){
+  const S=_impSt; if(!S) return; const a=accounts.find(x=>x.id===S.acctId); if(!a) return;
+  const cu=curOf(S.acctId), nm=escapeHtml(a.name), fn=escapeHtml(S.fileName), I=S.rep.info, row=(l,v,sub)=>'<div class="del-row'+(sub?' imp-sub':'')+'"><span style="min-width:0">'+l+'</span><b style="white-space:nowrap'+(sub?';font-weight:600':'')+'">'+v+'</b></div>';
+  const bad=S.tz==='fixed'&&S.fixed==null, need=!S.tz||bad, P=_impPlanMT5(S.rep,S.acctId,need?'device':S.tz,S.fixed), money=v=>fmtMoney(v,{plus:true},cu);
+  const rl='<div class="brc-fine" style="margin:0 0 6px">MT5 trade history · '+escapeHtml(I.server)+' · account '+escapeHtml(I.account)+' · '+escapeHtml(I.currency)+'</div>';
+  const close=[{l:'Close',c:'btn btn-ghost',f:_impClose}], keep=S.scroll;
+  if(!P.rows.length&&!P.opsNew.length){ _impPending=null; _impDlg('Nothing new to import','Every position in '+fn+' is already in the journal.',rl+row('Already in the journal',P.already),close); return; }
+  const n=P.rows.length, nl=S.ledgerOn?P.opsNew.length:0;
+  let rows=rl+row('New trades',n)+row('Already in the journal',P.already);
+  if(n){
+    rows+=row('Net P&amp;L','<span style="color:var(--'+(P.pnl<0?'red':'green')+')">'+money(P.pnl)+'</span>')+row('Profit',money(P.profit),1)+row('Commission',money(P.comm),1)+row('Swap',money(P.swap),1);
+    if(P.dmin){ const y1=P.dmin.slice(0,4), y2=P.dmax.slice(0,4); rows+=row('Dates',P.dmin===P.dmax?_impDate(P.dmin,true):(y1===y2?_impDate(P.dmin,false):_impDate(P.dmin,true))+' – '+_impDate(P.dmax,true)); }
+    rows+=row('Symbols',P.symbols+(P.suffixes.length?' · “'+escapeHtml(P.suffixes.join(', '))+'” removed':''));
+    if(P.held) rows+=row('Closing on a later day',P.held+' · close day kept');
+  }
+  const opt=(k,t,sm)=>'<div class="imp-opt'+(S.tz===k?' on':'')+'" onclick="_impSetTz(\''+k+'\')"><span class="r"></span><span style="flex:1;min-width:0">'+t+(S.sg===k&&!S.pref?'<span class="imp-sg">Suggested</span>':'')+(S.pref===k?'<span class="imp-sg">Used before</span>':'')+(sm?'<small>'+sm+'</small>':'')
+    +(k==='fixed'&&S.tz==='fixed'?'<input class="form-input" id="impFixed" value="'+escapeHtml(S.fixedTxt||'')+'" placeholder="+3 or -05:30" onclick="event.stopPropagation()" onchange="_impSetFixed(this.value)"/>':'')+'</span></div>';
+  rows+='<div class="imp-sec">Report times are in</div>'+opt('utc','UTC (GMT+0)','')+opt('ny','GMT+2 winter · GMT+3 summer','US daylight-saving dates (New York close)')+opt('eu','GMT+2 winter · GMT+3 summer','European daylight-saving dates')+opt('fixed','Fixed offset…','Choose GMT±hh:mm')+opt('device','Same as my device','No conversion');
+  if(need) rows+='<div class="del-warn">'+(bad?'Enter an offset like +3 or -05:30.':'Choose the report’s time zone to continue.')+'</div>';
+  else if(S.tz==='device') rows+='<div class="brc-fine" style="margin:4px 0 0">No conversion: times are used as they are in the report.</div>';
+  else if(P.sample&&P.sample.local.date){ const z=Intl.DateTimeFormat().resolvedOptions().timeZone, w=P.sample.wall, lm=new Date(+P.sample.local.date.slice(0,4),+P.sample.local.date.slice(5,7)-1,+P.sample.local.date.slice(8,10)); rows+='<div class="brc-fine" style="margin:4px 0 0">'+_impDate(w.replace(/\./g,'-').slice(0,10),false)+' '+w.slice(11,16)+' in the report = '+_impDate(P.sample.local.date,false)+' '+P.sample.local.time+' your time ('+escapeHtml(z)+', '+_impOff(-new Date(+P.sample.local.date.slice(0,4),+P.sample.local.date.slice(5,7)-1,+P.sample.local.date.slice(8,10),+P.sample.local.time.slice(0,2),+P.sample.local.time.slice(3,5)).getTimezoneOffset())+').</div>'; }
+  if(P.opsNew.length){
+    const d=P.opsDep, w=P.opsWd, tot=d+w, plural=(c,s)=>c+' '+s+(c!==1?'s':'');
+    const txt=tot===1?('1 '+(d?'deposit':'withdrawal')+', '+money(d?P.opsDepSum:P.opsWdSum)+'.'):(tot+' operations: '+(d?plural(d,'deposit')+' '+money(P.opsDepSum):'')+(d&&w?', ':'')+(w?plural(w,'withdrawal')+' '+money(P.opsWdSum):'')+' (net '+money(P.opsDepSum+P.opsWdSum)+').');
+    rows+='<div class="imp-sec">Deposits and withdrawals</div><div style="font-size:13px;color:var(--text2);line-height:1.4">'+txt+'</div><div class="imp-sw'+(S.ledgerOn?' on':'')+'" onclick="_impToggleLedger()"><i></i><span>Add them to the Deposit / Withdraw ledger</span></div>';
+  }
+  if(P.curMis) rows+='<div class="del-warn">The file says '+escapeHtml(P.curMis.file)+'; this account is '+escapeHtml(P.curMis.acct)+'. P&amp;L is imported as typed, not converted.</div>';
+  if(a.type==='prop'||_linkedFirm(S.acctId)) rows+='<div class="brc-fine" style="margin-top:12px;margin-bottom:0">'+nm+' is a prop account: after importing, the breach check runs once for it.</div>';
+  const lab=(n?'Import '+n+' trade'+(n!==1?'s':''):'')+(nl?(n?' + ':'Add ')+nl+' ledger entr'+(nl!==1?'ies':'y'):''), none=!n&&!nl;
+  _impPending={kind:'mt5',acctId:S.acctId,rows:P.rows,already:P.already,noPair:0,ledger:S.ledgerOn?P.opsNew:[],rememberTz:need?null:{server:I.server,tz:S.tz,fixed:S.fixed}};
+  const m=document.querySelector('#importModal .modal'), st=m?m.scrollTop:0;
+  _impDlg(n?'Import trades':'Nothing new to import',n?'From '+fn+' into “'+nm+'”.':'Every position in '+fn+' is already in the journal.',rows,[{l:none?'Nothing to add':lab,c:'btn btn-primary',f:_impCommit,dis:need||none},{l:n?'Cancel':'Close',c:'btn btn-ghost',f:_impClose}]);
+  if(m) m.scrollTop=st;
+}
+function _impPreview(src,fileName,acctId){
+  if(typeof src==='string') return _impPreviewCsv(src,fileName,acctId);
+  const close=[{l:'Close',c:'btn btn-ghost',f:_impClose}];
+  if(src&&src.mt5){ if(!src.mt5.pos.length){ _impDlg('Can’t import this file','This report has no positions in it.','',close); return; } return _impMt5Open(src.mt5,fileName,acctId); }
+  _impDlg('Can’t import this file',(src&&src.err)==='NO_DECOMP'?'This browser can’t open Excel files. In MT5 save the report as HTML, or update your browser.':'This doesn’t look like an MT5 trade history report or a CSV from this app. In MT5, open History, right-click and choose Report. Or use a file from Settings → Export CSV.','',close);
+}
+function startImport(acctId){
+  const a=accounts.find(x=>x.id===acctId); if(!a||a.status==='archived'||a.status==='breached') return;
+  _impAcctId=acctId; const inp=document.getElementById('acctImportInput'); inp.value=''; inp.click();
+}
+function importPick(input){
+  const f=input.files[0]; if(!f) return; const id=_impAcctId, reader=new FileReader();
+  reader.onload=async e=>{ try{ _impPreview(await _impSniff(new Uint8Array(e.target.result)),f.name,id); }catch(err){ console.error('Import error:',err); showToast('Import failed — check file format','error'); } input.value=''; };
+  reader.readAsArrayBuffer(f);
+}
+function _impDlg(title,msgHtml,rowsHtml,btns){
+  document.getElementById('impTitle').textContent=title;
+  document.getElementById('impMsg').innerHTML=msgHtml;
+  document.getElementById('impList').innerHTML=rowsHtml||'';
+  const box=document.getElementById('impBtns'); box.innerHTML='';
+  btns.forEach(b=>{ const e=document.createElement('button'); e.className=b.c; e.textContent=b.l; e.onclick=b.f; if(b.dis){ e.disabled=true; e.style.opacity='.45'; } box.appendChild(e); });
+  document.getElementById('importModal').classList.add('open'); updateNavVisibility();
+}
+function _impClose(){ document.getElementById('importModal').classList.remove('open'); _impPending=null; _impSt=null; updateNavVisibility(); }
+function _impPreviewCsv(text,fileName,acctId){
+  const a=accounts.find(x=>x.id===acctId); if(!a) return;
+  const P=_impPlan(text,acctId), nm=escapeHtml(a.name), fn=escapeHtml(fileName), row=(l,v)=>'<div class="del-row"><span style="min-width:0">'+l+'</span><b style="white-space:nowrap">'+v+'</b></div>';
+  const close=[{l:'Close',c:'btn btn-ghost',f:_impClose}];
+  if(P.err){ _impDlg('Can’t import this file',P.err==='CSV has no data rows'?'This file has no trade rows. Use a file from Settings → Export CSV, or one with the same headers.':'It needs a pair column and a p&amp;l column. Use a file from Settings → Export CSV, or one with the same headers.','',close); return; }
+  if(!P.rows.length){
+    const m=P.noPair===0?'Every row in '+fn+' is already in the journal.':(P.already===0?'No row in '+fn+' has a pair.':'Every row in '+fn+' is already in the journal or has no pair.');
+    _impDlg('Nothing new to import',m,(P.already?row('Already in the journal',P.already):'')+(P.noPair?row('Skipped (no pair)',P.noPair):''),close); return;
+  }
+  _impPending=P; const cu=curOf(acctId), n=P.rows.length;
+  let rows=row('New trades',n)+row('Already in the journal',P.already);
+  if(P.noPair) rows+=row('Skipped (no pair)',P.noPair);
+  rows+=row('P&amp;L of the new trades','<span style="color:var(--'+(P.pnl<0?'red':'green')+')">'+fmtMoney(P.pnl,{plus:true},cu)+'</span>');
+  if(P.dmin){ const y1=P.dmin.slice(0,4), y2=P.dmax.slice(0,4); rows+=row('Dates',P.dmin===P.dmax?_impDate(P.dmin,true):(y1===y2?_impDate(P.dmin,false):_impDate(P.dmin,true))+' – '+_impDate(P.dmax,true)); }
+  if(P.otherAccts) rows+='<div class="del-warn">This file lists trades for '+(P.fileAccts>=2?P.fileAccts+' accounts':'another account')+'. All of them will go into “'+nm+'”.</div>';
+  if(P.curMis) rows+='<div class="del-warn">The file says '+escapeHtml(P.curMis.file)+'; this account is '+escapeHtml(P.curMis.acct)+'. P&amp;L is imported as typed, not converted.</div>';
+  if(a.type==='prop'||_linkedFirm(acctId)) rows+='<div class="brc-fine" style="margin-top:12px;margin-bottom:0">'+nm+' is a prop account: after importing, the breach check runs once for it.</div>';
+  _impDlg('Import trades','From '+fn+' into “'+nm+'”.',rows,[{l:'Import '+n+' trade'+(n!==1?'s':''),c:'btn btn-primary',f:_impCommit},{l:'Cancel',c:'btn btn-ghost',f:_impClose}]);
+}
+function _impCommit(){
+  const P=_impPending; _impClose(); if(!P||(!P.rows.length&&!(P.ledger&&P.ledger.length))) return;
+  const a=accounts.find(x=>x.id===P.acctId); if(!a||a.status==='archived'||a.status==='breached'){ showToast('That account can’t take trades','error'); return; }
+  P.rows.forEach(t=>trades.push(t)); if(P.rows.length) tradesVersion++;
+  const L=(P.ledger||[]).length; if(L){ if(!Array.isArray(a.ledger)) a.ledger=[]; P.ledger.forEach(e=>a.ledger.push(e)); saveAccounts(); }
+  if(P.rememberTz&&P.rememberTz.server) _impTzSave(P.rememberTz.server,P.rememberTz.tz,P.rememberTz.fixed);
+  saveTrades(); renderAll(); renderAcctList(); renderSettings();
+  const n=P.rows.length, sk=P.already+P.noPair;
+  showToast(n?('Imported '+n+' trade'+(n!==1?'s':'')+(sk?' · '+sk+' skipped':'')+(L?' · '+L+' ledger entr'+(L!==1?'ies':'y'):'')+' ✓'):('Added '+L+' ledger entr'+(L!==1?'ies':'y')+' ✓'));
+  _brcAfterSave(P.acctId);   // Batch 4b engine, once, for that account only
+}
 function parseCSVLine(line){
   // RFC-4180 aware splitter: handles quoted fields with embedded commas/newlines
   const result=[], re=/("(?:[^"]|"")*"|[^,]*)(,|$)/g;
@@ -12740,17 +13089,12 @@ function parseCSVLine(line){
   return result;
 }
 
-function importCSV(input){
-  const file = input.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try{
-      const lines = e.target.result.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n').filter(l=>l.trim());
-      if(lines.length < 2){ showToast('CSV has no data rows','error'); return; }
-
-      const rawHeaders = parseCSVLine(lines[0]).map(h=>h.trim().toLowerCase());
-      // Map our canonical column names to their indices in this file
-      const colIdx = {};
+function _csvRead(text){
+  const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n').filter(l=>l.trim());
+  if(lines.length < 2) return {err:'CSV has no data rows'};
+  const rawHeaders = parseCSVLine(lines[0]).map(h=>h.trim().toLowerCase());
+  // Map our canonical column names to their indices in this file
+  const colIdx = {};
       const canonicalMap = {
         'id':'id','account id':'accountId','accountid':'accountId',
         'pair':'pair','direction':'dir','dir':'dir',
@@ -12774,29 +13118,17 @@ function importCSV(input){
         'checklist sl placement':'cl_slpl','cl_slpl':'cl_slpl',
         'checklist exit':'cl_exit','cl_exit':'cl_exit',
       };
-      rawHeaders.forEach((h,i)=>{ const key=canonicalMap[h]; if(key) colIdx[key]=i; });
 
-      if(colIdx.pair===undefined){ showToast('Missing required column: pair','error'); return; }
-      if(colIdx.pnl===undefined){  showToast('Missing required column: p&l / pnl','error'); return; }
-
-      const existingIds = new Set(trades.map(t=>t.id));
-      let added=0, skipped=0, noAcct=0;
-
-      // Default account for rows without their own accountId: the selected account only while it is active, else the first active account (4c)
-      const _fa=activeAcctFilter!=='all'?accounts.find(a=>a.id===activeAcctFilter):null, _okA=(_fa&&_fa.status!=='archived'&&_fa.status!=='breached')?_fa:activeAccounts()[0];
-      const defaultAcctId = _okA?_okA.id:'';
-
-      const get=(row,key,fallback='')=>colIdx[key]!==undefined ? (row[colIdx[key]]||fallback) : fallback;
-
-      for(let i=1;i<lines.length;i++){
-        const row = parseCSVLine(lines[i]);
-        if(row.every(c=>!c.trim())) continue; // blank row
-
-        const id = get(row,'id') || genId()+'_'+i;
-        if(existingIds.has(id)){ skipped++; continue; }
-
-        const clSplit = s => s ? s.split(';').map(x=>x.trim()).filter(Boolean) : [];
-        const trade = {
+  rawHeaders.forEach((h,i)=>{ const key=canonicalMap[h]; if(key) colIdx[key]=i; });
+  if(colIdx.pair===undefined) return {err:'Missing required column: pair'};
+  if(colIdx.pnl===undefined) return {err:'Missing required column: p&l / pnl'};
+  return {lines,colIdx,curIdx:rawHeaders.indexOf('currency')};
+}
+function _csvTrade(row,i,colIdx,defaultAcctId){
+  const get=(row,key,fallback='')=>colIdx[key]!==undefined ? (row[colIdx[key]]||fallback) : fallback;
+  const id = get(row,'id') || genId()+'_'+i;
+  const clSplit = s => s ? s.split(';').map(x=>x.trim()).filter(Boolean) : [];
+  const trade = {
           id,
           accountId: get(row,'accountId') || defaultAcctId,
           pair:      (get(row,'pair')||'').toUpperCase(),
@@ -12827,10 +13159,34 @@ function importCSV(input){
           },
           images:[],
         };
+  return trade;
+}
+function _csvHasId(row,colIdx){ return colIdx.id!==undefined && !!row[colIdx.id]; }
+function importCSV(input){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try{
+      const R = _csvRead(e.target.result); if(R.err){ showToast(R.err,'error'); return; }
+      const lines = R.lines, colIdx = R.colIdx;
+
+      const existingIds = new Set(trades.map(t=>t.id));
+      let added=0, skipped=0, noAcct=0;
+
+      // Default account for rows without their own accountId: the selected account only while it is active, else the first active account (4c)
+      const _fa=activeAcctFilter!=='all'?accounts.find(a=>a.id===activeAcctFilter):null, _okA=(_fa&&_fa.status!=='archived'&&_fa.status!=='breached')?_fa:activeAccounts()[0];
+      const defaultAcctId = _okA?_okA.id:'';
+
+      for(let i=1;i<lines.length;i++){
+        const row = parseCSVLine(lines[i]);
+        if(row.every(c=>!c.trim())) continue; // blank row
+
+        const trade = _csvTrade(row,i,colIdx,defaultAcctId);
+        if(existingIds.has(trade.id)){ skipped++; continue; }
         if(!trade.pair){ skipped++; continue; }
         if(!trade.accountId){ noAcct++; continue; }
         trades.push(trade);
-        existingIds.add(id);
+        existingIds.add(trade.id);
         added++;
       }
 
@@ -13268,6 +13624,7 @@ function _dsKeyFromMs(ds,ms){
 // A trade is placed by its closing time (opening time if none), read as the device's local time; null = no time at all.
 function _tradeMs(t){
   const tm=t.closeTime||t.time, dm=/^(\d{4})-(\d{2})-(\d{2})$/.exec(t.date||''), tt=/^(\d{1,2}):(\d{2})/.exec(tm||''); if(!dm||!tt) return null;
+  const _cd=/^(\d{4})-(\d{2})-(\d{2})$/.exec(t.closeDate||''); if(_cd&&t.closeTime) return new Date(parseInt(_cd[1],10),parseInt(_cd[2],10)-1,parseInt(_cd[3],10),parseInt(tt[1],10),parseInt(tt[2],10)).getTime();   // Batch I2: a real close date wins
   const cross=!!(t.closeTime&&t.time&&t.closeTime<t.time);
   return new Date(parseInt(dm[1],10),parseInt(dm[2],10)-1,parseInt(dm[3],10)+(cross?1:0),parseInt(tt[1],10),parseInt(tt[2],10)).getTime();
 }
@@ -13546,6 +13903,7 @@ function openTplSource(){
 function _tplLine(f){ const t=f&&f.tpl&&_tplGet(f.tpl.id); return t?'<div class="dd-note">Rules from the template '+_tplNm(t)+', checked '+_tplD(f.tpl.on)+'.</div>':''; }
 
 function openAddFirm(){
+  _step2Id=null; document.getElementById('pStep2Banner').style.display='none';
   document.getElementById('propModalTitle').textContent = 'Add Prop Firm';
   document.getElementById('pFirmId').value = '';
   document.getElementById('pFirmName').value = '';
@@ -13581,6 +13939,7 @@ function openFirmMenu(btn,id,ev){
 }
 function openEditFirm(id){
   const f = propFirms.find(x=>x.id===id); if(!f) return;
+  _step2Id=null; document.getElementById('pStep2Banner').style.display='none';
   document.getElementById('propModalTitle').textContent = 'Edit Prop Firm';
   document.getElementById('pFirmId').value = f.id;
   document.getElementById('pFirmName').value = f.name||'';
@@ -13624,6 +13983,7 @@ function openEditFirm(id){
 function closePropModal(){
   document.getElementById('propFirmModal').classList.remove('open');
   updateNavVisibility();
+  { const _s=_step2Id; _step2Id=null; if(_s&&accounts.some(a=>a.id===_s)&&!propFirms.some(f=>f.linkedAccount===_s)) showToast('Add rules later from ⋯'); }
 }
 function closePropOnOverlay(e){ if(e.target===document.getElementById('propFirmModal')) closePropModal(); }
 
@@ -13709,7 +14069,7 @@ function savePropFirm(){
 
 function deletePropFirm(){
   const id = document.getElementById('pFirmId').value; if(!id) return;
-  showConfirm('Delete firm?','This will permanently remove this prop firm account and all payout records.',()=>{
+  showConfirm('Delete firm?',_delFirmMsg(id),()=>{
     propFirms = propFirms.filter(x=>x.id!==id);
     savePropFirms(); closePropModal(); renderPropFirms();
     showToast('Firm deleted');
