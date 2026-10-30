@@ -1683,6 +1683,14 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
           <input class="form-input" type="number" id="pMinDays" placeholder="e.g. 3"/>
         </div>
         </div>
+        <div class="form-group">
+          <label class="form-label">Day Counts When Profit Is At Least</label>
+          <div class="pm-amt"><input class="form-input" type="number" id="pMinDayPct" placeholder="0.5" min="0" max="100" step="any"/><span class="pm-unit static">% of size</span></div>
+          <div class="pm-help">Your firm’s minimum profit for a trading day to count. Blank means 0.5%.</div>
+          <label class="form-label" style="margin-top:12px">A Trade Counts On</label>
+          <select class="form-select" id="pTdBy"><option value="close">The day it closed</option><option value="open">The day it opened</option></select>
+          <div class="pm-help">Which day a trade belongs to when counting trading days. The daily limit and the trailing floor still follow the closing time.</div>
+        </div>
         <div class="form-row pm-stack">
         <div class="form-group">
           <label class="form-label" id="pDailyDDLbl">Daily DD Limit</label>
@@ -1877,6 +1885,15 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
     <div class="modal-title">How this is calculated</div>
     <div id="ddCalcBody"></div>
     <button type="button" class="btn" style="width:100%;margin-top:4px" onclick="closeDdSheet('ddCalcModal')">Close</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="tdModal" onclick="if(event.target===this)closeDdSheet('tdModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Trading days</div>
+    <div id="tdBody"></div>
+    <button type="button" class="btn" style="width:100%;margin-top:4px" onclick="closeDdSheet('tdModal')">Close</button>
   </div>
 </div>
 
@@ -2347,7 +2364,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
     <button class="st-row " onclick="document.getElementById('jsonFileInput').click()"><span class="st-ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span><span class="st-rt"><b>Restore from backup (JSON)</b></span><svg class="st-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
     <input type="file" id="jsonFileInput" accept=".json,application/json" style="display:none" onchange="importJSON(this)"/>
     <input type="file" id="csvFileInput" accept=".csv,text/csv" style="display:none" onchange="importCSV(this)"/>
-    <input type="file" id="acctImportInput" accept=".csv,.xlsx,.html,.htm,text/csv,text/html,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none" onchange="importPick(this)"/>
+    <input type="file" id="acctImportInput" style="display:none" onchange="importPick(this)"/>
   </div>
 
   <h3 class="st-h">Danger zone</h3>
@@ -9635,6 +9652,8 @@ function saveAccount(opt){
   const name=document.getElementById('acctName').value.trim(), bal=parseFloat(document.getElementById('acctBal').value)||0;
   if(!name){showToast('Enter account name','error');return;}
   const extras=_readAcctExtras(); if(!extras)return;
+  { const _ta=editingAcctId?accounts.find(a=>a.id===editingAcctId):null, _tf=_ta?_linkedFirm(_ta.id):null;   // Batch I3: Prop to Live/Demo with rules asks first
+    if(_ta&&_tf&&_ta.type==='prop'&&extras.type!=='prop'&&!(opt&&opt.typeOk)){ _typeAsk(_ta,_tf,extras.type,opt); return; } }
   if(editingAcctId){ const idx=accounts.findIndex(a=>a.id===editingAcctId); if(idx!==-1){const _oN=accounts[idx].name,_oB=accounts[idx].balance; accounts[idx].name=name;accounts[idx].balance=bal;Object.assign(accounts[idx],extras); _followFirm(editingAcctId,_oN,name,_oB,bal); if(CURRENCY_UI&&extras.currency!=='CUSTOM'){delete accounts[idx].currencySymbol;delete accounts[idx].currencyPos;} } }
   else { _newAcctId=genId(); accounts.push({id:_newAcctId,name,balance:bal,ledger:[],...extras}); }
   saveAccounts(); document.getElementById('acctModal').classList.remove('open');
@@ -9667,6 +9686,14 @@ function _syncAcctPropUI(){
   row.innerHTML='<label class="form-label">Prop Rules</label><button type="button" class="tpl-row" onclick="acctPropRowGo()"><span style="flex:1;min-width:0"><span class="t">'+T+'</span><span class="s">'+S+'</span></span><span class="ap-go">'+GO+'</span></button><div class="pm-help">'+H+'</div>';
 }
 function acctPropRowGo(){ saveAccount({rules:true}); }
+// Batch I3: a firm linked to an account decides how it shows and is checked, so changing the type away from Prop needs the rules removed first.
+function _removeFirmNow(id){ propFirms=propFirms.filter(x=>x.id!==id); savePropFirms(); try{ renderPropFirms(); }catch(e){} }
+function _typeAsk(a,f,ty,opt){
+  const lbl=ty==='demo'?'Demo':'Live';
+  _delDlg('Change type to '+lbl+'?','\u201c'+escapeHtml(a.name)+'\u201d has prop rules, so it shows as Prop and its limits are still checked. To make it '+lbl+', the rules have to go.','<div class="del-warn">'+escapeHtml(_delFirmMsg(f.id))+'</div>',[
+    {l:'Keep as Prop',c:'btn btn-primary',f:()=>{ _closeDelAcct(); const sel=document.getElementById('acctType'); sel.value='prop'; sel.dispatchEvent(new Event('change')); }},
+    {l:'Remove rules and make '+lbl,c:'btn btn-danger',f:()=>{ _closeDelAcct(); _removeFirmNow(f.id); saveAccount(Object.assign({},opt||{},{typeOk:true,rules:false})); }}]);
+}
 // Name and starting balance follow from account to firm only while they still match (no stored marker; the firm modal can still diverge).
 function _followFirm(id,oldName,newName,oldBal,newBal){
   const f=_linkedFirm(id); if(!f) return; let ch=false; const ob=parseFloat(oldBal)||0, nb=parseFloat(newBal)||0;
@@ -12955,6 +12982,12 @@ function _mt5Suggest(rep){
   fx.forEach(p=>[p.open,p.close].forEach(s=>{ const m=/^(\d{4})\.(\d{2})\.(\d{2}) (\d{2}):/.exec(s); if(!m) return; const dw=new Date(Date.UTC(+m[1],+m[2]-1,+m[3])).getUTCDay(); if(dw===0&&+m[4]>=22) sunLate++; if(dw===0||dw===6) wk++; }));
   if(sunLate>0) return 'utc'; if(fx.length>=30&&wk===0) return 'ny'; return '';
 }
+// Batch I3: the reason shown when _mt5Suggest has nothing to say (pure)
+function _mt5Why(rep){
+  const fx=rep.pos.filter(p=>!/^(BTC|ETH|LTC|XRP|SOL|DOGE|BNB|ADA|DOT)/i.test(p.symbol)); let wk=0;
+  fx.forEach(p=>[p.open,p.close].forEach(s=>{ const m=/^(\d{4})\.(\d{2})\.(\d{2}) /.exec(s); if(!m) return; const dw=new Date(Date.UTC(+m[1],+m[2]-1,+m[3])).getUTCDay(); if(dw===0||dw===6) wk++; }));
+  return wk>0?'No suggestion: positions have weekend times that fit more than one zone.':'No suggestion: this report has '+fx.length+' position'+(fx.length!==1?'s':'')+'. The hint needs at least 30, with no weekend times.';
+}
 // Pure: what importing this report into acctId WOULD do under a given server zone
 function _impPlanMT5(rep,acctId,tz,fixed){
   const out={err:null,kind:'mt5',acctId,rows:[],already:0,pnl:0,profit:0,comm:0,swap:0,dmin:'',dmax:'',symbols:0,suffixes:[],held:0,opsNew:[],opsDep:0,opsWd:0,opsDepSum:0,opsWdSum:0,curMis:null,sample:null};
@@ -13006,6 +13039,7 @@ function _impMt5Render(){
   const opt=(k,t,sm)=>'<div class="imp-opt'+(S.tz===k?' on':'')+'" onclick="_impSetTz(\''+k+'\')"><span class="r"></span><span style="flex:1;min-width:0">'+t+(S.sg===k&&!S.pref?'<span class="imp-sg">Suggested</span>':'')+(S.pref===k?'<span class="imp-sg">Used before</span>':'')+(sm?'<small>'+sm+'</small>':'')
     +(k==='fixed'&&S.tz==='fixed'?'<input class="form-input" id="impFixed" value="'+escapeHtml(S.fixedTxt||'')+'" placeholder="+3 or -05:30" onclick="event.stopPropagation()" onchange="_impSetFixed(this.value)"/>':'')+'</span></div>';
   rows+='<div class="imp-sec">Report times are in</div>'+opt('utc','UTC (GMT+0)','')+opt('ny','GMT+2 winter · GMT+3 summer','US daylight-saving dates (New York close)')+opt('eu','GMT+2 winter · GMT+3 summer','European daylight-saving dates')+opt('fixed','Fixed offset…','Choose GMT±hh:mm')+opt('device','Same as my device','No conversion');
+  if(!S.sg&&!S.pref) rows+='<div class="brc-fine" style="margin:6px 0 0">'+_mt5Why(S.rep)+'</div>';
   if(need) rows+='<div class="del-warn">'+(bad?'Enter an offset like +3 or -05:30.':'Choose the report’s time zone to continue.')+'</div>';
   else if(S.tz==='device') rows+='<div class="brc-fine" style="margin:4px 0 0">No conversion: times are used as they are in the report.</div>';
   else if(P.sample&&P.sample.local.date){ const z=Intl.DateTimeFormat().resolvedOptions().timeZone, w=P.sample.wall, lm=new Date(+P.sample.local.date.slice(0,4),+P.sample.local.date.slice(5,7)-1,+P.sample.local.date.slice(8,10)); rows+='<div class="brc-fine" style="margin:4px 0 0">'+_impDate(w.replace(/\./g,'-').slice(0,10),false)+' '+w.slice(11,16)+' in the report = '+_impDate(P.sample.local.date,false)+' '+P.sample.local.time+' your time ('+escapeHtml(z)+', '+_impOff(-new Date(+P.sample.local.date.slice(0,4),+P.sample.local.date.slice(5,7)-1,+P.sample.local.date.slice(8,10),+P.sample.local.time.slice(0,2),+P.sample.local.time.slice(3,5)).getTimezoneOffset())+').</div>'; }
@@ -13396,16 +13430,42 @@ function getNextPayoutDate(f){
   return d;
 }
 
-function calcTradingDaysInCycle(f){
+// Batch I3: ONE day list feeds both the card count and the Trading days sheet, so they can never differ.
+// A day counts when its net P&L is at least minDayPct (default 0.5) percent of the account size; tdBy:'open' puts a trade on the day it opened (trading days only).
+function _openMs(t){ const dm=/^(\d{4})-(\d{2})-(\d{2})$/.exec(t.date||''), tt=/^(\d{1,2}):(\d{2})/.exec(t.time||''); if(!dm||!tt) return null; return new Date(parseInt(dm[1],10),parseInt(dm[2],10)-1,parseInt(dm[3],10),parseInt(tt[1],10),parseInt(tt[2],10)).getTime(); }
+function _tdKey(f,t){ if(f&&f.tdBy==='open'){ const ds=f.dayStart; if(!ds) return t.date; const ms=_openMs(t); return ms==null?t.date:_dsKeyFromMs(ds,ms); } return _fdKey(f,t); }
+function _tdMinPct(f){ const v=parseFloat(f&&f.minDayPct); return v>0?v:0.5; }
+function _tdDays(f){
   const linked = getLinkedTrades(f);
-  if(linked === null) return 0;
+  if(linked === null) return null;
   const cutoff = getCycleCutoff(f);
   const scoped = cutoff ? linked.filter(t=>parseLocalDate(t.date)>cutoff) : linked;
-  // Only count days where the day's net P&L > 0.5% of account size
-  const threshold = (f.acctSize||0) * 0.005;
-  const byDay = {};
-  scoped.forEach(t=>{ const _k=_fdKey(f,t); byDay[_k]=(byDay[_k]||0)+parseFloat(t.pnl||0); });
-  return Object.values(byDay).filter(v=>v>threshold).length;
+  const pct = _tdMinPct(f), thr = (f.acctSize||0) * pct / 100, byDay = {};
+  scoped.forEach(t=>{ const _k=_tdKey(f,t); byDay[_k]=(byDay[_k]||0)+parseFloat(t.pnl||0); });
+  const days = Object.keys(byDay).sort().map(k=>({key:k, net:byDay[k], counts:byDay[k]>0 && Math.round(byDay[k]*100)>=Math.round(thr*100)}));
+  return {days, thr, pct};
+}
+function calcTradingDaysInCycle(f){
+  const r = _tdDays(f);
+  return r ? r.days.filter(d=>d.counts).length : 0;
+}
+function _tdFmt(k){ return _dsFmtKey(k)+', '+String(k).slice(0,4); }
+function _tdFmtDate(k){ const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(k||''); if(!m) return ''; return parseInt(m[3],10)+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(m[2],10)-1]+' '+m[1]; }
+function openTradingDays(id){
+  const f=propFirms.find(x=>x.id===id); if(!f) return; const r=_tdDays(f); if(!r) return;
+  const C=_firmCur(f), fm=(v,o)=>fmtMoney(v,o,C), size=parseFloat(f.acctSize)||0, ds=f.dayStart, byOpen=f.tdBy==='open';
+  const row=(l,v,col)=>'<div class="dd-row"><span style="min-width:0">'+l+'</span><b style="white-space:nowrap;align-self:center'+(col?';color:var(--'+col+')':'')+'">'+v+'</b></div>';
+  const lp=(f.phase==='funded'&&f.payout&&f.payout.lastPayoutDate)?f.payout.lastPayoutDate:'', sc=_startCut(f), lpd=lp?parseLocalDate(lp):null;
+  let since=''; if(lpd&&(!sc||lpd>=sc)) since=' Counted after your last payout on '+_tdFmtDate(lp)+'.'; else if(f.startDate&&sc) since=' Counted since '+_tdFmtDate(f.startDate)+'.';
+  let h='<div class="pm-help" style="font-size:13px;margin:0 0 6px">A day counts when its net P&amp;L is at least '+fm(r.thr,null)+' ('+(Math.round(r.pct*100)/100)+'% of '+fm(size,{dec:0})+'). '
+    +(ds?'Days follow '+escapeHtml(_dsLabel(ds))+'. A trade counts on the day it '+(byOpen?'opened':'closed')+'.':'Days are the dates you typed for each trade (the day it opened), because this firm has no day start.')+since+'</div>';
+  let cnt=0, loss=0;
+  r.days.slice().reverse().forEach(d=>{ if(d.net<0){ loss++; return; } if(d.net===0) return; if(d.counts) cnt++;
+    h+=row(_tdFmt(d.key), fm(d.net,{plus:true})+(size>0?' \u00b7 '+(d.net/size*100).toFixed(2)+'%':'')+' '+(d.counts?'\u2713':'\u2715'), d.counts?'green':'text3'); });
+  h+=row('Days with a loss',String(loss),'text3');
+  h+='<div class="dd-row" style="margin-top:6px"><span><b>Counting</b></span><b>'+cnt+' of '+(parseInt(f.minDays)||0)+' needed</b></div>';
+  h+='<div class="pm-help" style="margin-top:8px">If your firm\u2019s dashboard shows a different number, compare its list of days with this one. The usual reasons: the minimum profit for a day, which day a trade belongs to, which clock the days follow, and where the cycle starts (start date or last payout).</div>';
+  document.getElementById('tdBody').innerHTML=h; document.getElementById('tdModal').classList.add('open'); updateNavVisibility();
 }
 
 function calcConsistencyStatus(f){
@@ -13913,6 +13973,7 @@ function openAddFirm(){
   document.getElementById('pMaxDD').value = '';
   document.getElementById('pDailyDD').value = '';
   document.getElementById('pMinDays').value = '';
+  document.getElementById('pMinDayPct').value = ''; document.getElementById('pTdBy').value = 'close';
   document.getElementById('pNotes').value = '';
   document.getElementById('pConsistencyType').value = 'none';
   document.getElementById('consistencyValueGroup').style.display = 'none';
@@ -13934,6 +13995,7 @@ function openAddFirm(){
 function openFirmMenu(btn,id,ev){
   const f=propFirms.find(x=>x.id===id); if(!f)return;
   const items=[{label:'Edit firm',icon:_I.edit,fn:()=>openEditFirm(id)}];
+  if(f.linkedAccount && (parseInt(f.minDays)||0)>0 && accounts.some(a=>a.id===f.linkedAccount)) items.push({label:'Trading days',icon:_I.check,fn:()=>openTradingDays(id)});
   if(f.phase==='funded' || (f.payouts||[]).length) items.push({label:'Payouts',icon:_I.coins,fn:()=>openPayoutLog(id)});
   openActionMenu(btn,items,ev);
 }
@@ -13965,6 +14027,7 @@ function openEditFirm(id){
   document.getElementById('pMinPayout').value = py.minPayout||'';
   document.getElementById('pLastPayoutDate').value = py.lastPayoutDate||'';
   document.getElementById('pStartDate').value = f.startDate||'';
+  document.getElementById('pMinDayPct').value = f.minDayPct>0?f.minDayPct:''; document.getElementById('pTdBy').value = (f.tdBy==='open')?'open':'close';
   document.getElementById('pDeleteBtnWrap').style.display = 'block';
   document.getElementById('pDdType').value=(f.ddType==='eodTrailing')?'eodTrailing':'static';
   document.getElementById('pDdLock').value=f.ddLockAt?'start':'none';
@@ -14042,6 +14105,10 @@ function savePropFirm(){
   // Optional fields are only written when used, so firms that don't use them stay byte-identical to before.
   const _lm=_limitModes(); if(Object.keys(_lm).length) firmData.limitMode=_lm;
   const _sd=(document.getElementById('pStartDate')||{}).value||''; if(_sd&&linkedAccount) firmData.startDate=_sd;
+  if(linkedAccount){   // Batch I3: written only when used (rule 32)
+    const _mp=Math.min(100,parseFloat(document.getElementById('pMinDayPct').value)||0); if(_mp>0&&_mp!==0.5) firmData.minDayPct=_mp;
+    if(document.getElementById('pTdBy').value==='open') firmData.tdBy='open';
+  }
   if(linkedAccount){   // Batch R2: daily-loss options and personal stop, written only when used (rule 32)
     const _dv=parseFloat(document.getElementById('pDailyDD').value)||0, _mv=parseFloat(document.getElementById('pMaxDD').value)||0;
     if(_dv>0 && _lm.dailyDD==='pct' && document.getElementById('pDayKind').value==='sod') firmData.dailyKind='pctSod';
