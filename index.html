@@ -1689,7 +1689,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
           <div class="pm-help">Your firm’s minimum profit for a trading day to count. Blank means 0.5%.</div>
           <label class="form-label" style="margin-top:12px">A Trade Counts On</label>
           <select class="form-select" id="pTdBy"><option value="close">The day it closed</option><option value="open">The day it opened</option></select>
-          <div class="pm-help">Which day a trade belongs to when counting trading days. The daily limit and the trailing floor still follow the closing time.</div>
+          <div class="pm-help">Which day a trade belongs to when counting trading days and the best day. The daily limit and the trailing floor still follow the closing time.</div>
         </div>
         <div class="form-row pm-stack">
         <div class="form-group">
@@ -9783,10 +9783,11 @@ function openAcctMenu(btn,id,ev){
   const a=accounts.find(x=>x.id===id); if(!a)return;
   const items=[{label:'Edit account',icon:_I.edit,fn:()=>editAccount(id)}];
   if(a.status!=='archived'){ const _pf=_linkedFirm(id); if(_pf||a.type==='prop') items.push({label:_pf?'Edit prop rules':'Set up prop rules',icon:_I.chart,fn:()=>{ if(_pf) openEditFirm(_pf.id); else _propStep2(id,false); }}); }
-  if(a.status==='archived') items.push({label:'Restore account',icon:_I.restore,fn:()=>restoreAccount(id)});
+  if(a.status==='archived'){ items.push({label:'Restore account',icon:_I.restore,fn:()=>restoreAccount(id)}); if(_expRows(id).length) items.push({label:'Export trades',icon:_I.exp,fn:()=>openAcctExport(id)}); }
   else{
     if(a.status==='breached') items.push({label:'Reactivate account',icon:_I.restore,fn:()=>reactivateAccount(id)});
     if(a.status!=='breached') items.push({label:'Import trades',icon:_I.imp,fn:()=>startImport(id)});   // Batch I1: active accounts only
+    if(_expRows(id).length) items.push({label:'Export trades',icon:_I.exp,fn:()=>openAcctExport(id)});   // Batch I4: any account that has trades
     items.push({label:'Deposit / Withdraw',icon:_I.ledger,fn:()=>openLedgerModal(id)});
     if(a.status!=='breached') items.push({label:'Mark as breached',icon:_I.flag,fn:()=>markBreachedManual(id)});
     if(a.status==='breached'||activeAccounts().length>1) items.push({label:'Archive account',icon:_I.archive,fn:()=>archiveAccount(id)});
@@ -12430,6 +12431,7 @@ document.addEventListener('pointerdown',e=>{ if(_am&&!_am.contains(e.target)&&!_
 window.addEventListener('scroll',closeActionMenu,true); window.addEventListener('resize',closeActionMenu);
 const _I={
   imp:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+  exp:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
   flag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
   edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
   ledger:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>',
@@ -12801,6 +12803,7 @@ const CSV_HEADERS = [
   'Setup','Emotion','Reasoning','Notes',
   'Checklist HTF','Checklist Liquidity','Checklist Setup','Checklist POI',
   'Checklist Confluence','Checklist SL Placement','Checklist Exit',
+  'Close Date','Close Time',
 ];
 
 function tradeToCSVRow(t){
@@ -12818,6 +12821,7 @@ function tradeToCSVRow(t){
     (cl.conf  ||[]).join('; '),
     (cl.slpl  ||[]).join('; '),
     (cl.exit  ||[]).join('; '),
+    t.closeDate||(t.closeTime?t.date:''), t.closeTime||'',   // Batch I4: the day a trade closed is part of the file
   ];
   return vals.map(v=>{
     const s = v===null||v===undefined ? '' : String(v);
@@ -12834,6 +12838,38 @@ function exportCSV(){
   const ts = new Date().toISOString().slice(0,10);
   triggerDownload(blob, `trades_${ts}.csv`);
   showToast(`Exported ${trades.length} trades ✓`);
+}
+
+// ─── Batch I4: per-account Export trades (menu item, dialog, download / copy) ───
+let _expSt=null;
+function _expRows(id){ return trades.filter(t=>t.accountId===id); }
+function _expCsv(list){
+  const _cc=CURRENCY_UI;
+  return [(_cc?CSV_HEADERS.concat(['Currency']):CSV_HEADERS).join(','), ...list.map(t=>tradeToCSVRow(t)+(_cc?','+curOf(t.accountId).code:''))].join('\r\n');
+}
+function _expName(a){ const slug=String(a.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40)||'account'; return 'trades_'+slug+'_'+new Date().toISOString().slice(0,10)+'.csv'; }
+function openAcctExport(id){
+  const a=accounts.find(x=>x.id===id); if(!a) return; const list=_expRows(id);
+  if(!list.length){ showToast('No trades to export','error'); return; }
+  const ds=list.map(t=>t.date).filter(Boolean).sort(), dmin=ds[0]||'', dmax=ds[ds.length-1]||'', name=_expName(a);
+  _expSt={id,csv:_expCsv(list),name,n:list.length};
+  const row=(l,v)=>'<div class="del-row"><span style="min-width:0">'+l+'</span><b style="white-space:nowrap">'+v+'</b></div>';
+  let rows='<div class="brc-fine" style="margin:0 0 6px">'+escapeHtml(a.name)+'</div>'+row('Trades',list.length);
+  if(dmin){ const y1=dmin.slice(0,4), y2=dmax.slice(0,4); rows+=row('Dates',dmin===dmax?_impDate(dmin,true):(y1===y2?_impDate(dmin,false):_impDate(dmin,true))+' – '+_impDate(dmax,true)); }
+  rows+='<div class="brc-fine" style="margin:6px 0 0;overflow-wrap:anywhere">File: '+escapeHtml(name)+'</div>';
+  _impDlg('Export trades','One row per trade, with its open and close date and time. You can import the file again into any account.',rows,
+    [{l:'Download file',c:'btn btn-primary',f:_expDownload},{l:'Copy as text',c:'btn btn-ghost',f:_expCopy},{l:'Cancel',c:'btn btn-ghost',f:_impClose}]);
+}
+function _expDownload(){
+  const S=_expSt; if(!S) return;
+  triggerDownload(new Blob([S.csv],{type:'text/csv;charset=utf-8;'}),S.name);
+  _impClose(); showToast('Exported '+S.n+' trade'+(S.n!==1?'s':'')+' ✓');
+}
+function _expCopy(){
+  const S=_expSt; if(!S) return;
+  const done=()=>{ _impClose(); showToast('Copied '+S.n+' trade'+(S.n!==1?'s':'')+' ✓'); }, fail=()=>showToast('Could not copy','error');
+  const legacy=()=>{ try{ const ta=document.createElement('textarea'); ta.value=S.csv; ta.setAttribute('readonly',''); ta.style.cssText='position:fixed;top:0;left:0;opacity:0'; document.body.appendChild(ta); ta.select(); const ok=document.execCommand('copy'); document.body.removeChild(ta); if(ok) done(); else fail(); }catch(e){ fail(); } };
+  if(navigator.clipboard&&navigator.clipboard.writeText){ try{ navigator.clipboard.writeText(S.csv).then(done,legacy); }catch(e){ legacy(); } } else legacy();
 }
 
 // ─── Batch I1: per-account Import trades (menu item, preview, commit) ───
@@ -13151,6 +13187,7 @@ function _csvRead(text){
         'checklist confluence':'cl_conf','cl_conf':'cl_conf',
         'checklist sl placement':'cl_slpl','cl_slpl':'cl_slpl',
         'checklist exit':'cl_exit','cl_exit':'cl_exit',
+        'close date':'closeDate','close time':'closeTime',
       };
 
   rawHeaders.forEach((h,i)=>{ const key=canonicalMap[h]; if(key) colIdx[key]=i; });
@@ -13193,6 +13230,7 @@ function _csvTrade(row,i,colIdx,defaultAcctId){
           },
           images:[],
         };
+  { const _cd=get(row,'closeDate'), _ct=get(row,'closeTime'); if(_ct) trade.closeTime=_ct; if(_cd&&_cd!==trade.date) trade.closeDate=_cd; }   // Batch I4: only when the file has them, so older files import exactly as before
   return trade;
 }
 function _csvHasId(row,colIdx){ return colIdx.id!==undefined && !!row[colIdx.id]; }
@@ -13481,7 +13519,7 @@ function calcConsistencyStatus(f){
     const profitTrades = scoped.filter(t=>parseFloat(t.pnl)>0);
     if(!profitTrades.length) return {status:'ok', msg:'No profit days yet'};
     const byDay = {};
-    profitTrades.forEach(t=>{ const _k=_fdKey(f,t); byDay[_k]=(byDay[_k]||0)+parseFloat(t.pnl); });
+    profitTrades.forEach(t=>{ const _k=_tdKey(f,t); byDay[_k]=(byDay[_k]||0)+parseFloat(t.pnl); });
     const totalProfit = Object.values(byDay).reduce((s,v)=>s+v,0);
     const maxDay = Math.max(...Object.values(byDay));
     const maxDayPct = totalProfit>0 ? (maxDay/totalProfit)*100 : 0;
