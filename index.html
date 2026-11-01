@@ -12832,6 +12832,7 @@ function tradeToCSVRow(t){
 
 function exportCSV(){
   if(!trades.length){ showToast('No trades to export','error'); return; }
+  if(_inTg()){ openAcctExport('*'); return; }   // Batch I5: same copy / share dialog, all accounts
   const _cc=CURRENCY_UI;   // trailing 'Currency' column only when per-account currencies are on; importCSV ignores it
   const lines = [(_cc?CSV_HEADERS.concat(['Currency']):CSV_HEADERS).join(','), ...trades.map(t=>tradeToCSVRow(t)+(_cc?','+curOf(t.accountId).code:''))];
   const blob = new Blob([lines.join('\r\n')], {type:'text/csv;charset=utf-8;'});
@@ -12842,28 +12843,42 @@ function exportCSV(){
 
 // ─── Batch I4: per-account Export trades (menu item, dialog, download / copy) ───
 let _expSt=null;
-function _expRows(id){ return trades.filter(t=>t.accountId===id); }
+function _expRows(id){ return id==='*'?trades.slice():trades.filter(t=>t.accountId===id); }
 function _expCsv(list){
   const _cc=CURRENCY_UI;
   return [(_cc?CSV_HEADERS.concat(['Currency']):CSV_HEADERS).join(','), ...list.map(t=>tradeToCSVRow(t)+(_cc?','+curOf(t.accountId).code:''))].join('\r\n');
 }
-function _expName(a){ const slug=String(a.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40)||'account'; return 'trades_'+slug+'_'+new Date().toISOString().slice(0,10)+'.csv'; }
+function _expName(a){
+  const d=new Date().toISOString().slice(0,10); if(!a) return 'trades_'+d+'.csv';
+  const slug=String(a.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40)||'account'; return 'trades_'+slug+'_'+d+'.csv';
+}
 function openAcctExport(id){
-  const a=accounts.find(x=>x.id===id); if(!a) return; const list=_expRows(id);
+  const all=id==='*', a=all?null:accounts.find(x=>x.id===id); if(!all&&!a) return; const list=_expRows(id);
   if(!list.length){ showToast('No trades to export','error'); return; }
-  const ds=list.map(t=>t.date).filter(Boolean).sort(), dmin=ds[0]||'', dmax=ds[ds.length-1]||'', name=_expName(a);
-  _expSt={id,csv:_expCsv(list),name,n:list.length};
+  const ds=list.map(t=>t.date).filter(Boolean).sort(), dmin=ds[0]||'', dmax=ds[ds.length-1]||'', name=_expName(a), csv=_expCsv(list), inTg=_inTg();
+  let file=null;   // Batch I5: inside Telegram, offer Share file only when the phone says it can share this file
+  if(inTg){ try{ const f=new File([csv],name,{type:'text/csv'}); if(navigator.share&&navigator.canShare&&navigator.canShare({files:[f]})) file=f; }catch(e){} }
+  _expSt={id,csv,name,n:list.length,file};
   const row=(l,v)=>'<div class="del-row"><span style="min-width:0">'+l+'</span><b style="white-space:nowrap">'+v+'</b></div>';
-  let rows='<div class="brc-fine" style="margin:0 0 6px">'+escapeHtml(a.name)+'</div>'+row('Trades',list.length);
+  let rows='<div class="brc-fine" style="margin:0 0 6px">'+(all?'All accounts':escapeHtml(a.name))+'</div>'+row('Trades',list.length);
   if(dmin){ const y1=dmin.slice(0,4), y2=dmax.slice(0,4); rows+=row('Dates',dmin===dmax?_impDate(dmin,true):(y1===y2?_impDate(dmin,false):_impDate(dmin,true))+' – '+_impDate(dmax,true)); }
   rows+='<div class="brc-fine" style="margin:6px 0 0;overflow-wrap:anywhere">File: '+escapeHtml(name)+'</div>';
-  _impDlg('Export trades','One row per trade, with its open and close date and time. You can import the file again into any account.',rows,
-    [{l:'Download file',c:'btn btn-primary',f:_expDownload},{l:'Copy as text',c:'btn btn-ghost',f:_expCopy},{l:'Cancel',c:'btn btn-ghost',f:_impClose}]);
+  let msg, btns;
+  if(!inTg){ msg='One row per trade, with its open and close date and time. You can import the file again into any account.'; btns=[{l:'Download file',c:'btn btn-primary',f:_expDownload},{l:'Copy as text',c:'btn btn-ghost',f:_expCopy},{l:'Cancel',c:'btn btn-ghost',f:_impClose}]; }
+  else if(file){ msg='Downloads don\u2019t work inside Telegram. Share the file, or copy the text.'; btns=[{l:'Share file',c:'btn btn-primary',f:_expShare},{l:'Copy as text',c:'btn btn-ghost',f:_expCopy},{l:'Cancel',c:'btn btn-ghost',f:_impClose}]; }
+  else { msg='Downloads don\u2019t work inside Telegram. Copy the text, then paste it into Notes or a spreadsheet.'; btns=[{l:'Copy as text',c:'btn btn-primary',f:_expCopy},{l:'Cancel',c:'btn btn-ghost',f:_impClose}]; }
+  _impDlg('Export trades',msg,rows,btns);
 }
 function _expDownload(){
   const S=_expSt; if(!S) return;
-  triggerDownload(new Blob([S.csv],{type:'text/csv;charset=utf-8;'}),S.name);
+  if(_inTg()){ showToast('Downloads don\u2019t work inside Telegram','error'); return; }
+  if(triggerDownload(new Blob([S.csv],{type:'text/csv;charset=utf-8;'}),S.name)===false){ showToast('Could not download','error'); return; }
   _impClose(); showToast('Exported '+S.n+' trade'+(S.n!==1?'s':'')+' ✓');
+}
+function _expShare(){
+  const S=_expSt; if(!S||!S.file) return; let p;
+  try{ p=navigator.share({files:[S.file],title:S.name}); }catch(e){ showToast('Could not share','error'); return; }
+  Promise.resolve(p).then(()=>{ _impClose(); showToast('Shared ✓'); },e=>{ if(!e||e.name!=='AbortError') showToast('Could not share','error'); });   // cancelling the share sheet is not an error
 }
 function _expCopy(){
   const S=_expSt; if(!S) return;
@@ -13278,6 +13293,7 @@ function importCSV(input){
 // ─── JSON Backup / Restore ───
 
 async function exportJSON(){
+  if(_inTg()){ _impDlg('Backup can\u2019t be saved here','Downloads don\u2019t work inside Telegram. To save a backup file, open the journal in Chrome or Safari and sign in with the same Google account. Check it shows the same trade count first.','',[{l:'OK',c:'btn btn-primary',f:_impClose}]); return; }   // Batch I5
   // Count images up front so we know whether this is a quick export or a
   // longer one worth showing progress for.
   const imageJobs = [];
@@ -13385,12 +13401,15 @@ function importJSON(input){
   reader.readAsText(file);
 }
 
+function _inTg(){ try{ return !!(tg && tg.initData); }catch(e){ return false; } }   // Batch I5: true only inside a Telegram mini app (initData is empty in a plain browser)
 function triggerDownload(blob, filename){
+  if(_inTg()) return false;   // Batch I5: a file cannot be saved from inside Telegram; callers must not claim success
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = filename;
   document.body.appendChild(a); a.click();
   setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+  return true;
 }
 
 // ─── Prop Firm Tracker ───
