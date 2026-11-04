@@ -283,6 +283,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .tag-r-pos{background:var(--accent2-dim);color:#60a5fa}
 .tag-r-neg{background:var(--red-dim);color:var(--red)}
 .tag-over{background:transparent;color:var(--amber);border:1px solid var(--amber)}
+.per-row{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:9px 0;border:0;border-bottom:1px solid var(--border);background:none;color:var(--text);font:inherit;font-size:13px;text-align:left;cursor:pointer}
+.per-row .t{color:var(--text2);min-width:0}
+.per-row b{font-family:var(--mono);white-space:nowrap}
+.per-hint{border-left:3px solid var(--accent);background:var(--card2,rgba(120,120,120,.10));padding:9px 10px;border-radius:8px;font-size:12px;line-height:1.4;margin:8px 0}
+.per-use{background:none;border:0;color:var(--accent);font:inherit;font-weight:700;padding:0;cursor:pointer;white-space:nowrap}
 .tag-amber{background:var(--amber-dim);color:var(--amber)}
 .trade-bottom{display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:var(--text3);font-family:var(--mono);padding-left:6px}
 .cl-summary{padding-left:6px;margin-top:5px;font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -2756,6 +2761,7 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
       <select id="acctRiskMode" hidden onchange="updateRiskPreview()"><option value="pct">pct</option><option value="fixed">fixed</option></select>
       <input class="form-input" id="acctRiskVal" type="number" step="any" min="0" placeholder="e.g. 0.5" oninput="updateRiskPreview()"/>
       <div id="acctRiskPreview" style="font-size:11.5px;color:var(--text3);margin-top:6px;line-height:1.4"></div>
+      <div id="acctPeriods" style="margin-top:14px"></div>
     </div>
     <div class="form-group">
       <label class="form-label">Notes <span style="opacity:.6;font-weight:500;text-transform:none;letter-spacing:0">(optional)</span></label>
@@ -2775,6 +2781,21 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
      Swipe a row left to reveal Edit (see _swipeStart/_swipeMove/_swipeEnd),
      which reuses this same acctModal in edit mode rather than duplicating
      the rename/balance form. ══ -->
+<div class="modal-overlay centered" id="periodModal" onclick="closeOnOverlay(event)">
+  <div class="modal">
+    <div class="modal-title" id="periodTitle">Add a risk period</div>
+    <div class="brc-fine" style="margin:0 0 10px">Risk per trade from this date until the next period starts.</div>
+    <div class="form-group"><label class="form-label">From</label><input class="form-input" id="periodFrom" type="date" oninput="periodHintUpdate()" onchange="periodHintUpdate()"/></div>
+    <div class="form-group"><label class="form-label" id="periodAmtLabel">Risk per trade</label><input class="form-input" id="periodAmt" type="number" step="any" min="0" inputmode="decimal" placeholder="e.g. 17"/></div>
+    <div class="per-hint" id="periodHint" style="display:none"></div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
+      <button class="btn btn-primary" onclick="savePeriod()">Save period</button>
+      <button class="btn btn-ghost" onclick="closePeriod()">Cancel</button>
+      <button class="btn btn-danger" id="periodDelBtn" style="display:none" onclick="deletePeriod()">Delete period</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay centered" id="switchAcctModal" onclick="closeOnOverlay(event)">
   <div class="modal">
         <div class="modal-title">Switch Account</div>
@@ -7499,7 +7520,7 @@ function openPeek(id){
     </div>
     <div class="card" style="padding:12px;margin-bottom:10px;background:var(--surface2)">
       ${irow('Entry',escapeHtml(t.entry)||'—')} ${irow('Exit',escapeHtml(t.exit)||'—')}
-      ${irow('Size',escapeHtml(t.size)||'—')} ${t.riskSrc?irowN('Risk',t.risk?_amtRaw((+t.risk).toFixed(2),t):'—',t.riskSrc==='sl'?'≈ from initial stop loss':'≈ from account default'):irow('Risk',t.risk?_amtRaw(escapeHtml(t.risk),t):'—')}
+      ${irow('Size',escapeHtml(t.size)||'—')} ${t.riskSrc?irowN('Risk',t.risk?_amtRaw((+t.risk).toFixed(2),t):'—',t.riskSrc==='sl'?'≈ from initial stop loss':t.riskSrc==='period'?'≈ from risk period':'≈ from account default'):irow('Risk',t.risk?_amtRaw(escapeHtml(t.risk),t):'—')}
       ${(t.sl||t.slInit)?(t.slInit?irowN('Stop Loss',t.sl?escapeHtml(t.sl):'—','Moved from '+escapeHtml(t.slInit)):irow('Stop Loss',escapeHtml(t.sl))):''} ${t.tp?irow('Take Profit',escapeHtml(t.tp)):''}
       ${r!==null?irow('R:R',(parseFloat(r)>=0?'+':'')+r+'R'):''}
     </div>
@@ -8077,17 +8098,74 @@ function defaultRiskFor(a){
   return a.riskMode==='fixed' ? a.riskValue : Math.round(acctBalance(a)*a.riskValue)/100;
 }
 // New trades only: prefill Risk Amount from the chosen account's default risk, unless the user already typed one.
+// ─── Batch I7: risk periods ───
+// An account may hold dated risks ({from:'YYYY-MM-DD', amount}); each runs until the next starts. The latest period with from <= date applies.
+function periodRiskAt(a,date){ const P=a&&a.riskPeriods; if(!P||!P.length||!date) return null; let r=null; P.forEach(x=>{ if(x.from<=date&&(!r||x.from>r.from)) r=x; }); return r?r.amount:null; }
+// median gross loss of the trades a stop closed in [from,to) on one account; null under 5 trades
+function periodHintFor(acctId,from,to){ const v=trades.filter(t=>t.accountId===acctId&&t.slHit>0&&t.date>=from&&(!to||t.date<to)).map(t=>+t.slHit).sort((x,y)=>x-y), n=v.length; if(n<5) return null; const m=n%2?v[(n-1)/2]:(v[n/2-1]+v[n/2])/2; return {med:Math.round(m*100)/100,n}; }
+let _acctPeriods=[], _perIdx=-1;
+const _perFmt=d=>{ const m=String(d).split('-'); return (+m[2])+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m[1]-1]+' '+m[0]; };   // not toLocaleDateString: some engines print Sept
+function renderAcctPeriods(){
+  const el=document.getElementById('acctPeriods'); if(!el) return; const cu=_acctFormCur();
+  el.innerHTML='<label class="form-label" style="margin-bottom:2px">Risk periods <span style="opacity:.6;font-weight:500;text-transform:none;letter-spacing:0">(optional)</span></label><div style="font-size:11.5px;color:var(--text3);line-height:1.4;margin-bottom:4px">For when your risk changed. Each period runs until the next one starts.</div>'
+    +_acctPeriods.map((p,i)=>'<button type="button" class="per-row" onclick="openPeriod('+i+')"><span class="t">From '+_perFmt(p.from)+'</span><b>'+fmtMoney(p.amount,null,cu)+'</b></button>').join('')
+    +'<button type="button" class="btn btn-ghost" style="width:100%;margin-top:10px" onclick="openPeriod(-1)">+ Add a period</button>';
+}
+function openPeriod(i){
+  _perIdx=i; const p=i>=0?_acctPeriods[i]:null, cu=_acctFormCur();
+  document.getElementById('periodTitle').textContent=p?'Edit risk period':'Add a risk period';
+  document.getElementById('periodFrom').value=p?p.from:''; document.getElementById('periodAmt').value=p?p.amount:'';
+  document.getElementById('periodAmtLabel').textContent='Risk per trade ('+cu.sym+')';
+  document.getElementById('periodDelBtn').style.display=p?'block':'none';
+  periodHintUpdate(); document.getElementById('periodModal').classList.add('open'); updateNavVisibility();
+}
+function closePeriod(){ document.getElementById('periodModal').classList.remove('open'); updateNavVisibility(); }
+function periodHintUpdate(){
+  const h=document.getElementById('periodHint'), from=document.getElementById('periodFrom').value; h.style.display='none';
+  if(!editingAcctId||!/^\d{4}-\d{2}-\d{2}$/.test(from)) return;
+  const nx=_acctPeriods.filter((p,i)=>i!==_perIdx&&p.from>from).map(p=>p.from).sort()[0]||'', r=periodHintFor(editingAcctId,from,nx); if(!r) return;
+  const cu=_acctFormCur(); h.innerHTML='≈ '+fmtMoney(r.med,null,cu)+' from '+r.n+' trades stopped out in this range, before commission. <button type="button" class="per-use" onclick="periodUseHint('+r.med+')">Use '+fmtMoney(r.med,null,cu)+'</button>'; h.style.display='block';
+}
+function periodUseHint(v){ document.getElementById('periodAmt').value=String(v); }
+function savePeriod(){
+  const from=document.getElementById('periodFrom').value, amt=parseFloat(document.getElementById('periodAmt').value);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(from)){ showToast('Pick the date this period starts','error'); return; }
+  if(!(amt>0)){ showToast('Enter the risk per trade','error'); return; }
+  if(_perIdx>=0) _acctPeriods.splice(_perIdx,1);
+  _acctPeriods=_acctPeriods.filter(p=>p.from!==from); _acctPeriods.push({from,amount:amt}); _acctPeriods.sort((x,y)=>x.from<y.from?-1:1);
+  renderAcctPeriods(); closePeriod();
+}
+function deletePeriod(){ if(_perIdx>=0) _acctPeriods.splice(_perIdx,1); renderAcctPeriods(); closePeriod(); }
+// after the account is saved with changed periods: trades that follow a period (no typed risk, no stop from the order) are set, updated or cleared
+function _periodApplyPlan(id){
+  const a=accounts.find(x=>x.id===id), add=[], upd=[], clr=[]; if(!a) return {add,upd,clr};
+  trades.forEach(t=>{ if(t.accountId!==id||t.riskSrc==='sl') return; const cur=parseFloat(t.risk)>0?+t.risk:0; if(cur&&!t.riskSrc) return;
+    const per=periodRiskAt(a,t.date);
+    if(per){ if(!cur) add.push({t,risk:per}); else if(t.riskSrc!=='period'||Math.abs(cur-per)>0.0049) upd.push({t,risk:per}); }
+    else if(t.riskSrc==='period') clr.push({t}); });
+  return {add,upd,clr};
+}
+function _periodApplyAsk(id){
+  const P=_periodApplyPlan(id), n=P.add.length+P.upd.length+P.clr.length; if(!n) return; const onlyAdd=!P.upd.length&&!P.clr.length, pl=n+' trade'+(n!==1?'s':'');
+  showConfirm(onlyAdd?'Add risk to '+pl+'?':'Update risk on '+pl+'?', onlyAdd?'These trades are in your periods and have no risk yet. Trades with a typed risk or a stop from the order keep theirs.':'These trades follow your risk periods. Trades with a typed risk or a stop from the order keep theirs.', ()=>_periodApply(id), onlyAdd?'Add risk to '+pl:'Update '+pl);
+}
+function _periodApply(id){
+  const P=_periodApplyPlan(id), n=P.add.length+P.upd.length+P.clr.length; if(!n) return;
+  P.add.concat(P.upd).forEach(f=>{ f.t.risk=f.risk; f.t.rr=+((parseFloat(f.t.pnl)||0)/f.risk).toFixed(2); f.t.riskSrc='period'; });
+  P.clr.forEach(f=>{ f.t.risk=''; f.t.rr=null; delete f.t.riskSrc; });
+  tradesVersion++; saveTrades(); renderAll(); showToast('Risk updated on '+n+' trade'+(n!==1?'s':'')+' ✓');
+}
 function applyDefaultRisk(){
   if(editingTradeId) return;
   const el=document.getElementById('fRisk'), hint=document.getElementById('fRiskHint'); if(!el)return;
   if(el.value!=='' && el.dataset.auto!=='1') return;
-  const a=accounts.find(x=>x.id===document.getElementById('fAccount').value), r=defaultRiskFor(a);
+  const a=accounts.find(x=>x.id===document.getElementById('fAccount').value), _fd=(document.getElementById('fDate')||{}).value||(()=>{const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})(), _pr=periodRiskAt(a,_fd), r=_pr!=null?_pr:defaultRiskFor(a);   // Batch I7: a risk period covering the date wins
   if(r==null){ if(el.dataset.auto==='1'){ el.value=''; delete el.dataset.auto; autoCalc(); } if(hint)hint.style.display='none'; return; }
   el.value=String(r); el.dataset.auto='1'; autoCalc();
-  if(hint){ hint.textContent='Default risk: '+(a.riskMode==='fixed'?fmtMoney(a.riskValue,null,a):(+a.riskValue)+'% of balance')+' · '+a.name; hint.style.display='block'; }
+  if(hint){ hint.textContent=(_pr!=null?'Risk period: '+fmtMoney(_pr,null,a):'Default risk: '+(a.riskMode==='fixed'?fmtMoney(a.riskValue,null,a):(+a.riskValue)+'% of balance'))+' · '+a.name; hint.style.display='block'; }
 }
 document.addEventListener('change',e=>{ if(e.target&&e.target.id==='fAccount'){ applyDefaultRisk(); syncTradeFormCur(); autoCalc(); } if(e.target&&e.target.id==='qAccount') syncQuickCur(); });
-['input','change'].forEach(ev=>document.addEventListener(ev,e=>{ const id=e.target&&e.target.id; if(id==='fPair'||id==='fDate') autoCalc(); }));
+['input','change'].forEach(ev=>document.addEventListener(ev,e=>{ const id=e.target&&e.target.id; if(id==='fPair'||id==='fDate') autoCalc(); if(id==='fDate') applyDefaultRisk(); }));
 document.addEventListener('input',e=>{ if(e.target&&e.target.id==='fRisk'){ delete e.target.dataset.auto; const h=document.getElementById('fRiskHint'); if(h)h.style.display='none'; } });
 function populateAccountDropdown(selectedId,keep){
   document.getElementById('fAccount').innerHTML=_acctOpts(selectableAccounts(selectedId),selectedId,keep?selectedId:null);
@@ -9598,6 +9676,7 @@ function _fillAcctExtras(a){
   document.getElementById('acctNotes').value=(a&&a.notes)||'';
   document.getElementById('acctRiskMode').value=(a&&a.riskMode)||'pct';
   document.getElementById('acctRiskVal').value=(a&&a.riskValue>0)?a.riskValue:'';
+  _acctPeriods=((a&&a.riskPeriods)||[]).map(x=>({from:x.from,amount:x.amount}));   // Batch I7
   if(CURRENCY_UI){
     document.getElementById('acctCurGroup').style.display='';
     const c=(a&&a.currency&&(a.currency==='CUSTOM'||Object.prototype.hasOwnProperty.call(CURRENCIES,a.currency)))?a.currency:'USD';
@@ -9617,12 +9696,13 @@ function _syncAcctCurUI(){
   const lbl=document.getElementById('acctBalLbl'); if(lbl) lbl.textContent='Starting Balance ('+_acctFormCur().sym+')';
   const box=document.getElementById('acctCurCustom'); if(box) box.style.display=(CURRENCY_UI&&document.getElementById('acctCurrency').value==='CUSTOM')?'block':'none';
 }
-function onAcctCurChange(){ _syncAcctCurUI(); updateRiskPreview(); }
+function onAcctCurChange(){ renderAcctPeriods(); _syncAcctCurUI(); updateRiskPreview(); }
 function _readAcctExtras(){
   const mode=document.getElementById('acctRiskMode').value||'pct'; let val=parseFloat(document.getElementById('acctRiskVal').value);
   if(!(val>0)) val=0;
   if(mode==='pct'&&val>100){ showToast('Risk can’t be more than 100% of the balance','error'); return null; }
   const ex={type:document.getElementById('acctType').value||'live', broker:document.getElementById('acctBroker').value.trim(), notes:document.getElementById('acctNotes').value.trim(), riskMode:mode, riskValue:val};
+  if(_acctPeriods.length) ex.riskPeriods=_acctPeriods.map(x=>({from:x.from,amount:x.amount})).sort((x,y)=>x.from<y.from?-1:1);   // Batch I7
   if(CURRENCY_UI){
     const cc=document.getElementById('acctCurrency').value||'USD'; ex.currency=cc;
     if(cc==='CUSTOM'){
@@ -9647,24 +9727,25 @@ function openAddAccount(){
   editingAcctId=null;
   document.getElementById('acctModalTitle').textContent='New Account';
   document.getElementById('acctName').value=''; document.getElementById('acctBal').value='';
-  _fillAcctExtras(null); _syncAcctPropUI();
+  _fillAcctExtras(null); _syncAcctPropUI(); renderAcctPeriods();
   document.getElementById('acctDeleteBtn').style.display='none';
   document.getElementById('acctModal').classList.add('open');
   updateNavVisibility();
 }
 let _newAcctId=null;
 function saveAccount(opt){
+  let _perChanged=false;   // Batch I7: the account's risk periods changed
   const name=document.getElementById('acctName').value.trim(), bal=parseFloat(document.getElementById('acctBal').value)||0;
   if(!name){showToast('Enter account name','error');return;}
   const extras=_readAcctExtras(); if(!extras)return;
   { const _ta=editingAcctId?accounts.find(a=>a.id===editingAcctId):null, _tf=_ta?_linkedFirm(_ta.id):null;   // Batch I3: Prop to Live/Demo with rules asks first
     if(_ta&&_tf&&_ta.type==='prop'&&extras.type!=='prop'&&!(opt&&opt.typeOk)){ _typeAsk(_ta,_tf,extras.type,opt); return; } }
-  if(editingAcctId){ const idx=accounts.findIndex(a=>a.id===editingAcctId); if(idx!==-1){const _oN=accounts[idx].name,_oB=accounts[idx].balance; accounts[idx].name=name;accounts[idx].balance=bal;Object.assign(accounts[idx],extras); _followFirm(editingAcctId,_oN,name,_oB,bal); if(CURRENCY_UI&&extras.currency!=='CUSTOM'){delete accounts[idx].currencySymbol;delete accounts[idx].currencyPos;} } }
+  if(editingAcctId){ const idx=accounts.findIndex(a=>a.id===editingAcctId); if(idx!==-1){const _oN=accounts[idx].name,_oB=accounts[idx].balance; const _oldPer=JSON.stringify(accounts[idx].riskPeriods||[]); accounts[idx].name=name;accounts[idx].balance=bal;Object.assign(accounts[idx],extras); if(!extras.riskPeriods) delete accounts[idx].riskPeriods; _perChanged=_oldPer!==JSON.stringify(accounts[idx].riskPeriods||[]); _followFirm(editingAcctId,_oN,name,_oB,bal); if(CURRENCY_UI&&extras.currency!=='CUSTOM'){delete accounts[idx].currencySymbol;delete accounts[idx].currencyPos;} } }
   else { _newAcctId=genId(); accounts.push({id:_newAcctId,name,balance:bal,ledger:[],...extras}); }
   saveAccounts(); document.getElementById('acctModal').classList.remove('open');
   updateNavVisibility();
   renderAll(); renderAcctList(); renderSettings(); showToast(editingAcctId?'Account updated ✓':'Account added ✓');
-  { const _eid=editingAcctId, _nid=_newAcctId; _newAcctId=null;   // Batch 4d: a new Prop account goes on to its rules; the Prop Rules row saves, then opens them
+  { const _eid=editingAcctId, _nid=_newAcctId; _newAcctId=null; if(_eid&&_perChanged) setTimeout(()=>_periodApplyAsk(_eid),0);   // Batch 4d: a new Prop account goes on to its rules; the Prop Rules row saves, then opens them
     if(_nid&&extras.type==='prop') _propStep2(_nid,true);
     else if(opt&&opt.rules&&_eid){ const _f=_linkedFirm(_eid); if(_f) openEditFirm(_f.id); else _propStep2(_eid,false); } }
 }
@@ -9898,7 +9979,7 @@ function editAccount(id){
   editingAcctId=id; const a=accounts.find(x=>x.id===id); if(!a)return;
   document.getElementById('acctModalTitle').textContent='Edit Account';
   document.getElementById('acctName').value=a.name; document.getElementById('acctBal').value=a.balance;
-  _fillAcctExtras(a); _syncAcctPropUI();
+  _fillAcctExtras(a); _syncAcctPropUI(); renderAcctPeriods();
   document.getElementById('acctDeleteBtn').style.display=accounts.length>1?'block':'none';
   document.getElementById('acctModal').classList.add('open');
   updateNavVisibility();
@@ -9971,8 +10052,8 @@ function renderStrategyPerformance(){
   const metrics=[['Win Rate',scoped.length?Math.round(wins.length/scoped.length*100)+'%':'—'],[pfLabel,pf],['Total Trades',scoped.length]];
   if(rMode) metrics.push(['Scope','All accounts']);
   document.getElementById('strategyPerformance').innerHTML=metrics.map(([label,value])=>'<div><span class="metric-label">'+label+'</span><span class="metric-value">'+value+'</span></div>').join('');
-  { const _nt=document.getElementById('strategyPerfNote'); if(_nt){ const B=scoped.filter(t=>t.riskSrc==='sl'&&calcR(t)!==null).length, C=scoped.filter(t=>t.riskSrc==='default'&&calcR(t)!==null).length;   // Batch I6
-    if(rMode&&!dispActive()&&(B||C)){ const r2=rProfitFactor(scoped), z=r2.total-r2.n, pl=n=>n+' trade'+(n!==1?'s':''); _nt.textContent='R taken from the initial stop on '+pl(B)+', from the account default on '+C+', '+pl(z)+' without risk '+(z!==1?'are':'is')+' left out.'; _nt.style.display='block'; } else _nt.style.display='none'; } }
+  { const _nt=document.getElementById('strategyPerfNote'); if(_nt){ const B=scoped.filter(t=>t.riskSrc==='sl'&&calcR(t)!==null).length, C=scoped.filter(t=>t.riskSrc==='default'&&calcR(t)!==null).length, PP=scoped.filter(t=>t.riskSrc==='period'&&calcR(t)!==null).length;   // Batch I6
+    if(rMode&&!dispActive()&&(B||C||PP)){ const r2=rProfitFactor(scoped), z=r2.total-r2.n, pl=n=>n+' trade'+(n!==1?'s':''); _nt.textContent='R taken from the initial stop on '+pl(B)+(PP?', from a risk period on '+PP:'')+', from the account default on '+C+', '+pl(z)+' without risk '+(z!==1?'are':'is')+' left out.'; _nt.style.display='block'; } else _nt.style.display='none'; } }
 }
 function renderStrategyRuleChecks(){
   const el=document.getElementById('strategyRuleChecks');
@@ -12995,15 +13076,15 @@ function _mt5FromRows(rows){
       for(let i=ho+1;i<rows.length;i++){ let r=rows[i]; if(!r.length||!DT.test(r[0]||'')) break; if(r.length>H.length&&r[4]==='') r=r.filter((_,k)=>k!==4); const v=parseFloat(r[sI]); if(v>0) ordSl[String(r[oI])]=v; }
     }
   }
-  const ops=[], idl=sec('Deals');
+  const ops=[], slKeys=new Set(), idl=sec('Deals');   // Batch I7: slKeys = closes made by a stop loss
   if(idl>=0){
     let hd=idl+1; while(hd<rows.length&&!(rows[hd].includes('Deal')&&rows[hd].includes('Type'))) hd++;
     if(hd<rows.length){
-      const H=rows[hd], tI=H.indexOf('Type'), dI=H.indexOf('Deal'), pI=H.indexOf('Profit'), cI=H.indexOf('Comment');
-      for(let i=hd+1;i<rows.length;i++){ const r=rows[i]; if(!r.length||!DT.test(r[0]||'')) break; if(String(r[tI]).toLowerCase()==='balance') ops.push({time:r[0],deal:r[dI],amount:_mnum(r[pI]),comment:(cI>=0&&r[cI])||''}); }
+      const H=rows[hd], tI=H.indexOf('Type'), dI=H.indexOf('Deal'), pI=H.indexOf('Profit'), cI=H.indexOf('Comment'), yI=H.indexOf('Symbol');
+      for(let i=hd+1;i<rows.length;i++){ const r=rows[i]; if(!r.length||!DT.test(r[0]||'')) break; if(String(r[tI]).toLowerCase()==='balance') ops.push({time:r[0],deal:r[dI],amount:_mnum(r[pI]),comment:(cI>=0&&r[cI])||''}); else if(yI>=0&&cI>=0&&/^\[sl\b/i.test(String(r[cI]||''))) slKeys.add(String(r[yI])+'|'+String(r[0]).slice(0,19)); }
     }
   }
-  return {info,pos,ops,ordSl};
+  return {info,pos,ops,ordSl,slKeys};
 }
 // bytes -> a CSV text, an MT5 report ({mt5}), or an error ({err})
 async function _impSniff(u8){
@@ -13059,29 +13140,42 @@ function _mt5Why(rep){
 // Pure: what importing this report into acctId WOULD do under a given server zone
 // Batch I6: the money risk of one imported position. Gross profit / price move = money per price unit (it already holds lot size,
 // contract size and quote-currency conversion), times the distance from entry to the INITIAL stop. Falls back to the account default.
-function _mt5Risk(p,ordSl,dflt){
+function _mt5Risk(p,ordSl,dflt,per){
   const osl=ordSl?ordSl[String(p.ticket)]:0, e=parseFloat(p.price), c=parseFloat(p.closePrice), g=p.profit, buy=p.type!=='sell';
   if(osl>0&&e>0&&c>0&&Math.abs(g)>=0.25&&(buy?osl<e:osl>e)){
     const mv=buy?c-e:e-c;
     if(mv&&g*mv>0){ const r=Math.abs(e-osl)*Math.abs(g/mv); if(r>0&&isFinite(r)){ const f=parseFloat(p.sl); return {risk:+r.toFixed(2),src:'sl',slInit:(f>0&&Math.abs(f-osl)<1e-9)?'':String(osl)}; } }
   }
+  if(per>0) return {risk:per,src:'period',slInit:''};   // Batch I7: the account's risk period covering the trade's date
   return dflt>0?{risk:dflt,src:'default',slInit:''}:{risk:0,src:'',slInit:''};
 }
+// Batch I7: the gross loss (before commission) of a trade that a stop loss closed, the stop being on the loss side of entry; 0 otherwise
+function _mt5SlHit(p,keys){
+  if(!keys||!(p.profit<0)||!keys.has(String(p.symbol)+'|'+String(p.close).slice(0,19))) return 0;
+  const e=parseFloat(p.price), sl=parseFloat(p.sl), buy=p.type!=='sell';
+  if(!(e>0)||!(sl>0)||(buy?sl>=e:sl<=e)) return 0;
+  return +(-p.profit).toFixed(2);
+}
 function _impPlanMT5(rep,acctId,tz,fixed){
-  const out={err:null,kind:'mt5',acctId,fill:[],rS:0,rD:0,rN:0,rMoved:0,fS:0,fD:0,rows:[],already:0,pnl:0,profit:0,comm:0,swap:0,dmin:'',dmax:'',symbols:0,suffixes:[],held:0,opsNew:[],opsDep:0,opsWd:0,opsDepSum:0,opsWdSum:0,curMis:null,sample:null};
+  const out={err:null,kind:'mt5',acctId,fill:[],rS:0,rD:0,rN:0,rP:0,rMoved:0,fR:0,fK:0,rows:[],already:0,pnl:0,profit:0,comm:0,swap:0,dmin:'',dmax:'',symbols:0,suffixes:[],held:0,opsNew:[],opsDep:0,opsWd:0,opsDepSum:0,opsWdSum:0,curMis:null,sample:null};
   const existing=new Set(trades.map(t=>t.id)), syms=new Set(), suf=new Set(), acct=accounts.find(a=>a.id===acctId), I=rep.info;
   const byId=new Map(trades.map(t=>[t.id,t])), dflt=acct?defaultRiskFor(acct):null;
   rep.pos.forEach((p,k)=>{
     const [base,sx]=_mt5Sym(p.symbol); syms.add(base); if(sx) suf.add(sx);
     const o=_impToLocal(p.open,tz,fixed), c=_impToLocal(p.close,tz,fixed);
     if(k===0) out.sample={wall:p.open,local:o};
-    const id='mt5-'+I.account+'-'+p.ticket, rsk=_mt5Risk(p,rep.ordSl,dflt);
-    if(existing.has(id)){ out.already++; const x=byId.get(id); if(x&&x.accountId===acctId&&!(parseFloat(x.risk)>0)&&rsk.risk){ out.fill.push({t:x,risk:rsk.risk,src:rsk.src,slInit:rsk.slInit}); if(rsk.src==='sl') out.fS++; else out.fD++; } return; }
+    const id='mt5-'+I.account+'-'+p.ticket, hit=_mt5SlHit(p,rep.slKeys);
+    if(existing.has(id)){ out.already++; const x=byId.get(id);
+      if(x&&x.accountId===acctId){ const r2=_mt5Risk(p,rep.ordSl,dflt,acct?periodRiskAt(acct,x.date):null), needR=!(parseFloat(x.risk)>0)&&r2.risk>0, needK=hit>0&&!x.slHit;
+        if(needR||needK){ out.fill.push({t:x,risk:needR?r2.risk:0,src:r2.src,slInit:r2.slInit,slHit:needK?hit:0}); if(needR) out.fR++; if(needK) out.fK++; } }
+      return; }
+    const rsk=_mt5Risk(p,rep.ordSl,dflt,acct?periodRiskAt(acct,o.date):null);
     existing.add(id);
     const net=+(p.profit+p.commission+p.swap).toFixed(2);
     const t={id,accountId:acctId,pair:base,dir:p.type==='sell'?'short':'long',date:o.date,time:o.time,closeTime:c.time,session:detectSession(o.time),entry:p.price,exit:p.closePrice,size:p.volume,pnl:net,rr:null,risk:'',sl:p.sl,tp:p.tp,setup:'',emotion:'',reason:'',notes:'',checklist:{htf:[],liq:[],setup:[],poi:[],conf:[],slpl:[],exit:[]},images:[]};
     if(c.date&&c.date!==o.date){ t.closeDate=c.date; out.held++; }
-    if(rsk.risk){ t.risk=rsk.risk; t.rr=+(net/rsk.risk).toFixed(2); t.riskSrc=rsk.src; if(rsk.slInit) t.slInit=rsk.slInit; if(rsk.src==='sl'){ out.rS++; if(rsk.slInit) out.rMoved++; } else out.rD++; } else out.rN++;
+    if(rsk.risk){ t.risk=rsk.risk; t.rr=+(net/rsk.risk).toFixed(2); t.riskSrc=rsk.src; if(rsk.slInit) t.slInit=rsk.slInit; if(rsk.src==='sl'){ out.rS++; if(rsk.slInit) out.rMoved++; } else if(rsk.src==='period') out.rP++; else out.rD++; } else out.rN++;
+    if(hit) t.slHit=hit;
     out.rows.push(t); out.pnl+=net; out.profit+=p.profit; out.comm+=p.commission; out.swap+=p.swap;
     if(o.date){ if(!out.dmin||o.date<out.dmin) out.dmin=o.date; if(!out.dmax||o.date>out.dmax) out.dmax=o.date; }
   });
@@ -13114,11 +13208,13 @@ function _impMt5Render(){
   if(n){
     rows+=row('Net P&amp;L','<span style="color:var(--'+(P.pnl<0?'red':'green')+')">'+money(P.pnl)+'</span>')+row('Profit',money(P.profit),1)+row('Commission',money(P.comm),1)+row('Swap',money(P.swap),1);
     if(P.dmin){ const y1=P.dmin.slice(0,4), y2=P.dmax.slice(0,4); rows+=row('Dates',P.dmin===P.dmax?_impDate(P.dmin,true):(y1===y2?_impDate(P.dmin,false):_impDate(P.dmin,true))+' – '+_impDate(P.dmax,true)); }
-    if(P.rS||P.rD){ rows+=row('R from stop loss',P.rS+' of '+n); if(P.rMoved) rows+=row('Stop was moved',P.rMoved,1); if(P.rN+P.rD) rows+=row('No stop at entry',(P.rN+P.rD)+' · '+(P.rD?'account default used':'R left blank'),1); }
+    if(P.rS||P.rD||P.rP){ rows+=row('R from stop loss',P.rS+' of '+n); if(P.rMoved) rows+=row('Stop was moved',P.rMoved,1);
+      if(a.riskPeriods&&a.riskPeriods.length){ if(P.rP) rows+=row('Risk period used',P.rP,1); if(P.rD) rows+=row('Account default used',P.rD,1); if(P.rN) rows+=row('No risk (before the first period)',P.rN,1); }
+      else if(P.rN+P.rD) rows+=row('No stop at entry',(P.rN+P.rD)+' · '+(P.rD?'account default used':'R left blank'),1); }
     rows+=row('Symbols',P.symbols+(P.suffixes.length?' · “'+escapeHtml(P.suffixes.join(', '))+'” removed':''));
     if(P.held) rows+=row('Closing on a later day',P.held+' · close day kept');
   }
-  if(nf) rows+=row('Risk added to existing trades',nf);
+  if(P.fR) rows+=row('Risk added to existing trades',P.fR); if(P.fK) rows+=row('Closed-by-stop noted on existing trades',P.fK);
   const opt=(k,t,sm)=>'<div class="imp-opt'+(S.tz===k?' on':'')+'" onclick="_impSetTz(\''+k+'\')"><span class="r"></span><span style="flex:1;min-width:0">'+t+(S.sg===k&&!S.pref?'<span class="imp-sg">Suggested</span>':'')+(S.pref===k?'<span class="imp-sg">Used before</span>':'')+(sm?'<small>'+sm+'</small>':'')
     +(k==='fixed'&&S.tz==='fixed'?'<input class="form-input" id="impFixed" value="'+escapeHtml(S.fixedTxt||'')+'" placeholder="+3 or -05:30" onclick="event.stopPropagation()" onchange="_impSetFixed(this.value)"/>':'')+'</span></div>';
   rows+='<div class="imp-sec">Report times are in</div>'+opt('utc','UTC (GMT+0)','')+opt('ny','GMT+2 winter · GMT+3 summer','US daylight-saving dates (New York close)')+opt('eu','GMT+2 winter · GMT+3 summer','European daylight-saving dates')+opt('fixed','Fixed offset…','Choose GMT±hh:mm')+opt('device','Same as my device','No conversion');
@@ -13133,7 +13229,7 @@ function _impMt5Render(){
   }
   if(P.curMis) rows+='<div class="del-warn">The file says '+escapeHtml(P.curMis.file)+'; this account is '+escapeHtml(P.curMis.acct)+'. P&amp;L is imported as typed, not converted.</div>';
   if(a.type==='prop'||_linkedFirm(S.acctId)) rows+='<div class="brc-fine" style="margin-top:12px;margin-bottom:0">'+nm+' is a prop account: after importing, the breach check runs once for it.</div>';
-  const lab=(n?'Import '+n+' trade'+(n!==1?'s':''):'')+(nl?(n?' + ':'Add ')+nl+' ledger entr'+(nl!==1?'ies':'y'):'')+(nf&&!n&&!nl?'Add risk to '+nf+' trade'+(nf!==1?'s':''):''), none=!n&&!nl&&!nf;
+  const lab=(n?'Import '+n+' trade'+(n!==1?'s':''):'')+(nl?(n?' + ':'Add ')+nl+' ledger entr'+(nl!==1?'ies':'y'):'')+(nf&&!n&&!nl?(P.fR&&!P.fK?'Add risk to '+P.fR+' trade'+(P.fR!==1?'s':''):'Update '+nf+' trade'+(nf!==1?'s':'')):''), none=!n&&!nl&&!nf;
   _impPending={kind:'mt5',acctId:S.acctId,rows:P.rows,fill:P.fill,already:P.already,noPair:0,ledger:S.ledgerOn?P.opsNew:[],rememberTz:need?null:{server:I.server,tz:S.tz,fixed:S.fixed}};
   const m=document.querySelector('#importModal .modal'), st=m?m.scrollTop:0;
   _impDlg(n||nf?'Import trades':'Nothing new to import',n||nf?'From '+fn+' into “'+nm+'”.':'Every position in '+fn+' is already in the journal.',rows,[{l:none?'Nothing to add':lab,c:'btn btn-primary',f:_impCommit,dis:need||none},{l:n||nf?'Cancel':'Close',c:'btn btn-ghost',f:_impClose}]);
@@ -13186,13 +13282,13 @@ function _impCommit(){
   const P=_impPending; _impClose(); if(!P||(!P.rows.length&&!(P.ledger&&P.ledger.length)&&!(P.fill&&P.fill.length))) return;
   const a=accounts.find(x=>x.id===P.acctId); if(!a||a.status==='archived'||a.status==='breached'){ showToast('That account can’t take trades','error'); return; }
   P.rows.forEach(t=>trades.push(t)); if(P.rows.length) tradesVersion++;
-  const F=P.fill||[];   // Batch I6: risk added to trades already in the journal (only ever on a trade that has none)
-  if(F.length){ F.forEach(f=>{ if(parseFloat(f.t.risk)>0) return; f.t.risk=f.risk; f.t.rr=+((parseFloat(f.t.pnl)||0)/f.risk).toFixed(2); f.t.riskSrc=f.src; if(f.slInit) f.t.slInit=f.slInit; }); tradesVersion++; }
+  const F=P.fill||[]; let fr=0;   // Batch I6/I7: risk (only ever on a trade that has none) and the closed-by-stop figure added to trades already in the journal
+  if(F.length){ F.forEach(f=>{ if(f.slHit&&!f.t.slHit) f.t.slHit=f.slHit; if(!(f.risk>0)||parseFloat(f.t.risk)>0) return; f.t.risk=f.risk; f.t.rr=+((parseFloat(f.t.pnl)||0)/f.risk).toFixed(2); f.t.riskSrc=f.src; if(f.slInit) f.t.slInit=f.slInit; fr++; }); tradesVersion++; }
   const L=(P.ledger||[]).length; if(L){ if(!Array.isArray(a.ledger)) a.ledger=[]; P.ledger.forEach(e=>a.ledger.push(e)); saveAccounts(); }
   if(P.rememberTz&&P.rememberTz.server) _impTzSave(P.rememberTz.server,P.rememberTz.tz,P.rememberTz.fixed);
   saveTrades(); renderAll(); renderAcctList(); renderSettings();
   const n=P.rows.length, sk=P.already+P.noPair;
-  showToast(n?('Imported '+n+' trade'+(n!==1?'s':'')+(sk?' · '+sk+' skipped':'')+(L?' · '+L+' ledger entr'+(L!==1?'ies':'y'):'')+' ✓'):(L?('Added '+L+' ledger entr'+(L!==1?'ies':'y')+' ✓'):('Risk added to '+F.length+' trade'+(F.length!==1?'s':'')+' ✓')));
+  showToast(n?('Imported '+n+' trade'+(n!==1?'s':'')+(sk?' · '+sk+' skipped':'')+(L?' · '+L+' ledger entr'+(L!==1?'ies':'y'):'')+' ✓'):(L?('Added '+L+' ledger entr'+(L!==1?'ies':'y')+' ✓'):(fr?('Risk added to '+fr+' trade'+(fr!==1?'s':'')+' ✓'):('Updated '+F.length+' trade'+(F.length!==1?'s':'')+' ✓'))));
   _brcAfterSave(P.acctId);   // Batch 4b engine, once, for that account only
 }
 function parseCSVLine(line){
