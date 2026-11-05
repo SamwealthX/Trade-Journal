@@ -290,6 +290,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .per-use{background:none;border:0;color:var(--accent);font:inherit;font-weight:700;padding:0;cursor:pointer;white-space:nowrap}
 .tag-amber{background:var(--amber-dim);color:var(--amber)}
 .trade-bottom{display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:var(--text3);font-family:var(--mono);padding-left:6px}
+.trade-item .trade-bottom>span:first-child{min-width:0}
+.trade-item .trade-bottom>span:last-child{flex:0 0 auto;align-self:flex-start;margin-left:8px;white-space:nowrap}   /* Batch I8 */
 .cl-summary{padding-left:6px;margin-top:5px;font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* ── Pre-Trade cards ── */
 .pretrade-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px;margin-bottom:9px;position:relative;overflow:hidden}
@@ -8035,6 +8037,7 @@ function openEditTrade(t){
   document.getElementById('fExit').value=t.exit||'';
   document.getElementById('fSize').value=t.size||'';
   document.getElementById('fRisk').value=t.risk||'';
+  { const _h=document.getElementById('fRiskHint'); if(_h){ if(t.riskSrc==='period'){ _h.textContent='From your risk period. Changing the date updates it.'; _h.style.display='block'; } else _h.style.display='none'; } }   // Batch I8
   document.getElementById('fPnl').value=t.pnl||''; document.getElementById('fPnl').dataset.auto='0';
   document.getElementById('fSl').value=t.sl||'';
   document.getElementById('fTp').value=t.tp||'';
@@ -8893,6 +8896,11 @@ function saveTrade(){
   }
   if(editingTradeId){ const _o2=trades.find(x=>x.id===editingTradeId); if(_o2&&_o2.closeDate&&_o2.date===trade.date&&_o2.time===trade.time&&_o2.closeTime===trade.closeTime) trade.closeDate=_o2.closeDate; }   // Batch I2: keep the close date unless the times were edited
   if(editingTradeId){ const _o3=trades.find(x=>x.id===editingTradeId); if(_o3){ if(_o3.slInit) trade.slInit=_o3.slInit; if(_o3.riskSrc&&trade.risk!==''&&String(_o3.risk)===String(trade.risk)) trade.riskSrc=_o3.riskSrc; } }   // Batch I6
+  let _perMsg='';   // Batch I8: a period-sourced risk follows the trade's date (and account); a typed or stop risk never does
+  if(editingTradeId){ const _o4=trades.find(x=>x.id===editingTradeId); if(_o4&&_o4.riskSrc==='period'&&trade.riskSrc==='period'&&(_o4.date!==trade.date||_o4.accountId!==trade.accountId)){
+    const _pa=accounts.find(x=>x.id===trade.accountId), _pv=periodRiskAt(_pa,trade.date);
+    if(_pv>0){ if(Math.abs(_pv-parseFloat(trade.risk))>0.0049){ trade.risk=_pv; trade.rr=+((parseFloat(trade.pnl)||0)/_pv).toFixed(2); _perMsg='Risk now '+fmtMoney(_pv,null,_pa)+' from your period'; } }
+    else { trade.risk=''; trade.rr=null; delete trade.riskSrc; _perMsg='Risk cleared: no period covers that date'; } } }
   if(editingTradeId){ const idx=trades.findIndex(t=>t.id===editingTradeId); if(idx!==-1)trades[idx]=trade; }
   else trades.push(trade);
   tradesVersion++;
@@ -8919,7 +8927,7 @@ function saveTrade(){
   }
   saveTrades(); closeModal(); renderAll();
   if(isNew){ const tl=document.getElementById('tradeList'); if(tl) tl.scrollIntoView({block:'start',behavior:'smooth'}); }
-  showToast(editingTradeId?'Trade updated ✓':'Trade saved ✓');
+  showToast(_perMsg||(editingTradeId?'Trade updated ✓':'Trade saved ✓'));
   _brcAfterSave(trade.accountId);   // Batch 4b: that account only
 }
 
@@ -12894,6 +12902,7 @@ const CSV_HEADERS = [
   'Checklist HTF','Checklist Liquidity','Checklist Setup','Checklist POI',
   'Checklist Confluence','Checklist SL Placement','Checklist Exit',
   'Close Date','Close Time',
+  'Risk Source','Initial Stop','Closed By Stop',
 ];
 
 function tradeToCSVRow(t){
@@ -12912,6 +12921,7 @@ function tradeToCSVRow(t){
     (cl.slpl  ||[]).join('; '),
     (cl.exit  ||[]).join('; '),
     t.closeDate||(t.closeTime?t.date:''), t.closeTime||'',   // Batch I4: the day a trade closed is part of the file
+    t.riskSrc||'', t.slInit||'', t.slHit||'',   // Batch I8: where the risk came from, the initial stop, the gross loss of a stop-out
   ];
   return vals.map(v=>{
     const s = v===null||v===undefined ? '' : String(v);
@@ -13333,6 +13343,7 @@ function _csvRead(text){
         'checklist sl placement':'cl_slpl','cl_slpl':'cl_slpl',
         'checklist exit':'cl_exit','cl_exit':'cl_exit',
         'close date':'closeDate','close time':'closeTime',
+        'risk source':'riskSrc','initial stop':'slInit','closed by stop':'slHit',
       };
 
   rawHeaders.forEach((h,i)=>{ const key=canonicalMap[h]; if(key) colIdx[key]=i; });
@@ -13376,6 +13387,7 @@ function _csvTrade(row,i,colIdx,defaultAcctId){
           images:[],
         };
   { const _cd=get(row,'closeDate'), _ct=get(row,'closeTime'); if(_ct) trade.closeTime=_ct; if(_cd&&_cd!==trade.date) trade.closeDate=_cd; }   // Batch I4: only when the file has them, so older files import exactly as before
+  { const _rs=get(row,'riskSrc'), _si=get(row,'slInit'), _sh=parseFloat(get(row,'slHit')); if((_rs==='sl'||_rs==='period'||_rs==='default')&&parseFloat(trade.risk)>0) trade.riskSrc=_rs; if(_si&&parseFloat(_si)>0) trade.slInit=String(_si); if(_sh>0) trade.slHit=+_sh.toFixed(2); }   // Batch I8: only when the file has them
   return trade;
 }
 function _csvHasId(row,colIdx){ return colIdx.id!==undefined && !!row[colIdx.id]; }
