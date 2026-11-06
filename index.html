@@ -173,6 +173,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
 /* ── Tabs ── */
 .tab{display:none;padding:14px 14px calc(84px + env(safe-area-inset-bottom, 16px))}.tab.active{display:block}
+.tab{overflow-x:clip}   /* Batch I9: nothing inside a tab can widen the page (iOS lets a wider page slide); clip, never hidden: hidden would break the sticky day headers */
 
 /* ── Section header ── */
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px}
@@ -423,6 +424,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .perf-row.dimmed{opacity:.38}
 .pnl-chart{position:relative;height:120px;margin-top:4px;overflow:visible}
 .pnl-bars-row{display:flex;align-items:center;height:120px;gap:3px}
+/* Batch I9: above 40 trades the bars live in a lane that scrolls inside the card (6 px per trade, a 4 px bar) */
+.pnl-lane{position:relative;height:120px}
+.pnl-lane .pnl-bars-row{gap:0}
+.pnl-lane .pnl-bar-hit{flex:0 0 6px;min-width:0}
 .pnl-bar-hit{flex:1 1 0;height:100%;position:relative;min-width:2px;cursor:pointer;outline:none;border-radius:3px}
 .pnl-bar-hit:focus-visible{box-shadow:0 0 0 2px var(--accent)}
 .pnl-bar-fill{position:absolute;left:1px;right:1px;opacity:.78;border-radius:3px;transition:opacity .15s,filter .15s}
@@ -626,6 +631,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .dbar-zero{height:1px;background:var(--border2)}
 .dbar-labels{display:flex;gap:4px;margin-top:6px}
 .dbar-labels div{flex:1;text-align:center;font-size:9px;color:var(--text3);white-space:nowrap;overflow:hidden}
+/* Batch I9: above 40 days the bars live in a lane that scrolls inside the card (7 px per day, a 5 px bar) */
+.dbar-scroll,.pnl-scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:thin;padding-bottom:3px}
+.dbar-lane{position:relative}
+.dbar-lane .dbar-wrap{gap:0}
+.dbar-lane .dbar-col{flex:0 0 7px}
+.dbar-lane .dbar-up,.dbar-lane .dbar-dn{justify-content:center}
+.dbar-lane .dbar-b{width:5px}
+.dbar-lab2{position:relative;height:14px;margin-top:6px}
+.dbar-lab2 span{position:absolute;top:0;font-size:9px;color:var(--text3);white-space:nowrap}
 .dbar-tip{position:absolute;transform:translate(-50%,-100%);background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:8px 10px;font-size:11.5px;white-space:nowrap;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.35);z-index:5;opacity:0;transition:opacity .12s}
 .dbar-tip.show{opacity:1}
 .dbar-tip strong{display:block;font-size:12.5px;margin-bottom:3px}
@@ -11638,6 +11652,17 @@ function renderDailyPnlWidget(chronological){
     const flat=data.pnl===0?'<div class="dbar-b" style="height:2px;background:var(--border2)"></div>':'';
     return `<div class="dbar-col" onmouseenter="showDbarTip(event,${i})" onmousemove="moveDbarTip(event)" onmouseleave="hideDbarTip()" onclick="pinDbarTip(event,${i})"><div class="dbar-up">${up}${data.pnl===0?flat:''}</div><div class="dbar-zero"></div><div class="dbar-dn">${dn}</div></div>`;
   }).join('');
+  if(days.length>40){   // Batch I9: one bar per day cannot fit in the card above about 40 days, so the lane scrolls inside it
+    const N=days.length, unit=7, yearsApart=(parseLocalDate(days[N-1][0])-parseLocalDate(days[0][0]))/864e5>365;
+    const lab=(i)=>{ const dt=parseLocalDate(days[i][0]); if(!dt) return ''; let t=dt.toLocaleDateString('en-US',{month:'short',day:'numeric'}); if(yearsApart) t+=' \u2019'+String(dt.getFullYear()).slice(2); return t; };
+    const lw=yearsApart?54:40, step=Math.ceil((lw+6)/unit); let lb='', lastEnd=-1;   // labels sit left-aligned on their bar, one every ~60 px, and the last day is right-aligned when it fits
+    for(let i=0;i<N;i+=step){ if((N-i)*unit<lw) break; lb+=`<span style="left:${i*unit}px">${lab(i)}</span>`; lastEnd=i*unit+lw; }
+    if(N*unit-lw>=lastEnd+6) lb+=`<span style="left:${N*unit}px;transform:translateX(-100%)">${lab(N-1)}</span>`;
+    el.innerHTML=`<div style="position:relative"><div class="dbar-tip" id="dbarTip"></div><div class="dbar-scroll" id="dbarScroll"><div class="dbar-lane" style="width:${N*unit}px"><div class="dbar-wrap">${cols}</div><div class="dbar-lab2">${lb}</div></div></div></div>
+    <div class="rhist-footer"><span>${days.length} day${days.length!==1?'s':''} · <span class="positive">${greenDays}</span>/<span class="negative">${days.length-greenDays}</span></span><span>Avg <span class="v ${_sgn(avg,chronological)}">${fmtPnl(avg,chronological)}</span></span></div>`;
+    const sc=document.getElementById('dbarScroll'); if(sc){ sc.scrollLeft=sc.scrollWidth; sc.addEventListener('scroll',()=>{ if(_dbarPinned>=0) unpinDbarTip(); },{passive:true}); }
+    return;
+  }
   const step=Math.max(1,Math.ceil(days.length/8));
   const labs=days.map(([d],i)=>{
     const show=i===0||i===days.length-1||(i%step===0&&days.length-1-i>=Math.ceil(step*0.75));
@@ -12289,6 +12314,11 @@ function renderPnlBars(sorted){
     return `<div class="pnl-bar-hit" tabindex="0" role="button" aria-label="${escapeHtml((t.pair||'Trade')+' '+fmtPnl(v,t))}" onclick="togglePnlPin(event,${i})" onmouseenter="showPnlTooltip(event,${i})" onmousemove="movePnlTooltip(event)" onmouseleave="hidePnlTooltip()" onfocus="showPnlTooltip(event,${i})" onblur="hidePnlTooltip()"><div class="pnl-bar-fill" style="${pos?'bottom':'top'}:50%;height:${h}px;background:${color}"></div><span hidden>${escapeHtml(dateText)}</span></div>`;
   }).join('');
   window._pnlChartTrades=sorted;
+  if(sorted.length>40){   // Batch I9: same lane, 6 px per trade
+    el.innerHTML=`<div class="pnl-chart" style="height:auto"><div class="pnl-tooltip" id="pnlTooltip"></div><div class="pnl-scroll" id="pnlScroll"><div class="pnl-lane" style="width:${sorted.length*6}px"><div style="position:absolute;left:0;right:0;top:50%;height:1px;background:var(--border2)"></div><div class="pnl-bars-row">${bars}</div></div></div></div><div class="rhist-footer"><span>${sorted.length} trade${sorted.length!==1?'s':''} · <span class="positive">${wins}W</span>/<span class="negative">${losses}L</span></span><span>Avg <span class="v ${avg>=0?'positive':'negative'}">${fmtPnlSigned(avg,sorted)}</span></span></div>`;
+    const sc=document.getElementById('pnlScroll'); if(sc){ sc.scrollLeft=sc.scrollWidth; sc.addEventListener('scroll',()=>{ if(_pnlPinned>=0) hidePnlTooltip(true); },{passive:true}); }
+    return;
+  }
   el.innerHTML=`<div class="pnl-chart"><div class="pnl-tooltip" id="pnlTooltip"></div><div style="position:absolute;left:0;right:0;top:50%;height:1px;background:var(--border2)"></div><div class="pnl-bars-row">${bars}</div></div><div class="rhist-footer"><span>${sorted.length} trade${sorted.length!==1?'s':''} · <span class="positive">${wins}W</span>/<span class="negative">${losses}L</span></span><span>Avg <span class="v ${avg>=0?'positive':'negative'}">${fmtPnlSigned(avg,sorted)}</span></span></div>`;
 }
 
