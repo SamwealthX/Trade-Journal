@@ -1483,13 +1483,51 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
 .info-row>.k{min-width:0;overflow-wrap:anywhere}
 .info-row>div{flex:0 0 auto;max-width:62%}
 /* Batch I11: Symbols legend as a grid (two columns, one at 340 px and below; a long name wraps, nothing is clipped) */
-.sym-legend{display:grid;grid-template-columns:1fr 1fr;gap:7px 16px}
+.sym-legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(max(140px,calc((100% - 32px) / 3)),1fr));gap:7px 16px}
 .sym-lg{display:flex;align-items:flex-start;gap:6px;font-size:12px;color:var(--text);font-variant-numeric:tabular-nums;cursor:pointer}
 .sym-sw{width:8px;height:8px;border-radius:2px;display:inline-block;flex:0 0 auto;margin-top:3px}
 .sym-nm{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
 .sym-n{margin-left:auto;display:flex;gap:6px;white-space:nowrap;flex:0 0 auto}
 .sym-p{color:var(--text3);min-width:39px;text-align:right}
-@media (max-width:340px){.sym-legend{grid-template-columns:1fr}}
+
+/* Batch I12: desktop shell. Everything is inside min-width:1024px, so phones and tablets below it are unchanged. */
+.side-nav{display:none}
+:root{--side-w:248px}
+html.side-collapsed{--side-w:72px}
+@media(min-width:1024px){
+  body{padding-left:var(--side-w);transition:padding-left .2s ease}
+  .nav,#navCollapsedBtn{display:none!important}
+  .side-nav{display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;width:var(--side-w);background:var(--surface);border-right:1px solid var(--border);z-index:200;overflow:hidden;transition:width .2s ease}
+  .side-brand{display:flex;align-items:center;gap:10px;height:60px;padding:0 18px;flex:none}
+  .side-logo{width:34px;height:34px;overflow:hidden;display:flex;align-items:center;justify-content:center;flex:none}
+  .side-logo img{width:102px;height:102px;max-width:none;object-fit:contain;border-radius:18px;flex:none}
+  .side-brand-name{font-size:15px;font-weight:700;letter-spacing:-.3px;white-space:nowrap}
+  .side-scroll{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding:8px 12px}
+  .side-group{display:flex;flex-direction:column;gap:2px}
+  .side-ghead{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);padding:0 10px 6px;white-space:nowrap}
+  .side-item,.side-collapse{position:relative;display:flex;align-items:center;gap:12px;width:100%;height:40px;padding:0 10px;border:none;background:none;border-radius:10px;color:var(--text3);font-family:var(--font);font-size:13.5px;font-weight:600;text-align:left;white-space:nowrap;cursor:pointer;transition:background .15s,color .15s}
+  .side-item svg,.side-collapse svg{width:19px;height:19px;flex:none}
+  .side-item.active{color:var(--accent);background:var(--accent-dim)}
+  .side-item:focus-visible,.side-collapse:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+  .side-badge{margin-left:auto;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--accent);color:#000;font-size:10px;font-weight:800;align-items:center;justify-content:center;line-height:1}
+  .side-collapse{flex:none;width:calc(100% - 24px);margin:8px 12px 12px}
+  .side-collapse svg{transition:transform .2s ease}
+  html.side-collapsed .side-collapse svg{transform:rotate(180deg)}
+  html.side-collapsed .side-brand{padding:0;justify-content:center}
+  html.side-collapsed .side-brand-name,html.side-collapsed .side-lbl{display:none}
+  html.side-collapsed .side-item,html.side-collapsed .side-collapse{justify-content:center;padding:0}
+  html.side-collapsed .side-ghead{font-size:0;height:1px;padding:0;margin:0 10px 8px;background:var(--border)}
+  html.side-collapsed .side-group:first-child .side-ghead{display:none}
+  html.side-collapsed .side-badge{position:absolute;top:3px;right:6px;min-width:16px;height:16px;padding:0 4px;font-size:9px}
+  .sticky-top>*,.tab{max-width:1280px;margin-left:auto;margin-right:auto}
+  .tab{width:100%;padding:20px 24px 32px}
+  .header-logo .header-icon{display:none}
+  .modal-overlay{align-items:center;justify-content:center;padding-left:var(--side-w)}
+  .modal-overlay .modal{max-width:560px;border-radius:var(--radius);max-height:88vh}
+  .modal-overlay .modal-handle{display:none}
+}
+@media(min-width:1024px) and (hover:hover){.side-item:hover,.side-collapse:hover{background:var(--surface2);color:var(--text)}.side-item.active:hover{color:var(--accent);background:var(--accent-dim)}}
+@media(prefers-reduced-motion:reduce){body,.side-nav,.side-collapse svg{transition:none}}
 </style>
 </head>
 <body>
@@ -2432,6 +2470,9 @@ body.kb-open .tab.active{padding-bottom:16px}   /* nav is hidden, so drop the sp
     Settings
   </button>
 </nav>
+
+<!-- Batch I12: desktop sidebar (>=1024px only; hidden on phones). Built by buildSideNav() from NAV_DRAWER_CONFIG. -->
+<aside id="sideNav" class="side-nav" aria-label="Main navigation"></aside>
 <!-- Swipe-left-collapsed state of .nav (Batch 4) — see updateNavVisibility()
      and collapseNav()/expandNav() for the show/hide logic, and switchTab()'s
      syncNavCollapsedIcon() for how its icon stays in sync with the active tab. -->
@@ -6720,6 +6761,41 @@ function selectDrawerTab(tab){
 }
 
 
+// ─── Desktop sidebar (Batch I12) ───
+// Below 1024 px the aside is display:none and the bottom nav is unchanged. Sub-views are listed inline
+// (like the bottom-sheet drawers on a phone, but always visible). Collapse = icon-only (72 px), kept in dw_sidenav.
+const SIDE_CHEV='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>';
+function buildSideNav(){
+  const el=document.getElementById('sideNav'); if(!el||el.dataset.built) return; el.dataset.built='1';
+  const logo=document.querySelector('.header-logo img'), st=document.querySelector('#navSettings .nav-icon-wrap svg');
+  let h='<div class="side-brand">'+(logo?'<span class="side-logo"><img src="'+logo.src+'" alt=""></span>':'')+'<span class="side-brand-name">Decipher Wealth</span></div><nav class="side-scroll" aria-label="Sections">';
+  ['Dashboard','Journal','Accounts'].forEach(p=>{
+    h+='<div class="side-group"><div class="side-ghead">'+p+'</div>'+NAV_DRAWER_CONFIG[p].map(it=>'<button type="button" class="side-item" data-tab="'+it.tab+'" title="'+it.label+'" onclick="switchTab(\''+it.tab+'\')">'+it.icon+'<span class="side-lbl">'+it.label+'</span>'+(it.tab==='Journal'?'<span class="side-badge" id="sideJournalBadge" style="display:none"></span>':'')+'</button>').join('')+'</div>';
+  });
+  h+='<div class="side-group"><div class="side-ghead">General</div><button type="button" class="side-item" data-tab="Settings" title="Settings" onclick="switchTab(\'Settings\')">'+(st?st.outerHTML:'')+'<span class="side-lbl">Settings</span></button></div></nav>';
+  h+='<button type="button" class="side-collapse" id="sideCollapseBtn" onclick="toggleSideNav()" aria-expanded="true" aria-controls="sideNav" title="Collapse sidebar" aria-label="Collapse sidebar">'+SIDE_CHEV+'<span class="side-lbl">Collapse</span></button>';
+  el.innerHTML=h;
+  let c=false; try{ c=localStorage.getItem('dw_sidenav')==='1'; }catch(e){}
+  applySideNav(c);
+  const jb=document.getElementById('journalBadge'), sb=document.getElementById('sideJournalBadge');
+  if(jb&&sb){ sb.textContent=jb.textContent; sb.style.display=(jb.style.display==='flex')?'flex':'none'; }
+  try{ syncSideNav(activeTab); }catch(e){}
+}
+function applySideNav(c){
+  document.documentElement.classList.toggle('side-collapsed',!!c);
+  const b=document.getElementById('sideCollapseBtn'); if(!b) return;
+  const t=c?'Expand sidebar':'Collapse sidebar'; b.setAttribute('aria-expanded',String(!c)); b.title=t; b.setAttribute('aria-label',t);
+}
+function toggleSideNav(){
+  const c=!document.documentElement.classList.contains('side-collapsed'); applySideNav(c);
+  try{ localStorage.setItem('dw_sidenav',c?'1':'0'); }catch(e){}
+}
+function syncSideNav(name){
+  document.querySelectorAll('#sideNav .side-item').forEach(b=>{ const on=b.dataset.tab===name; b.classList.toggle('active',on); if(on) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); });
+}
+window.syncSideNav=syncSideNav;
+document.addEventListener('DOMContentLoaded',buildSideNav);
+
 // ─── Journal sub-nav popover ───
 const JNAV_ITEMS=[['PreTrade',jIcon('PreTrade','ic'),'Pre-Trade'],['Journal',jIcon('Journal','ic'),'Trade Log'],['DailyJournal',jIcon('DailyJournal','ic'),'Daily Journal'],['Library',jIcon('Library','ic'),'Library'],['Strategy',jIcon('Strategy','ic'),'Strategy']];
 const ANAV_ITEMS=[['TradingAccounts',jIcon('TradingAccounts','ic'),'Trading Accounts'],['Prop',jIcon('Prop','ic'),'Prop Firms']];
@@ -6779,6 +6855,7 @@ function switchTab(name){
   const navEl = document.getElementById('nav'+(TAB_TO_PARENT[name]||name));
   if(navEl){ navEl.classList.add('active'); syncNavCollapsedIcon(navEl); }
   activeTab=name;
+  if(window.syncSideNav) window.syncSideNav(name);
   document.querySelectorAll('.journal-segments .segment').forEach(btn=>{ const selected=btn.dataset.journalTab===name; btn.classList.toggle('active',selected); btn.setAttribute('aria-selected',String(selected)); });
   if(name==='Strategy'){renderStrategyPerformance();renderSetupPlaybook();}
   // Persist active tab to Telegram CloudStorage (session state)
@@ -7136,6 +7213,8 @@ function updateFilterPillBtn(){
 }
 
 function updateJournalBadge(count){
+  const sb=document.getElementById('sideJournalBadge');
+  if(sb){ if(count>0){ sb.textContent=count>99?'99+':count; sb.style.display='flex'; } else sb.style.display='none'; }
   const badge=document.getElementById('journalBadge');
   if(!badge)return;
   if(count>0){ badge.textContent=count>99?'99+':count; badge.style.display='flex'; }
