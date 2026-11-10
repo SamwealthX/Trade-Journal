@@ -1519,7 +1519,7 @@ html.side-collapsed{--side-w:72px}
   html.side-collapsed .side-ghead{font-size:0;height:1px;padding:0;margin:0 10px 8px;background:var(--border)}
   html.side-collapsed .side-group:first-child .side-ghead{display:none}
   html.side-collapsed .side-badge{position:absolute;top:3px;right:6px;min-width:16px;height:16px;padding:0 4px;font-size:9px}
-  .sticky-top>*,.tab{max-width:1280px;margin-left:auto;margin-right:auto}
+  .sticky-top>*,.tab{max-width:1760px;margin-left:auto;margin-right:auto}
   .tab{width:100%;padding:20px 24px 32px}
   .header-logo .header-icon{display:none}
   .modal-overlay{align-items:center;justify-content:center;padding-left:var(--side-w)}
@@ -1528,6 +1528,28 @@ html.side-collapsed{--side-w:72px}
 }
 @media(min-width:1024px) and (hover:hover){.side-item:hover,.side-collapse:hover{background:var(--surface2);color:var(--text)}.side-item.active:hover{color:var(--accent);background:var(--accent-dim)}}
 @media(prefers-reduced-motion:reduce){body,.side-nav,.side-collapse svg{transition:none}}
+
+/* Batch I13: Stats board on 12 columns (desktop), metric rows in columns, break-even gauge (all widths) */
+.be-gauge{margin-top:9px}
+.be-track{position:relative;height:6px;border-radius:3px;background:var(--surface2)}
+.be-fill{position:absolute;left:0;top:0;bottom:0;border-radius:3px}
+.be-fill.up{background:var(--accent)}.be-fill.dn{background:var(--red)}
+.be-mark{position:absolute;top:-3px;bottom:-3px;width:2px;margin-left:-1px;border-radius:1px;background:var(--text)}
+.be-cap{display:flex;flex-wrap:wrap;gap:0 6px;font-size:10.5px;color:var(--text2);margin-top:6px;line-height:1.35}
+.be-cap>*{white-space:nowrap}
+.be-cap b.up{color:var(--accent)}.be-cap b.dn{color:var(--red)}
+@media(min-width:1024px){
+  #widgetBoard{grid-template-columns:repeat(12,minmax(0,1fr))}
+  #widgetBoard > [data-widget]{grid-column:span 12}
+  #widgetBoard > [data-widget][data-size="half"]{grid-column:span 6}
+  #widgetBoard > .wb-add-tile,#widgetBoard > .wb-placeholder{grid-column:span 12}
+  #streakDrawdownGrid.metric-list{column-count:2;column-gap:40px}
+  #streakDrawdownGrid .metric-row{break-inside:avoid}
+}
+@media(min-width:1680px){
+  #widgetBoard > [data-widget][data-size="half"]{grid-column:span 4}
+  #streakDrawdownGrid.metric-list{column-count:3}
+}
 </style>
 </head>
 <body>
@@ -6360,12 +6382,19 @@ let wbEditMode = false;
 // deliberately NOT included even though it was in the original proposal —
 // now that Pair Performance is folded into it as an expandable table, it
 // needs full width to hold that table comfortably.
-function wbSeedHalfSizes(){
+// Batch I13: the chart widgets that read well one column wide on a desktop board.
+function wbSeedV2Extra(){
   return {
+    dailyPnl: 'half', symbols: 'half', tradeDistribution: 'half', rmultiple: 'half',
+    pnlPerTrade: 'half', duration: 'half', daySession: 'half', hourOfDay: 'half',
+  };
+}
+function wbSeedHalfSizes(){
+  return Object.assign({
     drawdown: 'half', longShort: 'half',
     winBySetup: 'half', ruleAdherence: 'half',
     recentTrades: 'half', monthlyGoal: 'half',
-  };
+  }, wbSeedV2Extra());
 }
 function wbLoadPrefs(){
   try{
@@ -6395,6 +6424,20 @@ function wbLoadPrefs(){
       widgetPrefs = { order: [], hidden: [], sizes: wbSeedHalfSizes() };
     }
     if(!seedApplied) localStorage.setItem('tj_widgetSeedV1','1');
+    // Batch I13 top-up, at most once per user (tj_widgetSeedV2). "Full" is stored as an absent key, so a deliberate
+    // "full" cannot be told from "never sized": the extras are added ONLY when the saved sizes are still exactly the six
+    // original defaults (the user never changed a size). Anyone who customised sizes keeps them untouched
+    // (Restore default layout gives the new defaults).
+    if(!localStorage.getItem('tj_widgetSeedV2')){
+      if(raw){
+        const v1 = ['drawdown','longShort','winBySetup','ruleAdherence','recentTrades','monthlyGoal'];
+        const ks = Object.keys(widgetPrefs.sizes);
+        if(ks.length===v1.length && v1.every(k=>widgetPrefs.sizes[k]==='half')){
+          Object.assign(widgetPrefs.sizes, wbSeedV2Extra()); wbSavePrefs();
+        }
+      }
+      localStorage.setItem('tj_widgetSeedV2','1');
+    }
   }catch(e){}
   if(!widgetPrefs.sizes) widgetPrefs.sizes = {};
 }
@@ -6768,7 +6811,7 @@ const SIDE_CHEV='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 function buildSideNav(){
   const el=document.getElementById('sideNav'); if(!el||el.dataset.built) return; el.dataset.built='1';
   const logo=document.querySelector('.header-logo img'), st=document.querySelector('#navSettings .nav-icon-wrap svg');
-  let h='<div class="side-brand">'+(logo?'<span class="side-logo"><img src="'+logo.src+'" alt=""></span>':'')+'<span class="side-brand-name">Decipher Wealth</span></div><nav class="side-scroll" aria-label="Sections">';
+  let h='<div class="side-brand">'+(logo?'<span class="side-logo"><img src="'+logo.src+'" alt=""></span>':'')+'<span class="side-brand-name">Trade Journal</span></div><nav class="side-scroll" aria-label="Sections">';
   ['Dashboard','Journal','Accounts'].forEach(p=>{
     h+='<div class="side-group"><div class="side-ghead">'+p+'</div>'+NAV_DRAWER_CONFIG[p].map(it=>'<button type="button" class="side-item" data-tab="'+it.tab+'" title="'+it.label+'" onclick="switchTab(\''+it.tab+'\')">'+it.icon+'<span class="side-lbl">'+it.label+'</span>'+(it.tab==='Journal'?'<span class="side-badge" id="sideJournalBadge" style="display:none"></span>':'')+'</button>').join('')+'</div>';
   });
@@ -11076,6 +11119,17 @@ function _statCardHtml(it){
     + `<div class="stat-sub">${it.sub||''}</div></div>`;
 }
 
+// Break-even win rate = average loss / (average win + average loss), over the closed trades of the period shown
+// (_statsScope). The bar is the win rate the tile shows (wins / all trades shown); the tick is the break-even rate.
+function _beGaugeHtml(){
+  const ft = (typeof _statsScope !== 'undefined' && _statsScope) || [];
+  const w = ft.filter(t=>parseFloat(t.pnl)>0), l = ft.filter(t=>parseFloat(t.pnl)<0);
+  if(!w.length || !l.length) return '';
+  const aw = w.reduce((a,t)=>a+parseFloat(t.pnl),0)/w.length;
+  const al = Math.abs(l.reduce((a,t)=>a+parseFloat(t.pnl),0)/l.length);
+  const be = al/(aw+al)*100, wr = w.length/ft.length*100, d = wr-be, up = d>=0;
+  return `<div class="be-gauge"><div class="be-track"><i class="be-fill ${up?'up':'dn'}" style="width:${Math.min(100,wr).toFixed(1)}%"></i><i class="be-mark" style="left:${be.toFixed(1)}%"></i></div><div class="be-cap"><span>${be.toFixed(1)}% to break even</span> <b class="${up?'up':'dn'}">${Math.abs(d).toFixed(1)} pts ${up?'over':'under'}</b></div></div>`;
+}
 function _statRowHtml(it){
   const val = it.listValue || it.value;
   return `<div class="metric-row"><div class="metric-row-key">`
@@ -11093,6 +11147,7 @@ function paintStatCards(coreItems, streakItems){
   const rest = [...coreItems.slice(2), ...streakItems];
   grid.className = 'stat-grid';
   grid.innerHTML = hero.map(_statCardHtml).join('');
+  const _g = _beGaugeHtml(), _f = grid.querySelector('.stat-card'); if(_g && _f) _f.insertAdjacentHTML('beforeend', _g);
   rowsHost.className = 'card metric-list';
   rowsHost.innerHTML = rest.map(_statRowHtml).join('');
 }
