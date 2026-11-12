@@ -1550,6 +1550,16 @@ html.side-collapsed{--side-w:72px}
   #widgetBoard > [data-widget][data-size="half"]{grid-column:span 4}
   #streakDrawdownGrid.metric-list{column-count:3}
 }
+
+/* Batch I14: trade detail docked beside the Trade Log (>=1280px, Journal tab) */
+:root{--dock-w:clamp(380px,28vw,460px);--dock-top:136px}
+.trade-item.peek-selected{border-color:var(--accent);background:var(--accent-dim)}
+@media(min-width:1280px){
+  body.peek-docked #tabJournal{padding-right:calc(var(--dock-w) + 40px)}
+  body.peek-docked .peek-overlay{display:none!important}
+  body.peek-docked #tradeList .trade-item{scroll-margin-top:calc(var(--dock-top) + 4px);scroll-margin-bottom:16px}
+  body.peek-docked .peek-panel,body.peek-docked .peek-panel.open{left:auto;top:var(--dock-top);right:max(24px,calc((100vw - var(--side-w) - 1760px) / 2 + 24px));width:var(--dock-w);max-width:none;height:calc(100dvh - var(--dock-top) - 24px);max-height:none;transform:none;box-shadow:none}
+}
 </style>
 </head>
 <body>
@@ -6337,7 +6347,8 @@ let navSwiped = false;
 // ═══════════════════════════════════════════════════════════════════
 let _scrollLockY = 0, _scrollLocked = false;
 function anyOverlayOpen(){
-  return !!document.querySelector('.modal-overlay.open, .peek-overlay.open, .peek-panel.open, .lightbox.open');
+  if(document.querySelector('.modal-overlay.open, .peek-overlay.open, .lightbox.open')) return true;
+  return !!document.querySelector('.peek-panel.open') && !document.body.classList.contains('peek-docked');
 }
 function syncScrollLock(){
   const want = anyOverlayOpen();
@@ -6899,6 +6910,7 @@ function switchTab(name){
   if(navEl){ navEl.classList.add('active'); syncNavCollapsedIcon(navEl); }
   activeTab=name;
   if(window.syncSideNav) window.syncSideNav(name);
+  if(document.body.classList.contains('peek-docked') && name!=='Journal') closePeek();
   document.querySelectorAll('.journal-segments .segment').forEach(btn=>{ const selected=btn.dataset.journalTab===name; btn.classList.toggle('active',selected); btn.setAttribute('aria-selected',String(selected)); });
   if(name==='Strategy'){renderStrategyPerformance();renderSetupPlaybook();}
   // Persist active tab to Telegram CloudStorage (session state)
@@ -7628,9 +7640,11 @@ function handleTradeCardClick(e,id){
 function calcR(t){ const p=parseFloat(t.pnl),r=parseFloat(t.risk); if(isNaN(p)||isNaN(r)||r===0)return null; return (p/r).toFixed(2); }
 
 // ─── Side Peek ───
+let _peekSig='';
 function openPeek(id){
   viewingId=id;
   const t=trades.find(x=>x.id===id); if(!t)return;
+  _peekSig=JSON.stringify(t);
   const pnl=parseFloat(t.pnl)||0, r=calcR(t), acct=accounts.find(a=>a.id===t.accountId);
   const _rk=parseFloat(t.risk), _over=(pnl<0&&_rk>0&&-pnl/_rk>=1.5)?'<div style="margin-top:6px"><span class="tag tag-over">OVER-RISK '+(-pnl/_rk).toFixed(1)+'×</span></div>':'';   // Batch I6: lost 1.5x or more of the planned risk
   const cl=t.checklist||{};
@@ -7681,9 +7695,8 @@ function openPeek(id){
       <button class="btn btn-ghost" onclick="closePeek()" style="flex:1">Close</button>
     </div>
   `;
-  document.getElementById('peekOverlay').classList.add('open');
   document.getElementById('peekPanel').classList.add('open');
-  updateNavVisibility();
+  _peekApplyMode(true);
   _updatePeekNavBtns();
 
   // Resolve each screenshot's fileId to a real src after paint, so opening
@@ -7700,7 +7713,51 @@ function openPeek(id){
   }
 }
 
+// ─── Batch I14: trade detail docked beside the Trade Log (viewport >= 1280 px, Journal tab) ───
+// Docked = no backdrop, list and panel both usable. Everywhere else (other tabs, narrower screens) it stays the centred modal.
+function _peekDockEligible(){ return window.matchMedia('(min-width:1280px)').matches && activeTab==='Journal'; }
+function _peekDockTop(){ const h=document.querySelector('.sticky-top'); if(h) document.documentElement.style.setProperty('--dock-top',Math.round(h.getBoundingClientRect().bottom+12)+'px'); }
+function _peekMarkSelected(scroll){
+  document.querySelectorAll('.trade-item.peek-selected').forEach(x=>x.classList.remove('peek-selected'));
+  if(!document.body.classList.contains('peek-docked')||!viewingId) return;
+  const el=document.querySelector('#wrap-'+CSS.escape(viewingId)+' .trade-item');
+  if(el){ el.classList.add('peek-selected'); if(scroll) el.scrollIntoView({block:'nearest'}); }
+}
+function _peekRefreshDocked(){
+  if(!document.body.classList.contains('peek-docked')) return;
+  _peekMarkSelected(false);
+  const t=trades.find(x=>x.id===viewingId);
+  if(!t) closePeek(); else if(JSON.stringify(t)!==_peekSig) openPeek(viewingId);
+}
+function _peekApplyMode(scroll){
+  if(!document.getElementById('peekPanel').classList.contains('open')) return;
+  const d=_peekDockEligible();
+  document.body.classList.toggle('peek-docked',d);
+  document.getElementById('peekOverlay').classList.toggle('open',!d);
+  _peekMarkSelected(scroll); _peekDockTop(); updateNavVisibility();
+}
+window.addEventListener('resize',()=>_peekApplyMode(false));
+document.addEventListener('keydown',e=>{
+  if(!document.body.classList.contains('peek-docked')||e.metaKey||e.ctrlKey||e.altKey) return;
+  const t=e.target, tag=t&&t.tagName; if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||(t&&t.isContentEditable)) return;
+  if(document.querySelector('.modal-overlay.open')||document.getElementById('lightbox').classList.contains('open')) return;
+  const k=e.key;
+  if(k==='Escape'){ e.preventDefault(); closePeek(); }
+  else if(k==='ArrowDown'||k==='j'||k==='J'){ e.preventDefault(); peekNav(1); }
+  else if(k==='ArrowUp'||k==='k'||k==='K'){ e.preventDefault(); peekNav(-1); }
+});
+document.addEventListener('DOMContentLoaded',()=>{
+  const tl=document.getElementById('tradeList'); if(tl) new MutationObserver(()=>_peekMarkSelected(false)).observe(tl,{childList:true});
+  // The docked detail follows an edited trade and closes for a deleted one. Cards do not show every field (notes, screenshots),
+  // so the list DOM may not change on a save: hook the render itself, which every save and delete path calls.
+  const _rtl=renderTradeList;
+  renderTradeList=function(){ const r=_rtl.apply(this,arguments); _peekRefreshDocked(); return r; };
+  // L34: any modal opening or closing, by any route (a Cancel button that only removes the class, an overlay tap, code), refreshes the bottom nav.
+  new MutationObserver(ms=>{ for(const m of ms){ const t=m.target; if(t.classList&&(t.classList.contains('modal-overlay')||t.id==='peekOverlay')){ updateNavVisibility(); return; } } })
+    .observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
+});
 function closePeek(){
+  document.body.classList.remove('peek-docked'); _peekMarkSelected(false);
   document.getElementById('peekOverlay').classList.remove('open');
   document.getElementById('peekPanel').classList.remove('open');
   updateNavVisibility();
@@ -7740,7 +7797,7 @@ function _updatePeekNavBtns(){
 // same as the other centered dialogs (Month Report, Daily Summary).
 
 function editFromPeek(){
-  closePeek();
+  if(!document.body.classList.contains('peek-docked')) closePeek();
   const t=trades.find(x=>x.id===viewingId); if(!t)return;
   openEditTrade(t);
 }
@@ -12927,7 +12984,7 @@ const _I={
 // ─── Duplicate from peek ───
 function duplicateFromPeek(){
   const t = trades.find(x=>x.id===viewingId); if(!t) return;
-  closePeek();
+  if(!document.body.classList.contains('peek-docked')) closePeek();
   // Deep-clone the trade, give it a fresh id, and open as new
   const clone = JSON.parse(JSON.stringify(t));
   clone.id = null; // will be assigned on save
