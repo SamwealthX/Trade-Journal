@@ -1560,6 +1560,20 @@ html.side-collapsed{--side-w:72px}
   body.peek-docked #tradeList .trade-item{scroll-margin-top:calc(var(--dock-top) + 4px);scroll-margin-bottom:16px}
   body.peek-docked .peek-panel,body.peek-docked .peek-panel.open{left:auto;top:var(--dock-top);right:max(24px,calc((100vw - var(--side-w) - 1760px) / 2 + 24px));width:var(--dock-w);max-width:none;height:calc(100dvh - var(--dock-top) - 24px);max-height:none;transform:none;box-shadow:none}
 }
+
+/* Batch I15: desktop layout for Settings, Trading Accounts and Prop Firms (>=1024px) */
+@media(min-width:1024px){
+  #tabSettings{column-count:2;column-gap:32px;max-width:1200px;margin-left:0}
+  #tabSettings>.st-sync,#tabSettings>.st-stats,#tabSettings>div[style*="text-align:center"]{column-span:all}
+  #tabSettings>.st-card{break-inside:avoid}
+  #tabSettings>.st-h{break-after:avoid;margin:0 4px 8px;padding-top:22px}
+  #acctList,#propFirmList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+  #acctList>*,#propFirmList>*{margin:0!important}
+  #acctList>:not(.ac-card),#propFirmList>:not(.prop-firm-card){grid-column:1/-1}
+}
+@media(min-width:1680px){
+  #acctList,#propFirmList{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
 </style>
 </head>
 <body>
@@ -7716,7 +7730,9 @@ function openPeek(id){
 // ─── Batch I14: trade detail docked beside the Trade Log (viewport >= 1280 px, Journal tab) ───
 // Docked = no backdrop, list and panel both usable. Everywhere else (other tabs, narrower screens) it stays the centred modal.
 function _peekDockEligible(){ return window.matchMedia('(min-width:1280px)').matches && activeTab==='Journal'; }
-function _peekDockTop(){ const h=document.querySelector('.sticky-top'); if(h) document.documentElement.style.setProperty('--dock-top',Math.round(h.getBoundingClientRect().bottom+12)+'px'); }
+// I15: the header stops sticking after one viewport (html,body{height:100%}), so its bottom can be negative: the panel never starts above 12px, and follows the header while scrolling.
+function _peekDockTop(){ const h=document.querySelector('.sticky-top'); if(h) document.documentElement.style.setProperty('--dock-top',Math.max(12,Math.round(h.getBoundingClientRect().bottom+12))+'px'); }
+let _pdRaf=0; window.addEventListener('scroll',()=>{ if(_pdRaf||!document.body.classList.contains('peek-docked')) return; _pdRaf=requestAnimationFrame(()=>{ _pdRaf=0; _peekDockTop(); }); },{passive:true});
 function _peekMarkSelected(scroll){
   document.querySelectorAll('.trade-item.peek-selected').forEach(x=>x.classList.remove('peek-selected'));
   if(!document.body.classList.contains('peek-docked')||!viewingId) return;
