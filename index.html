@@ -1567,12 +1567,36 @@ html.side-collapsed{--side-w:72px}
   #tabSettings>.st-sync,#tabSettings>.st-stats,#tabSettings>div[style*="text-align:center"]{column-span:all}
   #tabSettings>.st-card{break-inside:avoid}
   #tabSettings>.st-h{break-after:avoid;margin:0 4px 8px;padding-top:22px}
-  #acctList,#propFirmList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
-  #acctList>*,#propFirmList>*{margin:0!important}
-  #acctList>:not(.ac-card),#propFirmList>:not(.prop-firm-card){grid-column:1/-1}
+  #acctList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+  #acctList>*{margin:0!important}
+  #acctList>:not(.ac-card){grid-column:1/-1}
 }
 @media(min-width:1680px){
-  #acctList,#propFirmList{grid-template-columns:repeat(3,minmax(0,1fr))}
+  #acctList{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+/* Batch I16: desktop layout for Prop Firms, Pre-Trade (>=1024px), Daily Journal and Strategy (>=1280px). Every display override is scoped to .tab.active (a plain #tabX{display:grid} would beat .tab{display:none}). */
+@media(min-width:1024px){
+  #propFirmList,#preTradeList{display:block;column-count:2;column-gap:12px}
+  #propFirmList>*,#preTradeList>*{break-inside:avoid;margin:0 0 12px!important}
+  #propFirmList>:not(.prop-firm-card),#preTradeList>.empty{column-span:all}
+}
+@media(min-width:1680px){ #propFirmList,#preTradeList{column-count:3} }
+@media(min-width:1280px){
+  #tabDailyJournal.active{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);column-gap:24px;align-items:start;max-width:1500px;margin-left:0}
+  #tabDailyJournal>.journal-segments,#tabDailyJournal>.jnav-row{grid-column:1/-1}
+  #tabDailyJournal>.cal-nav,#tabDailyJournal>#djStrip,#tabDailyJournal>#dailySelectedSummary{grid-column:1}
+  #tabDailyJournal>.section-header,#tabDailyJournal>#djFilterRow,#tabDailyJournal>#dailyJournalList{grid-column:2}
+  #tabDailyJournal>.cal-nav{grid-row:3}
+  #tabDailyJournal>#djStrip{grid-row:4}
+  #tabDailyJournal>#dailySelectedSummary{grid-row:5}
+  #tabDailyJournal>.section-header{grid-row:3}
+  #tabDailyJournal>#djFilterRow{grid-row:4}
+  #tabDailyJournal>#dailyJournalList{grid-row:5 / span 3}
+  #tabStrategy.active{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:24px;align-items:start}
+  #tabStrategy>*{grid-column:1/-1}
+  #tabStrategy>#strategyPerfNote+.card{grid-column:1;grid-row:span 3}
+  #tabStrategy>#strategyRuleChecks,#tabStrategy>#strategyRuleChecks~.section-header,#tabStrategy>#strategyRuleChecks~.card{grid-column:2}
 }
 </style>
 </head>
